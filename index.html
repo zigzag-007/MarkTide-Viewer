@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Basic HTML meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO and page information meta tags -->
+    <meta name="title" content="MarkFlow Viewer">
+    <meta name="description" content="MarkFlow Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, beautiful purple dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph meta tags for social media sharing (e.g., Facebook) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://markdownviewer.pages.dev/">
+    <meta property="og:title" content="MarkFlow Viewer">
+    <meta property="og:description" content="MarkFlow Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, beautiful purple dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
+    <meta property="og:image" content="https://markdownviewer.pages.dev/assets/img/icon.jpg">
+
+    <!-- Twitter Card meta tags for social media sharing -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://markdownviewer.pages.dev/">
+    <meta property="twitter:title" content="MarkFlow Viewer">
+    <meta property="twitter:description" content="MarkFlow Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, beautiful purple dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
+    <meta property="twitter:image" content="https://markdownviewer.pages.dev/assets/img/icon.jpg">
+
+    <!-- Page title and favicon -->
+    <title>MarkFlow Viewer</title>
+    <link href="assets/img/icon.jpg" rel="icon" type="image/jpg">
+
+    <!-- External CSS libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+    <link rel="stylesheet" id="highlight-theme" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/extras/css/joypixels.min.css">
+    <!-- Custom stylesheet -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <!-- Mermaid diagram specific CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.css">
+    
+    <!-- External JavaScript libraries (order can be important for dependencies) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- MathJax configuration -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true,
+          processEnvironments: true
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
+      };
+    </script>
+    <!-- More JavaScript libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/lib/js/joypixels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+</head>
+<body>
+    <!-- Main application container -->
+    <div class="app-container">
+        <!-- Application header section -->
+        <header class="app-header">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <!-- Logo and GitHub link -->
+                <div class="d-flex align-items-center">
+                    <h1 class="h4 mb-0 me-2">MarkFlow Viewer</h1>
+                    <a href="https://github.com/zigzag-007" class="github-link" title="View on GitHub" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-github"></i>
+                    </a>
+                    <!-- Statistics container (word and character count) - Desktop only -->
+                    <div id="stats-container" class="stats-container d-flex align-items-center d-none d-xl-flex">
+                        <div class="stat-item me-3">
+                            <i class="bi bi-text-paragraph me-1"></i> <span id="word-count">0</span> Words
+                        </div>
+                        <div class="stat-item">
+                            <i class="bi bi-fonts me-1"></i> <span id="char-count">0</span> Chars
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main toolbar for desktop view -->
+                <div class="toolbar d-none d-xl-flex">
+                    <button id="toggle-sync" class="tool-button sync-disabled border-primary" title="Toggle Sync Scrolling">
+                        <i class="bi bi-link-45deg"></i> Sync Off
+                    </button>
+                    <button id="print-button" class="tool-button" title="Print Preview">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <button id="show-code-button" class="tool-button" title="Hide Editor" aria-pressed="true">
+                        <i class="bi bi-code-square"></i> Hide Editor
+                    </button>
+                    <button id="show-preview-button" class="tool-button" title="Hide Preview" aria-pressed="true">
+                        <i class="bi bi-eye"></i> Hide Preview
+                    </button>
+                    <button id="import-button" class="tool-button" title="Import Markdown">
+                        <i class="bi bi-upload"></i> Import
+                    </button>
+                    <!-- Hidden file input for import functionality -->
+                    <input type="file" id="file-input" class="file-input" accept=".md,.markdown,text/markdown" aria-label="Import markdown file">
+                    
+                    <button id="copy-markdown-button" class="tool-button" title="Copy Markdown">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    
+                    <button id="theme-toggle" class="tool-button" title="Toggle Dark Mode">
+                        <i class="bi bi-moon"></i>
+                    </button>
+                </div>
+                
+                <!-- Hamburger menu for mobile view -->
+                <div class="mobile-menu d-xl-none">
+                    <button id="mobile-menu-toggle" class="tool-button" title="Menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    
+                    <!-- Mobile menu panel (slides in) -->
+                    <div id="mobile-menu-panel" class="mobile-menu-panel">
+                        <div class="mobile-menu-header">
+                            <h5>Menu</h5>
+                            <button id="close-mobile-menu" class="tool-button" title="Close Menu">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Statistics container for mobile menu -->
+                        <div class="mobile-stats-container mb-3">
+                            <div class="stat-item mb-2">
+                                <i class="bi bi-text-paragraph me-1"></i> <span id="mobile-word-count">0</span> Words
+                            </div>
+                            <div class="stat-item">
+                                <i class="bi bi-fonts me-1"></i> <span id="mobile-char-count">0</span> Chars
+                            </div>
+                        </div>
+                        
+                        <!-- Action buttons for mobile menu -->
+                        <div class="mobile-menu-items">
+                            <button id="mobile-toggle-sync" class="mobile-menu-item tool-button sync-disabled border-primary" title="Toggle Sync Scrolling">
+                                <i class="bi bi-link-45deg"></i> Sync Off
+                            </button>
+                            
+                            <button id="mobile-print-button" class="mobile-menu-item" title="Print Preview">
+                                <i class="bi bi-printer me-2"></i> Print
+                            </button>
+                            
+                            <button id="mobile-show-code" class="mobile-menu-item" title="Hide Editor" aria-pressed="true">
+                                <i class="bi bi-code-square me-2"></i> Hide Editor
+                            </button>
+                            
+                            <button id="mobile-show-preview" class="mobile-menu-item" title="Hide Preview" aria-pressed="true">
+                                <i class="bi bi-eye me-2"></i> Hide Preview
+                            </button>
+                            
+                            <button id="mobile-import-button" class="mobile-menu-item" title="Import Markdown">
+                                <i class="bi bi-upload me-2"></i> Import Markdown
+                            </button>
+                            
+                            <button id="mobile-copy-markdown" class="mobile-menu-item" title="Copy Markdown">
+                                <i class="bi bi-clipboard me-2"></i> Copy
+                            </button>
+                            
+                            <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
+                                <i class="bi bi-moon me-2"></i> Dark Mode
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Overlay for mobile menu (closes menu when clicked) -->
+                    <div id="mobile-menu-overlay"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dropzone for file import -->
+        <div id="dropzone" class="dropzone container-fluid mt-2">
+            <button id="close-dropzone" class="close-btn" title="Close dropzone">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <p class="mb-0"><i class="bi bi-cloud-arrow-up me-2"></i>Drop your Markdown file here or click to browse</p>
+        </div>
+
+        <!-- Main content area with editor and preview panes -->
+        <div class="content-container">
+            <!-- Editor pane section -->
+            <div class="editor-pane">
+                <!-- Formatting toolbar for the markdown editor -->
+                <div class="formatting-toolbar">
+                    <!-- Heading format buttons -->
+                    <button id="format-h1" class="format-button" title="Heading 1" data-format="h1">
+                        H1
+                    </button>
+                    <button id="format-h2" class="format-button" title="Heading 2" data-format="h2">
+                        H2
+                    </button>
+                    <button id="format-h3" class="format-button" title="Heading 3" data-format="h3">
+                        H3
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <!-- Text style format buttons -->
+                    <button id="format-bold" class="format-button" title="Bold" data-format="bold">
+                        <i class="bi bi-type-bold"></i>
+                    </button>
+                    <button id="format-italic" class="format-button" title="Italic" data-format="italic">
+                        <i class="bi bi-type-italic"></i>
+                    </button>
+                    <button id="format-code" class="format-button" title="Inline Code" data-format="code">
+                        <i class="bi bi-code"></i>
+                    </button>
+                    <button id="format-quote" class="format-button" title="Quote" data-format="quote">
+                        <i class="bi bi-quote"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <!-- List and line break format buttons -->
+                    <button id="format-ul" class="format-button" title="Bullet List" data-format="ul">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                    <button id="format-ol" class="format-button" title="Numbered List" data-format="ol">
+                        <i class="bi bi-list-ol"></i>
+                    </button>
+                    <button id="format-linebreak" class="format-button" title="Line Break" data-format="linebreak">
+                        <i class="bi bi-arrow-return-left"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <!-- Undo/Redo buttons -->
+                    <button id="format-undo" class="format-button" title="Undo" data-format="undo">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <button id="format-redo" class="format-button" title="Redo" data-format="redo">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <!-- Export options dropdown -->
+                    <div class="dropdown">
+                        <button id="format-download" class="format-button dropdown-toggle" title="Export Options" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i>
+                        </button>
+                        <ul class="dropdown-menu export-dropdown">
+                            <li><a class="dropdown-item" href="#" id="export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
+                            <li><a class="dropdown-item" href="#" id="export-html"><i class="bi bi-file-earmark-code me-2"></i>Export as HTML</a></li>
+                            <li><a class="dropdown-item" href="#" id="export-txt"><i class="bi bi-file-earmark me-2"></i>Export as Text</a></li>
+                            <li><a class="dropdown-item" href="#" id="export-pdf"><i class="bi bi-file-earmark-pdf me-2"></i>Export as PDF</a></li>
+                        </ul>
+                    </div>
+                    <!-- Upload and fullscreen buttons -->
+                    <button id="format-upload" class="format-button" title="Upload Markdown" data-format="upload">
+                        <i class="bi bi-upload"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <button id="format-fullscreen" class="format-button" title="Toggle Fullscreen" data-format="fullscreen">
+                        <i class="bi bi-fullscreen"></i>
+                    </button>
+                </div>
+                
+                <!-- Wrapper for the editor textarea and line numbers -->
+                <div class="editor-wrapper">
+                    <!-- Line numbers for the editor -->
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <!-- Markdown editor textarea -->
+                <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."></textarea>
+                </div>
+            </div>
+            <!-- Preview pane section -->
+            <div class="preview-pane">
+                <!-- Container for the rendered Markdown preview -->
+                <div id="markdown-preview" class="markdown-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application footer -->
+    <footer class="app-footer">
+        <div class="container-fluid text-center">
+            <p class="footer-text">© 2025 MarkFlow Viewer | ❤️ Designed by Zig Zag</p>
+        </div>
+    </footer>
+
+    <!-- Core JavaScript libraries (Bootstrap bundle and custom script) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
