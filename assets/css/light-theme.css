@@ -1,0 +1,136 @@
+/* =================================================================
+   LIGHT-THEME.CSS - Light Mode Color Scheme
+   
+   This file contains all the light theme specific styling:
+   - CSS Custom Properties (variables) for light mode
+   - Light mode color applications
+   - GitHub markdown light theme integration
+   - Light mode specific overrides
+   ================================================================= */
+
+/* ===== LIGHT THEME VARIABLES ===== */
+:root[data-theme="light"] {
+  /* Base colors */
+  --bg-color: #ffffff;
+  --text-color: #24292e;
+  --border-color: #e1e4e8;
+  --accent-color: #4338ca;
+  --accent-color-rgb: 67, 56, 202;
+
+  /* Header colors */
+  --header-bg: #fafbfc;
+  --header-gradient: #f6f8fa;
+  
+  /* Button colors */
+  --button-bg: #fafbfc;
+  --button-hover: #f3f4f6;
+  --button-active: #e5e7eb;
+  
+  /* Stats and dropdown backgrounds */
+  --stats-bg: rgba(255, 255, 255, 0.8);
+  --dropdown-bg: rgba(255, 255, 255, 0.95);
+  
+  /* Editor and preview colors */
+  --editor-bg: #ffffff;
+  --preview-bg: #ffffff;
+  --preview-text-color: #24292e;
+  
+  /* Scrollbar colors */
+  --scrollbar-track: #f1f3f4;
+  --scrollbar-thumb: #c1c1c1;
+  
+  /* Dropzone colors */
+  --dropzone-bg: #f8f9fa;
+  
+  /* Code highlighting */
+  --code-bg: #f6f8fa;
+  
+  /* Danger colors */
+  --color-danger-fg: #dc3545;
+}
+
+/* ===== GITHUB MARKDOWN LIGHT THEME ===== */
+/* GitHub's official light mode syntax highlighting variables */
+.markdown-body {
+  color-scheme: light;
+  --color-prettylights-syntax-comment: #6a737d;
+  --color-prettylights-syntax-constant: #005cc5;
+  --color-prettylights-syntax-entity: #6f42c1;
+  --color-prettylights-syntax-storage-modifier-import: #24292e;
+  --color-prettylights-syntax-entity-tag: #22863a;
+  --color-prettylights-syntax-keyword: #d73a49;
+  --color-prettylights-syntax-string: #032f62;
+  --color-prettylights-syntax-variable: #e36209;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #b31d28;
+  --color-prettylights-syntax-invalid-illegal-text: #fafbfc;
+  --color-prettylights-syntax-invalid-illegal-bg: #b31d28;
+  --color-prettylights-syntax-carriage-return-text: #fafbfc;
+  --color-prettylights-syntax-carriage-return-bg: #d73a49;
+  --color-prettylights-syntax-string-regexp: #22863a;
+  --color-prettylights-syntax-markup-list: #735c0f;
+  --color-prettylights-syntax-markup-heading: #005cc5;
+  --color-prettylights-syntax-markup-italic: #24292e;
+  --color-prettylights-syntax-markup-bold: #24292e;
+  --color-prettylights-syntax-markup-deleted-text: #b31d28;
+  --color-prettylights-syntax-markup-deleted-bg: #ffeef0;
+  --color-prettylights-syntax-markup-inserted-text: #22863a;
+  --color-prettylights-syntax-markup-inserted-bg: #f0fff4;
+  --color-prettylights-syntax-markup-changed-text: #e36209;
+  --color-prettylights-syntax-markup-changed-bg: #ffebda;
+  --color-prettylights-syntax-markup-ignored-text: #f6f8fa;
+  --color-prettylights-syntax-markup-ignored-bg: #005cc5;
+  --color-prettylights-syntax-meta-diff-range: #6f42c1;
+  --color-prettylights-syntax-brackethighlighter-angle: #586069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #e1e4e8;
+  --color-prettylights-syntax-constant-other-reference-link: #032f62;
+  --color-fg-default: #24292e;
+  --color-fg-muted: #586069;
+  --color-fg-subtle: #6a737d;
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #e1e4e8;
+  --color-border-muted: #eaecef;
+  --color-neutral-muted: rgba(175,184,193,0.2);
+  --color-accent-fg: #0366d6;
+  --color-accent-emphasis: #0366d6;
+  --color-attention-subtle: #fff5b1;
+  --color-danger-fg: #d73a49;
+}
+
+/* ===== LIGHT MODE TABLE STYLING ===== */
+/* Table background and border colors */
+.markdown-body table {
+  background-color: var(--table-bg);
+  border-color: var(--border-color);
+}
+
+/* Table row styling */
+.markdown-body table tr {
+  background-color: var(--table-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Alternating row colors for better readability */
+.markdown-body table tr:nth-child(2n) {
+  background-color: var(--bg-color);
+}
+
+/* ===== LIGHT MODE CODE BLOCK STYLING ===== */
+/* Pre-formatted code block backgrounds */
+.markdown-body pre {
+  background-color: var(--code-bg);
+  border-radius: 6px;
+}
+
+/* Inline code styling */
+.markdown-body code {
+  background-color: var(--code-bg);
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+}
+
+/* ===== LINE NUMBERS IN LIGHT MODE ===== */
+/* Numbered code block line indicators */
+.code-block-with-numbers .line-number {
+  
+}

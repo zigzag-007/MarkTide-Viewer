@@ -1,0 +1,176 @@
+/* =================================================================
+   DARK-THEME.CSS - Dark Mode Color Scheme
+   
+   This file contains all the dark theme specific styling:
+   - CSS Custom Properties (variables) for dark mode
+   - Dark mode color applications using [data-theme="dark"] selector
+   - GitHub markdown dark theme integration
+   - Dark mode specific overrides and enhancements
+   ================================================================= */
+
+/* ===== DARK THEME VARIABLES ===== */
+:root[data-theme="dark"] {
+  /* Base colors */
+  --bg-color: #0F1729;
+  --text-color: #E2E8F0;
+  --border-color: #2D3748;
+  --accent-color: #8B7CF8;
+  --accent-color-rgb: 139, 124, 248;
+
+  /* Header colors */
+  --header-bg: #1A1B3A;
+  --header-gradient: #252447;
+  
+  /* Button colors */
+  --button-bg: #2D3748;
+  --button-hover: #4A5568;
+  --button-active: #2C3A47;
+  
+  /* Stats and dropdown backgrounds */
+  --stats-bg: rgba(45, 55, 72, 0.8);
+  --dropdown-bg: rgba(26, 27, 58, 0.95);
+  
+  /* Editor and preview colors */
+  --editor-bg: #1A1B3A;
+  --preview-bg: #0F1729;
+  --preview-text-color: #E2E8F0;
+  
+  /* Scrollbar colors */
+  --scrollbar-track: #2D3748;
+  --scrollbar-thumb: #4A5568;
+  
+  /* Dropzone colors */
+  --dropzone-bg: rgba(26, 27, 58, 0.8);
+  
+  /* Code highlighting */
+  --code-bg: #2D3748;
+  
+  /* Danger colors */
+  --color-danger-fg: #E53E3E;
+}
+
+/* ===== DARK THEME CSS VARIABLES ===== */
+/* Dark theme custom properties - only applied when data-theme="dark" */
+[data-theme="dark"] {
+  --bg-color: #0F1729; /* Deep Navy Blue - User Specified */
+  --editor-bg: #1E293B; /* Dark Slate Blue */
+  --preview-bg: #0F1729; /* Deep Navy Blue */
+  --text-color: #E2E8F0; /* Light Slate Gray - for high contrast */
+  --preview-text-color: #E2E8F0; /* Light Slate Gray */
+  --border-color: #334155; /* Slate Gray - for subtle borders */
+  --header-bg: #1E293B; /* Dark Slate Blue */
+  --button-bg: #4338CA; /* Indigo-600 - Deep, rich purple-blue */
+  --button-hover: #4F46E5; /* Indigo-500 - Brighter for hover */
+  --button-active: #3730A3; /* Indigo-700 - Deeper for active state */
+  --dropzone-bg: rgba(15, 23, 41, 0.8); /* Deep Navy Blue with alpha, matches new --bg-color */
+  --scrollbar-thumb: #475569; /* Slate Gray - for scrollbar */
+  --scrollbar-track: #1E293B; /* Dark Slate Blue */
+  --accent-color: #7C3AED; /* Purple-600 - Vibrant purple for highlights */
+  --table-bg: #1E293B; /* Dark Slate Blue */
+  --code-bg: #1E293B; /* Dark Slate Blue - same as editor for integrated look */
+}
+
+/* ===== DARK MODE LINE NUMBERS ===== */
+/* Purple accent border for line numbers in dark mode */
+[data-theme="dark"] .line-numbers {
+  border-right: 3px solid var(--accent-color); /* Use dark theme accent color */
+}
+
+/* ===== GITHUB MARKDOWN DARK THEME ===== */
+/* GitHub's official dark mode syntax highlighting */
+[data-theme="dark"] .markdown-body {
+  color-scheme: dark;
+  --color-prettylights-syntax-comment: #8b949e;
+  --color-prettylights-syntax-constant: #79c0ff;
+  --color-prettylights-syntax-entity: #d2a8ff;
+  --color-prettylights-syntax-storage-modifier-import: #c9d1d9;
+  --color-prettylights-syntax-entity-tag: #7ee787;
+  --color-prettylights-syntax-keyword: #ff7b72;
+  --color-prettylights-syntax-string: #a5d6ff;
+  --color-prettylights-syntax-variable: #ffa657;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+  --color-prettylights-syntax-invalid-illegal-text: #f0f6fc;
+  --color-prettylights-syntax-invalid-illegal-bg: #8e1519;
+  --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+  --color-prettylights-syntax-carriage-return-bg: #b62324;
+  --color-prettylights-syntax-string-regexp: #7ee787;
+  --color-prettylights-syntax-markup-list: #f2cc60;
+  --color-prettylights-syntax-markup-heading: #1f6feb;
+  --color-prettylights-syntax-markup-italic: #c9d1d9;
+  --color-prettylights-syntax-markup-bold: #c9d1d9;
+  --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+  --color-prettylights-syntax-markup-deleted-bg: #67060c;
+  --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+  --color-prettylights-syntax-markup-inserted-bg: #033a16;
+  --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+  --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+  --color-prettylights-syntax-markup-ignored-text: #c9d1d9;
+  --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+  --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+  --color-prettylights-syntax-brackethighlighter-angle: #8b949e;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #484f58;
+  --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+  --color-fg-default: #c9d1d9;
+  --color-fg-muted: #8b949e;
+  --color-fg-subtle: #484f58;
+  --color-canvas-default: #0d1117;
+  --color-canvas-subtle: #161b22;
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+  --color-neutral-muted: rgba(110,118,129,0.4);
+  --color-accent-fg: #58a6ff;
+  --color-accent-emphasis: #1f6feb;
+  --color-attention-subtle: rgba(187,128,9,0.15);
+  --color-danger-fg: #f85149;
+}
+
+/* ===== DARK MODE TABLE STYLING ===== */
+/* Table styling overrides for dark mode */
+[data-theme="dark"] .markdown-body table tr {
+  background-color: var(--table-bg);
+}
+
+/* Alternating row colors for dark mode tables */
+[data-theme="dark"] .markdown-body table tr:nth-child(2n) {
+  background-color: #25334a; /* Slightly lighter version of editor-bg for dark mode table stripes */
+}
+
+/* ===== DARK MODE CODE BLOCK STYLING ===== */
+/* Pre-formatted code block backgrounds in dark mode */
+[data-theme="dark"] .markdown-body pre {
+  background-color: var(--code-bg);
+}
+
+/* Inline code styling for dark mode */
+[data-theme="dark"] .markdown-body code {
+  background-color: var(--code-bg);
+}
+
+/* Syntax highlighting text color */
+[data-theme="dark"] .hljs {
+  color: #e8eaed;
+}
+
+
+/* ===== DARK MODE LINE NUMBERS IN CODE BLOCKS ===== */
+/* Line number styling for numbered code blocks */
+[data-theme="dark"] .code-block-with-numbers .line-number {
+  border-right-color: var(--border-color);
+  background-color: var(--code-bg);
+}
+
+/* ===== DARK MODE HEADER ELEMENTS ===== */
+/* App header title color in dark mode */
+[data-theme="dark"] .app-header .h4 {
+  color: var(--text-color); /* Use dark theme text color for MarkFlow Viewer title */
+}
+
+/* GitHub link color in dark mode */
+[data-theme="dark"] .app-header .github-link {
+  color: var(--text-color); /* Use dark theme text color for GitHub icon */
+}
+
+/* GitHub link hover state in dark mode */
+[data-theme="dark"] .app-header .github-link:hover {
+  color: var(--accent-color); /* Use dark theme accent color for GitHub icon on hover */
+}
