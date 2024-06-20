@@ -57,11 +57,11 @@ class UndoRedoManager {
     this.markdownEditor.scrollTop = state.scrollTop;
     
     // Update line numbers and render
-    if (window.MarkFlowEditor && window.MarkFlowEditor.updateLineNumbers) {
-      window.MarkFlowEditor.updateLineNumbers();
+    if (window.MarkTideEditor && window.MarkTideEditor.updateLineNumbers) {
+      window.MarkTideEditor.updateLineNumbers();
     }
-    if (window.MarkFlowRenderer && window.MarkFlowRenderer.debouncedRender) {
-      window.MarkFlowRenderer.debouncedRender();
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
     }
   }
 
@@ -91,4 +91,4 @@ class UndoRedoManager {
 }
 
 // Create global instance
-window.MarkFlowUndoRedo = new UndoRedoManager();
+window.MarkTideUndoRedo = new UndoRedoManager();

@@ -51,4 +51,4 @@ class MobileMenuManager {
 }
 
 // Create global instance
-window.MarkFlowMobileMenu = new MobileMenuManager();
+window.MarkTideMobileMenu = new MobileMenuManager();

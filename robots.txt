@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://zigzag-007.github.io/MarkFlow-Viewer/sitemap.xml
+Sitemap: https://marktide.netlify.app/sitemap.xml
 
 # Additional URLs to crawl
 Crawl-delay: 1 

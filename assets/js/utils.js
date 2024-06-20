@@ -135,11 +135,10 @@ function preventDefaults(e) {
   e.stopPropagation();
 }
 
-// Export functions for use in other modules
-window.MarkFlowUtils = {
-  processEmojis,
+// Export utilities to global scope
+window.MarkTideUtils = {
   updateDocumentStats,
   copyToClipboard,
   showCopiedMessage,
-  preventDefaults
+  processEmojis
 };

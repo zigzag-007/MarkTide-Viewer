@@ -1,5 +1,5 @@
 /* =================================================================
-   BASE.CSS - Foundation Styles for MarkFlow Viewer
+   BASE.CSS - Foundation Styles for MarkTide Viewer
    
    This file contains all the base styles that are theme-independent:
    - CSS Reset and universal styles
@@ -546,6 +546,11 @@ body {
   max-width: 980px;
   margin: 0 auto;
   padding: 45px;
+}
+
+/* Fix for transparent images - override github-markdown-css background */
+.markdown-body img {
+  background-color: transparent !important;
 }
 
 /* ===== SCROLLBAR CUSTOMIZATION ===== */

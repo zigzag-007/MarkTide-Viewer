@@ -95,4 +95,4 @@ class MermaidHandler {
 }
 
 // Create global instance
-window.MarkFlowMermaid = new MermaidHandler();
+window.MarkTideMermaid = new MermaidHandler();

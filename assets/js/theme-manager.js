@@ -11,17 +11,14 @@ class ThemeManager {
     this.themeToggle = document.getElementById("theme-toggle");
     this.mobileThemeToggle = document.getElementById("mobile-theme-toggle");
     
-    // load saved theme from localStorage or use system preference
-    const savedTheme = localStorage.getItem('markflow-theme');
-    const prefersDarkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Load saved theme or default to dark
+    const savedTheme = localStorage.getItem('marktide-theme');
+    this.currentTheme = savedTheme || 'dark';
     
-    this.currentTheme = savedTheme || (prefersDarkMode ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    // Apply initial theme
+    this.applyTheme(this.currentTheme);
     
-    this.updateHighlightTheme();
-    this.updateThemeButtons();
-    
-    // set up event listeners
+    // Set up event listeners
     if (this.themeToggle) {
       this.themeToggle.addEventListener("click", () => this.toggleTheme());
     }
@@ -31,20 +28,27 @@ class ThemeManager {
     }
   }
 
+  applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    this.currentTheme = theme;
+    
+    // Save to localStorage
+    localStorage.setItem('marktide-theme', this.currentTheme);
+    
+    // Update highlight.js theme
+    this.updateHighlightTheme();
+    
+    // Re-render markdown to apply new theme
+    if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
+      window.MarkTideRenderer.renderMarkdown();
+    }
+  }
+
   toggleTheme() {
     this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    this.applyTheme(this.currentTheme);
     
-    // save theme preference
-    localStorage.setItem('markflow-theme', this.currentTheme);
-    
-    this.updateHighlightTheme();
     this.updateThemeButtons();
-    
-    // re-render markdown to apply theme changes
-    if (window.MarkFlowRenderer && window.MarkFlowRenderer.renderMarkdown) {
-      window.MarkFlowRenderer.renderMarkdown();
-    }
   }
 
   updateThemeButtons() {
@@ -89,4 +93,4 @@ class ThemeManager {
 }
 
 // Create global instance
-window.MarkFlowTheme = new ThemeManager();
+window.MarkTideTheme = new ThemeManager();

@@ -1,455 +1,281 @@
-// Core initialization and main application setup
-
-class MarkFlowCore {
+// Core application initialization and management
+class MarkTideCore {
   constructor() {
     this.initialized = false;
+    this.markdownEditor = null;
   }
 
   init() {
     if (this.initialized) return;
 
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.initializeApp());
-    } else {
-      this.initializeApp();
+    try {
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.initializeApp());
+      } else {
+        this.initializeApp();
+      }
+    } catch (error) {
+      console.error('Failed to initialize MarkTide Viewer:', error);
     }
   }
 
   initializeApp() {
-    // Initialize all modules
-    this.initializeModules();
-    
-    // Set up formatting toolbar
-    this.setupFormattingToolbar();
-    
-    // Set up export buttons
-    this.setupExportButtons();
-    
-    // Set up fullscreen functionality
-    this.setupFullscreen();
-    
-    // Load sample content
-    this.loadSampleContent();
-    
-    // Initial render
-    this.performInitialRender();
-    
-    // Set up editor event listeners
-    this.setupEditorEventListeners();
-    
-    this.initialized = true;
+    try {
+      // Get markdown editor reference
+      this.markdownEditor = document.getElementById("markdown-editor");
+      
+      if (!this.markdownEditor) {
+        console.error('Markdown editor element not found');
+        return;
+      }
+
+      // Initialize theme first (affects other components)
+      this.initializeTheme();
+      
+      // Initialize core modules in dependency order
+      this.initializeModules();
+      
+      // Set up formatting toolbar
+      this.setupFormattingToolbar();
+      
+      // Set up event listeners
+      this.setupEventListeners();
+      
+      // Load sample content
+      this.loadSampleContent();
+      
+      this.initialized = true;
+      console.log('MarkTide Viewer initialized successfully');
+      
+    } catch (error) {
+      console.error('Failed to initialize application:', error);
+    }
   }
 
   initializeModules() {
-    // Initialize all MarkFlow modules
-    if (window.MarkFlowTheme) window.MarkFlowTheme.init();
-    if (window.MarkFlowMermaid) window.MarkFlowMermaid.initMermaid();
-    if (window.MarkFlowRenderer) window.MarkFlowRenderer.init();
-    if (window.MarkFlowEditor) window.MarkFlowEditor.init(document.getElementById("markdown-editor"));
-    if (window.MarkFlowUndoRedo) window.MarkFlowUndoRedo.init(document.getElementById("markdown-editor"));
-    if (window.MarkFlowScrollSync) window.MarkFlowScrollSync.init();
-    if (window.MarkFlowViewManager) window.MarkFlowViewManager.init();
-    if (window.MarkFlowImportExport) window.MarkFlowImportExport.init();
-    if (window.MarkFlowPrintHandler) window.MarkFlowPrintHandler.init();
-    if (window.MarkFlowMobileMenu) window.MarkFlowMobileMenu.init();
-    if (window.MarkFlowKeyboardShortcuts) window.MarkFlowKeyboardShortcuts.init();
+    // Initialize all MarkTide modules
+    if (window.MarkTideTheme) window.MarkTideTheme.init();
+    if (window.MarkTideMermaid) window.MarkTideMermaid.initMermaid();
+    if (window.MarkTideRenderer) window.MarkTideRenderer.init();
+    if (window.MarkTideEditor) window.MarkTideEditor.init(document.getElementById("markdown-editor"));
+    if (window.MarkTideUndoRedo) window.MarkTideUndoRedo.init(document.getElementById("markdown-editor"));
+    if (window.MarkTideScrollSync) window.MarkTideScrollSync.init();
+    if (window.MarkTideViewManager) window.MarkTideViewManager.init();
+    if (window.MarkTideImportExport) window.MarkTideImportExport.init();
+    if (window.MarkTidePrintHandler) window.MarkTidePrintHandler.init();
+    if (window.MarkTideMobileMenu) window.MarkTideMobileMenu.init();
+    if (window.MarkTideKeyboardShortcuts) window.MarkTideKeyboardShortcuts.init();
   }
 
   setupFormattingToolbar() {
-    // Formatting toolbar event listeners
     const formatButtons = [
-      { id: 'format-h1', action: () => window.MarkFlowEditor.insertAtLineStart('# ') },
-      { id: 'format-h2', action: () => window.MarkFlowEditor.insertAtLineStart('## ') },
-      { id: 'format-h3', action: () => window.MarkFlowEditor.insertAtLineStart('### ') },
-      { id: 'format-bold', action: () => window.MarkFlowEditor.wrapText('**', '**') },
-      { id: 'format-italic', action: () => window.MarkFlowEditor.wrapText('*', '*') },
-      { id: 'format-code', action: () => window.MarkFlowEditor.wrapText('`', '`') },
-      { id: 'format-quote', action: () => window.MarkFlowEditor.insertAtLineStart('> ') },
-      { id: 'format-ul', action: () => window.MarkFlowEditor.insertAtLineStart('- ') },
-      { id: 'format-ol', action: () => window.MarkFlowEditor.insertAtLineStart('1. ') },
-      { id: 'format-linebreak', action: () => window.MarkFlowEditor.insertText('---\n') },
-      { id: 'format-undo', action: () => window.MarkFlowUndoRedo.undoAction() },
-      { id: 'format-redo', action: () => window.MarkFlowUndoRedo.redoAction() },
-      { id: 'format-upload', action: () => {
-        const fileInput = document.getElementById('file-input');
-        if (fileInput) {
-          fileInput.click();
-        }
-      }}
+      { id: 'format-h1', action: () => window.MarkTideEditor.insertAtLineStart('# ') },
+      { id: 'format-h2', action: () => window.MarkTideEditor.insertAtLineStart('## ') },
+      { id: 'format-h3', action: () => window.MarkTideEditor.insertAtLineStart('### ') },
+      { id: 'format-bold', action: () => window.MarkTideEditor.wrapText('**', '**') },
+      { id: 'format-italic', action: () => window.MarkTideEditor.wrapText('*', '*') },
+      { id: 'format-code', action: () => window.MarkTideEditor.wrapText('`', '`') },
+      { id: 'format-quote', action: () => window.MarkTideEditor.insertAtLineStart('> ') },
+      { id: 'format-ul', action: () => window.MarkTideEditor.insertAtLineStart('- ') },
+      { id: 'format-ol', action: () => window.MarkTideEditor.insertAtLineStart('1. ') },
+      { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('---\n') },
+      { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
+      { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() },
+      { id: 'format-upload', action: () => document.getElementById('file-input').click() }
     ];
 
-    formatButtons.forEach(button => {
-      const element = document.getElementById(button.id);
-      if (element) {
-        element.addEventListener('click', button.action);
-      }
-    });
-  }
-
-  setupExportButtons() {
-    // set up toolbar export buttons to trigger header export buttons
-    const toolbarExportButtons = [
-      { toolbarId: 'toolbar-export-markdown', headerId: 'export-markdown' },
-      { toolbarId: 'toolbar-export-html', headerId: 'export-html' },
-      { toolbarId: 'toolbar-export-txt', headerId: 'export-txt' },
-      { toolbarId: 'toolbar-export-pdf', headerId: 'export-pdf' }
-    ];
-
-    toolbarExportButtons.forEach(button => {
-      const toolbarElement = document.getElementById(button.toolbarId);
-      const headerElement = document.getElementById(button.headerId);
-      
-      if (toolbarElement && headerElement) {
-        toolbarElement.addEventListener('click', (e) => {
+    formatButtons.forEach(({ id, action }) => {
+      const button = document.getElementById(id);
+      if (button) {
+        button.addEventListener('click', (e) => {
           e.preventDefault();
-          headerElement.click();
+          action();
         });
       }
     });
   }
 
-  setupFullscreen() {
-    const fullscreenButton = document.getElementById('format-fullscreen');
-    if (fullscreenButton) {
-      fullscreenButton.addEventListener('click', this.toggleFullscreen);
-    }
-
-    // Listen for fullscreen changes (e.g., when ESC is pressed)
-    document.addEventListener('fullscreenchange', () => {
-      const fullscreenButton = document.getElementById('format-fullscreen');
-      if (fullscreenButton && !document.fullscreenElement) {
-        fullscreenButton.innerHTML = '<i class="bi bi-fullscreen"></i>';
-        fullscreenButton.title = 'Toggle Fullscreen';
-      }
-    });
-  }
-
-  toggleFullscreen() {
-    const fullscreenButton = document.getElementById('format-fullscreen');
-    
-    if (!document.fullscreenElement) {
-      // Enter fullscreen
-      document.documentElement.requestFullscreen().then(() => {
-        fullscreenButton.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
-        fullscreenButton.title = 'Exit Fullscreen';
-      }).catch(err => {
-        console.warn('Could not enter fullscreen:', err);
-      });
-    } else {
-      // Exit fullscreen
-      document.exitFullscreen().then(() => {
-        fullscreenButton.innerHTML = '<i class="bi bi-fullscreen"></i>';
-        fullscreenButton.title = 'Toggle Fullscreen';
-      }).catch(err => {
-        console.warn('Could not exit fullscreen:', err);
-      });
-    }
+  initializeTheme() {
+    // Apply saved theme or default
+    const savedTheme = localStorage.getItem('marktide-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }
 
   loadSampleContent() {
-    const sampleMarkdown = `# 🚀 Welcome to MarkFlow Viewer
+    if (!this.markdownEditor || this.markdownEditor.value.trim()) return;
 
-> **The Ultimate Markdown Editor** - Where creativity meets simplicity in perfect harmony.
+    const sampleMarkdown = `# 🚀 Welcome to MarkTide Viewer
 
----
+> **The Ultimate Free Online Markdown Editor** - Where creativity meets simplicity in perfect harmony.
 
-## 📋 Table of Contents
+## 🌟 What is MarkTide Viewer?
 
-1. [Introduction](#introduction)
-2. [Core Features](#core-features)
-3. [Markdown Showcase](#markdown-showcase)
-4. [Code Examples](#code-examples)
-5. [Advanced Features](#advanced-features)
-6. [Tips & Tricks](#tips-tricks)
-7. [Keyboard Shortcuts](#keyboard-shortcuts)
+MarkTide Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
 
----
+### 🎯 Perfect For:
 
-## Introduction
+- **Developers** writing documentation
+- **Students** creating notes and assignments  
+- **Writers** drafting articles and blogs
+- **Technical writers** creating manuals
+- **GitHub users** previewing README files
+- **Anyone** who needs to convert Markdown to PDF or HTML
 
-Welcome to **MarkFlow Viewer**, your comprehensive markdown editing solution! This powerful editor combines intuitive design with advanced features to create the perfect writing environment for developers, writers, and content creators.
+## ✨ Key Features
 
-### Why Choose MarkFlow?
+### 📝 **Markdown Editor**
 
-- ✨ **Real-time Preview** - See your changes instantly
-- 🎨 **Beautiful Themes** - Light and dark modes for comfortable editing
-- 💾 **Multiple Export Options** - PDF, HTML, and Markdown formats
-- ⚡ **Lightning Fast** - Optimized performance for large documents
-- 📱 **Responsive Design** - Works seamlessly on all devices
+- Real-time live preview
+- Syntax highlighting with 190+ programming languages
+- Line numbers and formatting toolbar
+- Drag & drop file support
+- Auto-save functionality
 
----
+### 🔄 **Format Conversion**
 
-## Core Features
+- **Markdown to PDF** - Professional document export
+- **Markdown to HTML** - Web-ready conversion
+- **Markdown to Text** - Plain text extraction
+- **GitHub-flavored Markdown** support
 
-### 1. **Rich Text Formatting**
+### 🎨 **User Experience**
 
-Transform your plain text into beautifully formatted documents with ease:
+- Beautiful dark & light themes
+- Responsive design (works on mobile, tablet, desktop)
+- Split-screen editor and preview
+- Scroll synchronization
+- Keyboard shortcuts for power users
 
-**Bold text** makes your important points stand out, while *italic text* adds emphasis with elegance. You can even combine them for ***bold italic*** impact!
+### 🚀 **Advanced Features**
 
-Need to ~~strike through~~ outdated information? We've got you covered. Want to highlight \`inline code\`? Just wrap it in backticks!
+- Mermaid diagram support
+- Mathematical expressions (LaTeX)
+- Tables, task lists, and code blocks
+- Emoji support
+- Print-friendly layouts
 
-### 2. **Lists & Organization**
+## 🚀 Quick Start
 
-#### Unordered Lists
-- 🎯 Clean and organized structure
-- 🔧 Easy to create and maintain
-- 📊 Perfect for brainstorming
-  - Nested items for hierarchy
-  - Multiple levels supported
-    - As deep as you need
+1. **Start typing** or **drag & drop** your \`.md\` file
+2. **See live preview** in real-time
+3. **Export** to PDF, HTML, or Text when ready
 
-#### Ordered Lists
-1. Step-by-step instructions
-2. Sequential processes
-3. Ranked items
-   1. Sub-steps with clarity
-   2. Detailed breakdowns
-      1. Even more detail when needed
+No installation needed - works instantly in any modern web browser!
 
-#### Task Lists
-- [x] Complete markdown support
-- [x] Real-time preview
-- [x] Export functionality
-- [ ] Share your amazing documents
-- [ ] Collaborate with others
+## 🎯 Use Cases
 
-### 3. **Blockquotes & Callouts**
-
-> "The best way to predict the future is to create it."
-> 
-> This editor helps you create beautiful documents that stand out from the crowd.
-
-> **💡 Pro Tip:** Use blockquotes to highlight important information or memorable quotes!
-
----
-
-## Markdown Showcase
-
-### Tables Made Simple
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Syntax Highlighting** | Beautiful code coloring | ✅ Active |
-| **Live Preview** | Real-time rendering | ✅ Active |
-| **Export Options** | PDF, HTML, Markdown | ✅ Active |
-| **Theme Support** | Light & Dark modes | ✅ Active |
-| **Mobile Responsive** | Works on all devices | ✅ Active |
-
-### Mathematical Expressions
-
-MarkFlow supports both inline math like $E = mc^2$ and display math:
-
-$$\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
-
-Complex equations? No problem:
-
-$$\\nabla \\times \\vec{\\mathbf{B}} - \\frac{1}{c} \\frac{\\partial\\vec{\\mathbf{E}}}{\\partial t} = \\frac{4\\pi}{c}\\vec{\\mathbf{j}}$$
-
----
-
-## Code Examples
-
-### Java Excellence
-
-\`\`\`java
-public class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello World!");
-        // Brought to you by Zig Zag
-    }
-}
+### For Developers
+\`\`\`markdown
+# Project Documentation
+- API documentation
+- README files
+- Code documentation
+- Technical specifications
 \`\`\`
 
-### Python Excellence
-
-\`\`\`python
-print("Hello World!")
-# Brought to you by Zig Zag
+### For Students & Academics
+\`\`\`markdown
+# Academic Work
+- Research papers
+- Study notes  
+- Assignment reports
+- Thesis drafts
 \`\`\`
 
-### HTML & CSS Styling
-
-\`\`\`html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>MarkFlow Export</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; }
-        h1 { color: #333; border-bottom: 2px solid #eee; }
-    </style>
-</head>
-<body>
-    <h1>Your Content Here</h1>
-</body>
-</html>
+### For Content Creators
+\`\`\`markdown
+# Content Creation
+- Blog posts
+- Articles
+- Documentation
+- User manuals
 \`\`\`
 
-
-## Advanced Features
-
-### 1. Mermaid Diagrams
+## 📊 Example Mermaid Diagram
 
 \`\`\`mermaid
 graph TD
-    A[Start Editing] --> B{Choose Mode}
-    B -->|Light| C[Light Theme]
-    B -->|Dark| D[Dark Theme]
-    C --> E[Write Content]
-    D --> E[Write Content]
-    E --> F{Export Format}
-    F -->|PDF| G[Download PDF]
-    F -->|HTML| H[Download HTML]
-    F -->|Markdown| I[Download MD]
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+    C --> E[End]
 \`\`\`
 
-### 2. Flowcharts
+## 🧮 Mathematical Expressions
 
-\`\`\`mermaid
-flowchart LR
-    subgraph "MarkFlow Editor"
-        A[Write] --> B[Preview]
-        B --> C[Export]
-    end
+Inline math: $E = mc^2$
+
+Block math:
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+## 📋 Task List Example
+
+- [x] Create awesome markdown editor
+- [x] Add real-time preview
+- [x] Implement export features
+- [ ] Add more themes
+- [ ] Mobile app version
+
+## 📊 Table Example
+
+| Feature | MarkTide Viewer | Other Tools |
+|---------|----------------|-------------|
+| **Free Forever** | ✅ | ❌ (Most charge) |
+| **No Registration** | ✅ | ❌ (Most require signup) |
+| **Works Offline** | ✅ | ❌ (Most need internet) |
+| **Privacy Focused** | ✅ | ❌ (Most track users) |
+
+---
+
+**Ready to get started?** Just start typing above or drag and drop your markdown file! 🚀`;
+
+    this.markdownEditor.value = sampleMarkdown;
     
-    C --> D{Format}
-    D --> E[📄 PDF]
-    D --> F[🌐 HTML]
-    D --> G[📝 Markdown]
+    // Render the sample content
+    if (window.MarkTideRenderer) {
+      window.MarkTideRenderer.renderMarkdown();
+    }
+    if (window.MarkTideUtils) {
+      window.MarkTideUtils.updateDocumentStats();
+    }
+    if (window.MarkTideEditor) {
+      window.MarkTideEditor.updateLineNumbers();
+    }
     
-    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000
-    style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
-\`\`\`
-
-### 3. Horizontal Rules
-
-Create visual separators with style:
-
----
-
-***
-
-___
-
----
-
-## Tips & Tricks
-
-### 🎯 Power User Tips
-
-1. **Quick Formatting**
-   - Use \`Ctrl/Cmd + B\` for **bold**
-   - Use \`Ctrl/Cmd + I\` for *italic*
-   - Use \`Ctrl/Cmd + K\` for [links]()
-
-2. **Efficient Navigation**
-   - Split view for simultaneous editing and preview
-   - Toggle views with keyboard shortcuts
-   - Use the toolbar for quick formatting
-
-3. **Export Mastery**
-   - PDF exports preserve all formatting
-   - HTML exports include embedded styles
-   - Markdown exports maintain compatibility
-
----
-
-## Keyboard Shortcuts
-
-### Essential Shortcuts
-
-| Action | Windows/Linux | macOS |
-|--------|---------------|-------|
-| **Bold** | \`Ctrl + B\` | \`Cmd + B\` |
-| **Italic** | \`Ctrl + I\` | \`Cmd + I\` |
-| **Link** | \`Ctrl + K\` | \`Cmd + K\` |
-| **Code** | \`Ctrl + E\` | \`Cmd + E\` |
-| **Save** | \`Ctrl + S\` | \`Cmd + S\` |
-| **Export** | \`Ctrl + Shift + E\` | \`Cmd + Shift + E\` |
-| **Toggle Preview** | \`Ctrl + P\` | \`Cmd + P\` |
-| **Toggle Theme** | \`Ctrl + T\` | \`Cmd + T\` |
-
----
-
-## 🎉 Start Creating!
-
-You're now ready to create amazing documents with MarkFlow Viewer. Whether you're writing technical documentation, creative content, or academic papers, this editor has everything you need.
-
-### Quick Start Checklist
-
-- [ ] Explore the toolbar options
-- [ ] Try different themes
-- [ ] Test the export features
-- [ ] Create your first document
-
-> **Remember:** The best way to learn is by doing. Start typing and watch your ideas come to life!
-
----
-
-<div align="center">
-
-### 🌟 Happy Writing with MarkFlow Viewer! 🌟
-
-**Built with ❤️ by Zig Zag, for everyone**
-
-</div>
-`;
-
-    const markdownEditor = document.getElementById("markdown-editor");
-    if (markdownEditor) {
-      markdownEditor.value = sampleMarkdown;
+    // Set initial undo state
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.lastSavedState = window.MarkTideUndoRedo.createState();
     }
   }
 
-  performInitialRender() {
-    // Initial render and setup
-    if (window.MarkFlowRenderer) {
-      window.MarkFlowRenderer.renderMarkdown();
-    }
-    if (window.MarkFlowUtils) {
-      window.MarkFlowUtils.updateDocumentStats();
-    }
-    if (window.MarkFlowEditor) {
-      window.MarkFlowEditor.updateLineNumbers();
-    }
+  setupEventListeners() {
+    if (!this.markdownEditor) return;
 
-    // Initialize undo stack with current content
-    if (window.MarkFlowUndoRedo) {
-      window.MarkFlowUndoRedo.lastSavedState = window.MarkFlowUndoRedo.createState();
-    }
-  }
-
-  setupEditorEventListeners() {
-    const markdownEditor = document.getElementById("markdown-editor");
-    if (!markdownEditor) return;
-
-    markdownEditor.addEventListener("input", () => {
-      if (window.MarkFlowRenderer) {
-        window.MarkFlowRenderer.debouncedRender();
+    // Editor input events
+    this.markdownEditor.addEventListener('input', () => {
+      if (window.MarkTideRenderer) {
+        window.MarkTideRenderer.debouncedRender();
       }
     });
 
-    markdownEditor.addEventListener("input", () => {
-      // Save to undo stack on significant changes (more than single character)
-      clearTimeout(window.undoSaveTimeout);
-      window.undoSaveTimeout = setTimeout(() => {
-        if (window.MarkFlowUndoRedo) {
-          window.MarkFlowUndoRedo.saveToUndoStack();
-        }
-      }, 1000);
+    this.markdownEditor.addEventListener('keydown', (e) => {
+      if (window.MarkTideUndoRedo) {
+        window.MarkTideUndoRedo.saveToUndoStack();
+      }
     });
 
-    markdownEditor.addEventListener("scroll", () => {
-      if (window.MarkFlowEditor) {
-        window.MarkFlowEditor.syncLineNumbersScroll();
+    this.markdownEditor.addEventListener('scroll', () => {
+      if (window.MarkTideEditor) {
+        window.MarkTideEditor.syncLineNumbersScroll();
       }
     });
   }
 }
 
 // Initialize the application
-const markFlowApp = new MarkFlowCore();
-markFlowApp.init();
+const markTideApp = new MarkTideCore();
+markTideApp.init();

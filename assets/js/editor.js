@@ -11,8 +11,8 @@ class EditorManager {
 
   // Text manipulation functions
   insertText(text) {
-    if (window.MarkFlowUndoRedo) {
-      window.MarkFlowUndoRedo.saveToUndoStack();
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
     }
     
     const start = this.markdownEditor.selectionStart;
@@ -23,14 +23,14 @@ class EditorManager {
     this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + text.length;
     this.markdownEditor.focus();
     
-    if (window.MarkFlowRenderer && window.MarkFlowRenderer.debouncedRender) {
-      window.MarkFlowRenderer.debouncedRender();
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
     }
   }
 
   wrapText(prefix, suffix = '') {
-    if (window.MarkFlowUndoRedo) {
-      window.MarkFlowUndoRedo.saveToUndoStack();
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
     }
     
     const start = this.markdownEditor.selectionStart;
@@ -50,14 +50,14 @@ class EditorManager {
     }
     this.markdownEditor.focus();
     
-    if (window.MarkFlowRenderer && window.MarkFlowRenderer.debouncedRender) {
-      window.MarkFlowRenderer.debouncedRender();
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
     }
   }
 
   insertAtLineStart(prefix) {
-    if (window.MarkFlowUndoRedo) {
-      window.MarkFlowUndoRedo.saveToUndoStack();
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
     }
     
     const start = this.markdownEditor.selectionStart;
@@ -79,8 +79,8 @@ class EditorManager {
     }
     this.markdownEditor.focus();
     
-    if (window.MarkFlowRenderer && window.MarkFlowRenderer.debouncedRender) {
-      window.MarkFlowRenderer.debouncedRender();
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
     }
   }
 
@@ -108,7 +108,58 @@ class EditorManager {
     
     lineNumbersDiv.scrollTop = this.markdownEditor.scrollTop;
   }
+
+  handleInput() {
+    // Save to undo stack periodically
+    clearTimeout(this.undoSaveTimeout);
+    this.undoSaveTimeout = setTimeout(() => {
+      if (window.MarkTideUndoRedo) {
+        window.MarkTideUndoRedo.saveToUndoStack();
+      }
+    }, 1000);
+
+    // Update line numbers
+    this.updateLineNumbers();
+    
+    // Trigger markdown rendering
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
+    }
+    
+    // Save to undo stack on significant changes
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
+    }
+  }
+
+  handleKeydown(e) {
+    // Handle tab key for indentation
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      this.insertText('  '); // Insert 2 spaces
+      
+      // Trigger re-render after tab insertion
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      
+      // Save state for undo
+      if (window.MarkTideUndoRedo) {
+        window.MarkTideUndoRedo.saveToUndoStack();
+      }
+    }
+  }
+
+  handlePaste(e) {
+    // Allow default paste behavior, then trigger re-render
+    setTimeout(() => {
+      this.updateLineNumbers();
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+    }, 10);
+  }
 }
 
 // Create global instance
-window.MarkFlowEditor = new EditorManager();
+window.MarkTideEditor = new EditorManager();
