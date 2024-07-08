@@ -11,9 +11,14 @@ class ThemeManager {
     this.themeToggle = document.getElementById("theme-toggle");
     this.mobileThemeToggle = document.getElementById("mobile-theme-toggle");
     
-    // Load saved theme or default to dark
-    const savedTheme = localStorage.getItem('marktide-theme');
-    this.currentTheme = savedTheme || 'dark';
+    // Load saved theme or detect system theme
+    let savedTheme = localStorage.getItem('marktide-theme');
+    if (!savedTheme) {
+      // Detect system theme
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      savedTheme = prefersDark ? 'dark' : 'light';
+    }
+    this.currentTheme = savedTheme;
     
     // Apply initial theme
     this.applyTheme(this.currentTheme);
@@ -26,6 +31,8 @@ class ThemeManager {
     if (this.mobileThemeToggle) {
       this.mobileThemeToggle.addEventListener("click", () => this.toggleTheme());
     }
+    // Update toggle button label/icon on init
+    this.updateThemeButtons();
   }
 
   applyTheme(theme) {
