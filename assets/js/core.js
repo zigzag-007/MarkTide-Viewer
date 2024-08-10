@@ -79,7 +79,7 @@ class MarkTideCore {
       { id: 'format-quote', action: () => window.MarkTideEditor.insertAtLineStart('> ') },
       { id: 'format-ul', action: () => window.MarkTideEditor.insertAtLineStart('- ') },
       { id: 'format-ol', action: () => window.MarkTideEditor.insertAtLineStart('1. ') },
-      { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('---\n') },
+      { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
       { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
       { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() },
       { id: 'format-upload', action: () => document.getElementById('file-input').click() },
