@@ -14,6 +14,10 @@ class PrintHandler {
   }
 
   printPreview() {
+    // Store original title and set a shorter one for PDF export
+    const originalTitle = document.title;
+    document.title = "MarkTide Document";
+    
     const markdownEditor = document.getElementById("markdown-editor");
     const markdown = markdownEditor.value;
     const html = marked.parse(markdown);
@@ -41,7 +45,7 @@ class PrintHandler {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Markdown Print</title>
+  <title>MarkTide Document</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
   <style>
@@ -414,9 +418,10 @@ class PrintHandler {
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
                 
-                // Clean up the iframe after printing
+                // Clean up the iframe after printing and restore title
                 setTimeout(function() {
                   document.body.removeChild(printFrame);
+                  document.title = originalTitle; // Restore original title
                 }, 500);
               }, 300);
             }).catch((err) => {
@@ -428,6 +433,7 @@ class PrintHandler {
                 
                 setTimeout(function() {
                   document.body.removeChild(printFrame);
+                  document.title = originalTitle; // Restore original title
                 }, 500);
               }, 300);
             });
@@ -440,6 +446,7 @@ class PrintHandler {
               
               setTimeout(function() {
                 document.body.removeChild(printFrame);
+                document.title = originalTitle; // Restore original title
               }, 500);
             }, 300);
           }
@@ -451,6 +458,7 @@ class PrintHandler {
             
             setTimeout(function() {
               document.body.removeChild(printFrame);
+              document.title = originalTitle; // Restore original title
             }, 500);
           }, 300);
         }
