@@ -82,7 +82,8 @@ class MarkTideCore {
       { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('---\n') },
       { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
       { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() },
-      { id: 'format-upload', action: () => document.getElementById('file-input').click() }
+      { id: 'format-upload', action: () => document.getElementById('file-input').click() },
+      { id: 'format-fullscreen', action: () => this.toggleFullscreen() }
     ];
 
     formatButtons.forEach(({ id, action }) => {
@@ -273,6 +274,48 @@ $$
         window.MarkTideEditor.syncLineNumbersScroll();
       }
     });
+
+    // Handle fullscreen changes (including ESC key)
+    document.addEventListener('fullscreenchange', () => {
+      const fullscreenBtn = document.getElementById('format-fullscreen');
+      if (fullscreenBtn) {
+        if (document.fullscreenElement) {
+          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+          fullscreenBtn.title = 'Exit Fullscreen';
+        } else {
+          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+          fullscreenBtn.title = 'Toggle Fullscreen';
+        }
+      }
+    });
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      // Enter fullscreen
+      document.documentElement.requestFullscreen().then(() => {
+        // Update button icon to exit fullscreen
+        const fullscreenBtn = document.getElementById('format-fullscreen');
+        if (fullscreenBtn) {
+          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+          fullscreenBtn.title = 'Exit Fullscreen';
+        }
+      }).catch(err => {
+        console.warn('Error attempting to enable fullscreen:', err);
+      });
+    } else {
+      // Exit fullscreen
+      document.exitFullscreen().then(() => {
+        // Update button icon back to fullscreen
+        const fullscreenBtn = document.getElementById('format-fullscreen');
+        if (fullscreenBtn) {
+          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+          fullscreenBtn.title = 'Toggle Fullscreen';
+        }
+      }).catch(err => {
+        console.warn('Error attempting to exit fullscreen:', err);
+      });
+    }
   }
 }
 
