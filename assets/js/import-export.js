@@ -69,8 +69,8 @@ class ImportExportManager {
       copyMarkdownButton.addEventListener("click", () => {
         try {
           const markdownText = this.markdownEditor.value;
-          if (window.MarkFlowUtils && window.MarkFlowUtils.copyToClipboard) {
-            window.MarkFlowUtils.copyToClipboard(markdownText);
+          if (window.MarkTideUtils && window.MarkTideUtils.copyToClipboard) {
+            window.MarkTideUtils.copyToClipboard(markdownText);
           }
         } catch (e) {
           console.error("Copy failed:", e);
@@ -202,8 +202,8 @@ class ImportExportManager {
     const reader = new FileReader();
     reader.onload = (e) => {
       this.markdownEditor.value = e.target.result;
-      if (window.MarkFlowRenderer && window.MarkFlowRenderer.renderMarkdown) {
-        window.MarkFlowRenderer.renderMarkdown();
+      if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
+        window.MarkTideRenderer.renderMarkdown();
       }
       this.dropzone.style.display = "none";
     };
@@ -321,6 +321,11 @@ class ImportExportManager {
         mjx-math {
             color: #E2E8F0 !important;
         }
+        
+        /* Fix for transparent images - override github-markdown-css background */
+        .markdown-body img {
+            background-color: transparent !important;
+        }
     ` : `
         body { 
             box-sizing: border-box;
@@ -405,6 +410,11 @@ class ImportExportManager {
         
         mjx-math {
             color: #24292e !important;
+        }
+        
+        /* Fix for transparent images - override github-markdown-css background */
+        .markdown-body img {
+            background-color: transparent !important;
         }
     `;
     
@@ -555,11 +565,11 @@ class ImportExportManager {
 
   exportAsPDF() {
     // Use the existing print functionality but save as PDF
-    if (window.MarkFlowPrintHandler && window.MarkFlowPrintHandler.printPreview) {
-      window.MarkFlowPrintHandler.printPreview();
+    if (window.MarkTidePrintHandler && window.MarkTidePrintHandler.printPreview) {
+      window.MarkTidePrintHandler.printPreview();
     }
   }
 }
 
 // Create global instance
-window.MarkFlowImportExport = new ImportExportManager();
+window.MarkTideImportExport = new ImportExportManager();

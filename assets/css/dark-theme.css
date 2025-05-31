@@ -162,7 +162,7 @@
 /* ===== DARK MODE HEADER ELEMENTS ===== */
 /* App header title color in dark mode */
 [data-theme="dark"] .app-header .h4 {
-  color: var(--text-color); /* Use dark theme text color for MarkFlow Viewer title */
+  color: var(--text-color); /* Use dark theme text color for MarkTide Viewer title */
 }
 
 /* GitHub link color in dark mode */

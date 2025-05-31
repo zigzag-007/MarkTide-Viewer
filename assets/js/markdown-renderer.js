@@ -91,14 +91,14 @@ class MarkdownRenderer {
         }
       });
 
-      if (window.MarkFlowUtils && window.MarkFlowUtils.processEmojis) {
-        window.MarkFlowUtils.processEmojis(this.markdownPreview);
+      if (window.MarkTideUtils && window.MarkTideUtils.processEmojis) {
+        window.MarkTideUtils.processEmojis(this.markdownPreview);
       }
       
       // Reinitialize mermaid with current theme before rendering diagrams
-      if (window.MarkFlowMermaid) {
-        window.MarkFlowMermaid.initMermaid();
-        window.MarkFlowMermaid.renderDiagrams(this.markdownPreview);
+      if (window.MarkTideMermaid) {
+        window.MarkTideMermaid.initMermaid();
+        window.MarkTideMermaid.renderDiagrams(this.markdownPreview);
       }
       
       if (window.MathJax) {
@@ -111,8 +111,8 @@ class MarkdownRenderer {
         }
       }
 
-      if (window.MarkFlowUtils && window.MarkFlowUtils.updateDocumentStats) {
-        window.MarkFlowUtils.updateDocumentStats();
+      if (window.MarkTideUtils && window.MarkTideUtils.updateDocumentStats) {
+        window.MarkTideUtils.updateDocumentStats();
       }
     } catch (e) {
       console.error("Markdown rendering failed:", e);
@@ -127,12 +127,12 @@ class MarkdownRenderer {
     clearTimeout(this.markdownRenderTimeout);
     this.markdownRenderTimeout = setTimeout(() => {
       this.renderMarkdown();
-      if (window.MarkFlowEditor && window.MarkFlowEditor.updateLineNumbers) {
-        window.MarkFlowEditor.updateLineNumbers();
+      if (window.MarkTideEditor && window.MarkTideEditor.updateLineNumbers) {
+        window.MarkTideEditor.updateLineNumbers();
       }
     }, this.RENDER_DELAY);
   }
 }
 
 // Create global instance
-window.MarkFlowRenderer = new MarkdownRenderer();
+window.MarkTideRenderer = new MarkdownRenderer();

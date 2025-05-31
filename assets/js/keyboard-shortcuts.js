@@ -30,20 +30,20 @@ class KeyboardShortcutManager {
           break;
         case 'z':
           e.preventDefault();
-          if (window.MarkFlowUndoRedo) {
-            window.MarkFlowUndoRedo.undoAction();
+          if (window.MarkTideUndoRedo) {
+            window.MarkTideUndoRedo.undoAction();
           }
           break;
         case 'y':
           e.preventDefault();
-          if (window.MarkFlowUndoRedo) {
-            window.MarkFlowUndoRedo.redoAction();
+          if (window.MarkTideUndoRedo) {
+            window.MarkTideUndoRedo.redoAction();
           }
           break;
         case 's':
           e.preventDefault();
-          if (window.MarkFlowImportExport) {
-            window.MarkFlowImportExport.downloadMarkdown();
+          if (window.MarkTideImportExport) {
+            window.MarkTideImportExport.downloadMarkdown();
           }
           break;
         case 'c':
@@ -61,14 +61,14 @@ class KeyboardShortcutManager {
       switch(e.key) {
         case 'Z':
           e.preventDefault();
-          if (window.MarkFlowUndoRedo) {
-            window.MarkFlowUndoRedo.redoAction();
+          if (window.MarkTideUndoRedo) {
+            window.MarkTideUndoRedo.redoAction();
           }
           break;
         case 'S':
           e.preventDefault();
-          if (window.MarkFlowScrollSync) {
-            window.MarkFlowScrollSync.toggleSyncScrolling();
+          if (window.MarkTideScrollSync) {
+            window.MarkTideScrollSync.toggleSyncScrolling();
           }
           break;
       }
@@ -77,4 +77,4 @@ class KeyboardShortcutManager {
 }
 
 // Create global instance
-window.MarkFlowKeyboardShortcuts = new KeyboardShortcutManager();
+window.MarkTideKeyboardShortcuts = new KeyboardShortcutManager();

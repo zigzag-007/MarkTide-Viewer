@@ -41,6 +41,31 @@ class ViewManager {
     }
   }
 
+  // Check if we're in mobile/tablet layout (1080px and below)
+  isMobileLayout() {
+    return window.innerWidth <= 1080;
+  }
+
+  // Clear all inline styles to let CSS take control
+  clearInlineStyles() {
+    const editorPane = document.querySelector(".editor-pane");
+    const previewPane = document.querySelector(".preview-pane");
+    
+    if (editorPane) {
+      editorPane.style.display = '';
+      editorPane.style.flex = '';
+      editorPane.style.width = '';
+      editorPane.style.height = '';
+    }
+    
+    if (previewPane) {
+      previewPane.style.display = '';
+      previewPane.style.flex = '';
+      previewPane.style.width = '';
+      previewPane.style.height = '';
+    }
+  }
+
   updateMobileButtons() {
     // Sync mobile buttons with desktop buttons
     // Mobile buttons show text, desktop buttons only show icons
@@ -88,31 +113,51 @@ class ViewManager {
     const isEditorVisible = editorPane.style.display !== 'none';
     const isPreviewVisible = previewPane.style.display !== 'none';
     
-    if (!isEditorVisible) {
-      // Show editor (restore split view)
-      editorPane.style.display = 'block';
-      previewPane.style.display = 'block';
-      editorPane.style.flex = '1';
-      previewPane.style.flex = '1';
-      editorPane.style.width = '50%';
-      previewPane.style.width = '50%';
-      this.updateButtonStates(true, true);
-    } else if (!isPreviewVisible) {
-      // Show both panes
-      editorPane.style.display = 'block';
-      previewPane.style.display = 'block';
-      editorPane.style.flex = '1';
-      previewPane.style.flex = '1';
-      editorPane.style.width = '50%';
-      previewPane.style.width = '50%';
-      this.updateButtonStates(true, true);
+    if (this.isMobileLayout()) {
+      // Mobile/tablet layout (1080px and below) - use vertical stacking
+      if (!isEditorVisible) {
+        // Show editor (restore split view)
+        this.clearInlineStyles();
+        this.updateButtonStates(true, true);
+      } else if (!isPreviewVisible) {
+        // Show both panes
+        this.clearInlineStyles();
+        this.updateButtonStates(true, true);
+      } else {
+        // Hide editor - show only preview
+        editorPane.style.display = 'none';
+        previewPane.style.display = 'block';
+        previewPane.style.height = '100%';
+        this.updateButtonStates(false, true);
+      }
     } else {
-      // Hide editor
-      editorPane.style.display = 'none';
-      previewPane.style.display = 'block';
-      previewPane.style.flex = '1';
-      previewPane.style.width = '100%';
-      this.updateButtonStates(false, true);
+      // Desktop layout (above 1080px) - use horizontal layout
+      if (!isEditorVisible) {
+        // Show editor (restore split view)
+        editorPane.style.display = 'block';
+        previewPane.style.display = 'block';
+        editorPane.style.flex = '1';
+        previewPane.style.flex = '1';
+        editorPane.style.width = '50%';
+        previewPane.style.width = '50%';
+        this.updateButtonStates(true, true);
+      } else if (!isPreviewVisible) {
+        // Show both panes
+        editorPane.style.display = 'block';
+        previewPane.style.display = 'block';
+        editorPane.style.flex = '1';
+        previewPane.style.flex = '1';
+        editorPane.style.width = '50%';
+        previewPane.style.width = '50%';
+        this.updateButtonStates(true, true);
+      } else {
+        // Hide editor
+        editorPane.style.display = 'none';
+        previewPane.style.display = 'block';
+        previewPane.style.flex = '1';
+        previewPane.style.width = '100%';
+        this.updateButtonStates(false, true);
+      }
     }
   }
 
@@ -122,34 +167,54 @@ class ViewManager {
     const isEditorVisible = editorPane.style.display !== 'none';
     const isPreviewVisible = previewPane.style.display !== 'none';
     
-    if (!isPreviewVisible) {
-      // Show preview (restore split view)
-      editorPane.style.display = 'block';
-      previewPane.style.display = 'block';
-      editorPane.style.flex = '1';
-      previewPane.style.flex = '1';
-      editorPane.style.width = '50%';
-      previewPane.style.width = '50%';
-      this.updateButtonStates(true, true);
-    } else if (!isEditorVisible) {
-    // Show both panes
-      editorPane.style.display = 'block';
-      previewPane.style.display = 'block';
-      editorPane.style.flex = '1';
-      previewPane.style.flex = '1';
-      editorPane.style.width = '50%';
-      previewPane.style.width = '50%';
-      this.updateButtonStates(true, true);
+    if (this.isMobileLayout()) {
+      // Mobile/tablet layout (1080px and below) - use vertical stacking
+      if (!isPreviewVisible) {
+        // Show preview (restore split view)
+        this.clearInlineStyles();
+        this.updateButtonStates(true, true);
+      } else if (!isEditorVisible) {
+        // Show both panes
+        this.clearInlineStyles();
+        this.updateButtonStates(true, true);
+      } else {
+        // Hide preview - show only editor
+        previewPane.style.display = 'none';
+        editorPane.style.display = 'block';
+        editorPane.style.height = '100%';
+        this.updateButtonStates(true, false);
+      }
     } else {
-      // Hide preview
-      previewPane.style.display = 'none';
-      editorPane.style.display = 'block';
-      editorPane.style.flex = '1';
-      editorPane.style.width = '100%';
-      this.updateButtonStates(true, false);
+      // Desktop layout (above 1080px) - use horizontal layout
+      if (!isPreviewVisible) {
+        // Show preview (restore split view)
+        editorPane.style.display = 'block';
+        previewPane.style.display = 'block';
+        editorPane.style.flex = '1';
+        previewPane.style.flex = '1';
+        editorPane.style.width = '50%';
+        previewPane.style.width = '50%';
+        this.updateButtonStates(true, true);
+      } else if (!isEditorVisible) {
+        // Show both panes
+        editorPane.style.display = 'block';
+        previewPane.style.display = 'block';
+        editorPane.style.flex = '1';
+        previewPane.style.flex = '1';
+        editorPane.style.width = '50%';
+        previewPane.style.width = '50%';
+        this.updateButtonStates(true, true);
+      } else {
+        // Hide preview
+        previewPane.style.display = 'none';
+        editorPane.style.display = 'block';
+        editorPane.style.flex = '1';
+        editorPane.style.width = '100%';
+        this.updateButtonStates(true, false);
+      }
     }
   }
 }
 
 // Create global instance
-window.MarkFlowViewManager = new ViewManager();
+window.MarkTideViewManager = new ViewManager();

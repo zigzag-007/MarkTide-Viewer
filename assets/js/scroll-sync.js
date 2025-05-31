@@ -134,4 +134,4 @@ class ScrollSyncManager {
 }
 
 // Create global instance
-window.MarkFlowScrollSync = new ScrollSyncManager();
+window.MarkTideScrollSync = new ScrollSyncManager();

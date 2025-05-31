@@ -263,6 +263,7 @@ class PrintHandler {
       max-width: 100% !important;
       height: auto !important;
       page-break-inside: avoid !important;
+      background-color: transparent !important;
     }
     
     /* Page break controls */
@@ -459,4 +460,4 @@ class PrintHandler {
 }
 
 // Create global instance
-window.MarkFlowPrintHandler = new PrintHandler();
+window.MarkTidePrintHandler = new PrintHandler();
