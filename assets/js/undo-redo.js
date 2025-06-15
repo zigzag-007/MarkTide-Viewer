@@ -56,10 +56,7 @@ class UndoRedoManager {
     this.markdownEditor.setSelectionRange(state.selectionStart, state.selectionEnd);
     this.markdownEditor.scrollTop = state.scrollTop;
     
-    // Update line numbers and render
-    if (window.MarkTideEditor && window.MarkTideEditor.updateLineNumbers) {
-      window.MarkTideEditor.updateLineNumbers();
-    }
+    // Trigger markdown re-render
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
     }

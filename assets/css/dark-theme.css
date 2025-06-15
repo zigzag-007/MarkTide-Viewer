@@ -71,10 +71,7 @@
 }
 
 /* ===== DARK MODE LINE NUMBERS ===== */
-/* Purple accent border for line numbers in dark mode */
-[data-theme="dark"] .line-numbers {
-  border-right: 3px solid var(--accent-color); /* Use dark theme accent color */
-}
+/* Removed legacy line-number gutter rule */
 
 /* ===== GITHUB MARKDOWN DARK THEME ===== */
 /* GitHub's official dark mode syntax highlighting */
@@ -139,6 +136,8 @@
 /* Pre-formatted code block backgrounds in dark mode */
 [data-theme="dark"] .markdown-body pre {
   background-color: var(--code-bg);
+  border-radius: 6px;
+  padding: 6px 12px;
 }
 
 /* Inline code styling for dark mode */

@@ -127,9 +127,6 @@ class MarkdownRenderer {
     clearTimeout(this.markdownRenderTimeout);
     this.markdownRenderTimeout = setTimeout(() => {
       this.renderMarkdown();
-      if (window.MarkTideEditor && window.MarkTideEditor.updateLineNumbers) {
-        window.MarkTideEditor.updateLineNumbers();
-      }
     }, this.RENDER_DELAY);
   }
 }

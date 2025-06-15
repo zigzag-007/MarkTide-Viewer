@@ -275,11 +275,13 @@ class ImportExportManager {
         
         .markdown-body table th, .markdown-body table td {
             border: 1px solid #334155 !important;
+            padding: 9px 20px !important;
         }
         
         /* Dark mode code blocks */
         .markdown-body pre {
             background-color: #1E293B !important;
+            padding: 6px !important;
         }
         
         .markdown-body code {
@@ -365,11 +367,13 @@ class ImportExportManager {
         
         .markdown-body table th, .markdown-body table td {
             border: 1px solid #e1e4e8 !important;
+            padding: 9px 20px !important;
         }
         
         /* Light mode code blocks */
         .markdown-body pre {
             background-color: #f6f8fa !important;
+            padding: 6px !important;
         }
         
         .markdown-body code {
@@ -429,6 +433,7 @@ class ImportExportManager {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exported Markdown</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/zigzag-007/MarkTide-Viewer/main/assets/img/icon.jpg" type="image/jpeg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
     <link rel="stylesheet" href="${highlightTheme}">
     <style>

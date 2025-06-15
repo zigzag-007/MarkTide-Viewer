@@ -127,14 +127,6 @@ function showCopiedMessage() {
   }, 2000);
 }
 
-/**
- * Prevent default drag and drop behavior
- */
-function preventDefaults(e) {
-  e.preventDefault();
-  e.stopPropagation();
-}
-
 // Export utilities to global scope
 window.MarkTideUtils = {
   updateDocumentStats,

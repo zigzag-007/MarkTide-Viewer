@@ -146,6 +146,27 @@
     </script>
 </head>
 <body>
+    <!-- Loading Screen Wrapper -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <div class="logo-animation">
+                    <i class="bi bi-markdown"></i>
+                </div>
+                <div class="loading-text">
+                    <h1 class="loading-title">MarkTide</h1>
+                    <span class="loading-subtitle">Viewer</span>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="loading-designer">
+                Designed by Zig Zag ❤️
+            </div>
+        </div>
+    </div>
+
     <!-- Main application container -->
     <div class="app-container">
         <!-- Application header section -->
@@ -320,11 +341,26 @@
                     <button id="format-italic" class="format-button" title="Italic" data-format="italic">
                         <i class="bi bi-type-italic"></i>
                     </button>
+                    <button id="format-underline" class="format-button" title="Underline" data-format="underline">
+                        <i class="bi bi-type-underline"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
                     <button id="format-code" class="format-button" title="Inline Code" data-format="code">
                         <i class="bi bi-code"></i>
                     </button>
                     <button id="format-quote" class="format-button" title="Quote" data-format="quote">
                         <i class="bi bi-quote"></i>
+                    </button>
+                    <div class="toolbar-separator"></div>
+                    <!-- Text alignment buttons -->
+                    <button id="format-align-left" class="format-button" title="Align Left" data-format="align-left">
+                        <i class="bi bi-text-left"></i>
+                    </button>
+                    <button id="format-align-center" class="format-button" title="Align Center" data-format="align-center">
+                        <i class="bi bi-text-center"></i>
+                    </button>
+                    <button id="format-align-right" class="format-button" title="Align Right" data-format="align-right">
+                        <i class="bi bi-text-right"></i>
                     </button>
                     <div class="toolbar-separator"></div>
                     <!-- List and line break format buttons -->
@@ -346,23 +382,7 @@
                         <i class="bi bi-arrow-clockwise"></i>
                     </button>
                     <div class="toolbar-separator"></div>
-                    <!-- Export options dropdown -->
-                    <div class="dropdown">
-                        <button id="format-download" class="format-button dropdown-toggle" title="Export Options" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-download"></i>
-                        </button>
-                        <ul class="dropdown-menu export-dropdown">
-                            <li><a class="dropdown-item" href="#" id="toolbar-export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
-                            <li><a class="dropdown-item" href="#" id="toolbar-export-html"><i class="bi bi-file-earmark-code me-2"></i>Export as HTML</a></li>
-                            <li><a class="dropdown-item" href="#" id="toolbar-export-txt"><i class="bi bi-file-earmark me-2"></i>Export as Text</a></li>
-                            <li><a class="dropdown-item" href="#" id="toolbar-export-pdf"><i class="bi bi-file-earmark-pdf me-2"></i>Export as PDF</a></li>
-                        </ul>
-                    </div>
-                    <!-- Upload and fullscreen buttons -->
-                    <button id="format-upload" class="format-button" title="Upload Markdown" data-format="upload">
-                        <i class="bi bi-upload"></i>
-                    </button>
-                    <div class="toolbar-separator"></div>
+                    <!-- Fullscreen button -->
                     <button id="format-fullscreen" class="format-button" title="Toggle Fullscreen" data-format="fullscreen">
                         <i class="bi bi-fullscreen"></i>
                     </button>
@@ -370,8 +390,7 @@
                 
                 <!-- Wrapper for the editor textarea and line numbers -->
                 <div class="editor-wrapper">
-                    <!-- Line numbers for the editor -->
-                    <div class="line-numbers" id="line-numbers"></div>
+                    <!-- Line numbers gutter removed -->
                     <!-- Markdown editor textarea -->
                     <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."></textarea>
                     
