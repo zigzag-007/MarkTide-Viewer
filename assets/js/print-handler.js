@@ -179,7 +179,7 @@ class PrintHandler {
     }
     
     .markdown-body table th, .markdown-body table td {
-      padding: 6px 13px !important;
+      padding: 9px 20px !important;
       border: 1px solid #e1e4e8 !important;
       overflow: visible !important;
     }
@@ -206,6 +206,7 @@ class PrintHandler {
       overflow: visible !important;
       max-width: 100% !important;
       page-break-inside: avoid !important;
+      text-align: center !important;
     }
     
     /* Mermaid flowchart specific styling for print */
@@ -302,6 +303,7 @@ class PrintHandler {
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
         max-width: 100% !important;
+        padding: 12px !important;
       }
       
       .markdown-body pre code {
@@ -312,12 +314,12 @@ class PrintHandler {
       
       /* Table responsiveness for print */
       .markdown-body table {
-        font-size: 12px !important;
+        font-size: 90% !important;
         word-break: break-word !important;
       }
       
       .markdown-body table th, .markdown-body table td {
-        padding: 4px 8px !important;
+        padding: 9px 20px !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
           }

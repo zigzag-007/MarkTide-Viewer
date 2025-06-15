@@ -3,53 +3,92 @@ class MarkTideCore {
   constructor() {
     this.initialized = false;
     this.markdownEditor = null;
+    this.markdownPreview = null;
   }
 
   init() {
-    if (this.initialized) return;
-
-    try {
-      // Wait for DOM to be ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => this.initializeApp());
-      } else {
+    // Show loading screen
+    this.showLoadingScreen();
+    
+    // Wait for DOM content to be loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
         this.initializeApp();
-      }
-    } catch (error) {
-      console.error('Failed to initialize MarkTide Viewer:', error);
+      });
+    } else {
+      // DOM is already loaded
+      this.initializeApp();
+    }
+  }
+
+  showLoadingScreen() {
+    // Ensure loading screen is visible and hide main content initially
+    const loadingScreen = document.getElementById('loading-screen');
+    const appContainer = document.querySelector('.app-container');
+    
+    if (loadingScreen) {
+      loadingScreen.style.display = 'flex';
+    }
+    
+    if (appContainer) {
+      appContainer.style.visibility = 'hidden';
+    }
+    
+    // Hide loading screen after 2 seconds
+    setTimeout(() => {
+      this.hideLoadingScreen();
+    }, 2000);
+  }
+
+  hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    const appContainer = document.querySelector('.app-container');
+    
+    if (loadingScreen) {
+      loadingScreen.classList.add('fade-out');
+      
+      // Remove loading screen completely after fade animation
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 500);
+    }
+    
+    if (appContainer) {
+      appContainer.style.visibility = 'visible';
     }
   }
 
   initializeApp() {
+    if (this.initialized) return;
+    
     try {
-      // Get markdown editor reference
+      // Initialize core elements
       this.markdownEditor = document.getElementById("markdown-editor");
+      this.markdownPreview = document.getElementById("markdown-preview");
       
-      if (!this.markdownEditor) {
-        console.error('Markdown editor element not found');
-        return;
+      if (!this.markdownEditor || !this.markdownPreview) {
+        throw new Error("Required elements not found");
       }
 
-      // Initialize theme first (affects other components)
-      this.initializeTheme();
-      
-      // Initialize core modules in dependency order
+      // Initialize modules in proper order
       this.initializeModules();
       
-      // Set up formatting toolbar
+      // Setup formatting toolbar
       this.setupFormattingToolbar();
       
-      // Set up event listeners
-      this.setupEventListeners();
+      // Initialize theme system
+      this.initializeTheme();
       
       // Load sample content
       this.loadSampleContent();
       
-      this.initialized = true;
-      console.log('MarkTide Viewer initialized successfully');
+      // Setup event listeners
+      this.setupEventListeners();
       
+      this.initialized = true;
+      console.log("MarkTide Viewer initialized successfully");
     } catch (error) {
-      console.error('Failed to initialize application:', error);
+      console.error('Failed to initialize MarkTide Viewer:', error);
     }
   }
 
@@ -70,19 +109,22 @@ class MarkTideCore {
 
   setupFormattingToolbar() {
     const formatButtons = [
-      { id: 'format-h1', action: () => window.MarkTideEditor.insertAtLineStart('# ') },
-      { id: 'format-h2', action: () => window.MarkTideEditor.insertAtLineStart('## ') },
-      { id: 'format-h3', action: () => window.MarkTideEditor.insertAtLineStart('### ') },
+      { id: 'format-h1', action: () => window.MarkTideEditor.setHeading(1) },
+      { id: 'format-h2', action: () => window.MarkTideEditor.setHeading(2) },
+      { id: 'format-h3', action: () => window.MarkTideEditor.setHeading(3) },
       { id: 'format-bold', action: () => window.MarkTideEditor.wrapText('**', '**') },
       { id: 'format-italic', action: () => window.MarkTideEditor.wrapText('*', '*') },
+      { id: 'format-underline', action: () => window.MarkTideEditor.wrapText('<u>', '</u>') },
       { id: 'format-code', action: () => window.MarkTideEditor.wrapText('`', '`') },
       { id: 'format-quote', action: () => window.MarkTideEditor.insertAtLineStart('> ') },
+      { id: 'format-align-left', action: () => this.alignText('left') },
+      { id: 'format-align-center', action: () => this.alignText('center') },
+      { id: 'format-align-right', action: () => this.alignText('right') },
       { id: 'format-ul', action: () => window.MarkTideEditor.insertAtLineStart('- ') },
       { id: 'format-ol', action: () => window.MarkTideEditor.insertAtLineStart('1. ') },
       { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
       { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
       { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() },
-      { id: 'format-upload', action: () => document.getElementById('file-input').click() },
       { id: 'format-fullscreen', action: () => this.toggleFullscreen() }
     ];
 
@@ -95,6 +137,50 @@ class MarkTideCore {
         });
       }
     });
+  }
+
+  alignText(alignment) {
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
+    }
+    
+    const prefix = `<div style="text-align: ${alignment};">`;
+    const suffix = `</div>`;
+    
+    const start = this.markdownEditor.selectionStart;
+    const end = this.markdownEditor.selectionEnd;
+    const currentValue = this.markdownEditor.value;
+    const selectedText = currentValue.substring(start, end);
+    
+    const hasPrefix = start >= prefix.length && currentValue.substring(start - prefix.length, start) === prefix;
+    const hasSuffix = end + suffix.length <= currentValue.length && currentValue.substring(end, end + suffix.length) === suffix;
+
+    if (hasPrefix && hasSuffix) {
+      // Remove alignment wrapper
+      this.markdownEditor.value = currentValue.substring(0, start - prefix.length) +
+                                  selectedText +
+                                  currentValue.substring(end + suffix.length);
+      this.markdownEditor.selectionStart = start - prefix.length;
+      this.markdownEditor.selectionEnd = end - prefix.length;
+    } else if (selectedText) {
+      // Wrap selected text with alignment div
+      const alignedText = prefix + selectedText + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
+      this.markdownEditor.selectionStart = start + prefix.length;
+      this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
+    } else {
+      // No selection: insert empty alignment div and place cursor inside
+      const alignedText = prefix + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
+      this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + prefix.length;
+    }
+    
+    this.markdownEditor.focus();
+    
+    // Trigger re-render
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
+    }
   }
 
   initializeTheme() {
@@ -243,9 +329,6 @@ $$
     if (window.MarkTideUtils) {
       window.MarkTideUtils.updateDocumentStats();
     }
-    if (window.MarkTideEditor) {
-      window.MarkTideEditor.updateLineNumbers();
-    }
     
     // Set initial undo state
     if (window.MarkTideUndoRedo) {
@@ -269,9 +352,10 @@ $$
       }
     });
 
-    this.markdownEditor.addEventListener('scroll', () => {
+    // Fix double-click word selection behavior
+    this.markdownEditor.addEventListener('mouseup', (e) => {
       if (window.MarkTideEditor) {
-        window.MarkTideEditor.syncLineNumbersScroll();
+        window.MarkTideEditor.handleMouseUp(e);
       }
     });
 

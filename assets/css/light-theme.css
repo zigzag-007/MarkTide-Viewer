@@ -120,6 +120,7 @@
 .markdown-body pre {
   background-color: var(--code-bg);
   border-radius: 6px;
+  padding: 6px 12px;
 }
 
 /* Inline code styling */
@@ -127,10 +128,4 @@
   background-color: var(--code-bg);
   border-radius: 3px;
   padding: 0.2em 0.4em;
-}
-
-/* ===== LINE NUMBERS IN LIGHT MODE ===== */
-/* Numbered code block line indicators */
-.code-block-with-numbers .line-number {
-  
 }

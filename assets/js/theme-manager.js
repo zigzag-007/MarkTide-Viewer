@@ -89,14 +89,6 @@ class ThemeManager {
       highlightTheme.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
     }
   }
-
-  getCurrentTheme() {
-    return this.currentTheme;
-  }
-
-  isDarkMode() {
-    return this.currentTheme === "dark";
-  }
 }
 
 // Create global instance

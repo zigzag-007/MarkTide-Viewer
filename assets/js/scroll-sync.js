@@ -127,10 +127,6 @@ class ScrollSyncManager {
       this.mobileToggleSync.classList.add("border-primary");
     }
   }
-
-  isSyncEnabled() {
-    return this.syncScrollingEnabled;
-  }
 }
 
 // Create global instance
