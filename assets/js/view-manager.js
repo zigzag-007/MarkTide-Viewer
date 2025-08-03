@@ -9,6 +9,7 @@ class ViewManager {
     this.showPreviewButton = null;
     this.mobileShowCode = null;
     this.mobileShowPreview = null;
+    this.currentView = 'split'; // 'split', 'editor-only', 'preview-only'
   }
 
   init() {
@@ -50,12 +51,16 @@ class ViewManager {
   clearInlineStyles() {
     const editorPane = document.querySelector(".editor-pane");
     const previewPane = document.querySelector(".preview-pane");
+    const footer = document.querySelector(".app-footer");
+    const appContainer = document.querySelector(".app-container");
+    const editorWrapper = editorPane?.querySelector(".editor-wrapper");
     
     if (editorPane) {
       editorPane.style.display = '';
       editorPane.style.flex = '';
       editorPane.style.width = '';
       editorPane.style.height = '';
+      editorPane.style.minHeight = '';
     }
     
     if (previewPane) {
@@ -63,6 +68,22 @@ class ViewManager {
       previewPane.style.flex = '';
       previewPane.style.width = '';
       previewPane.style.height = '';
+      previewPane.style.minHeight = '';
+    }
+    
+    // Reset editor wrapper height to let CSS take control
+    if (editorWrapper) {
+      editorWrapper.style.height = '';
+    }
+    
+    // Show footer when returning to split view
+    if (footer) {
+      footer.style.display = 'block';
+    }
+    
+    // Restore normal app container height for split view
+    if (appContainer) {
+      appContainer.style.height = '100vh';
     }
   }
 
@@ -86,132 +107,118 @@ class ViewManager {
 
   updateButtonStates(isEditorVisible, isPreviewVisible) {
     // Update editor button state - only icon for new header design
-    if (isEditorVisible) {
-      this.showCodeButton.innerHTML = '<i class="bi bi-code-square"></i>';
-      this.showCodeButton.classList.add("active");
-    } else {
-      this.showCodeButton.innerHTML = '<i class="bi bi-code-square"></i>';
-      this.showCodeButton.classList.remove("active");
+    if (this.showCodeButton) {
+      if (isEditorVisible) {
+        this.showCodeButton.classList.add('active');
+        this.showCodeButton.setAttribute('aria-pressed', 'true');
+        this.showCodeButton.setAttribute('title', 'Hide Editor');
+      } else {
+        this.showCodeButton.classList.remove('active');
+        this.showCodeButton.setAttribute('aria-pressed', 'false');
+        this.showCodeButton.setAttribute('title', 'Show Editor');
+      }
     }
-
+    
     // Update preview button state - only icon for new header design
-    if (isPreviewVisible) {
-      this.showPreviewButton.innerHTML = '<i class="bi bi-eye"></i>';
-      this.showPreviewButton.classList.add("active");
-    } else {
-      this.showPreviewButton.innerHTML = '<i class="bi bi-eye"></i>';
-      this.showPreviewButton.classList.remove("active");
+    if (this.showPreviewButton) {
+      if (isPreviewVisible) {
+        this.showPreviewButton.classList.add('active');
+        this.showPreviewButton.setAttribute('aria-pressed', 'true');
+        this.showPreviewButton.setAttribute('title', 'Hide Preview');
+      } else {
+        this.showPreviewButton.classList.remove('active');
+        this.showPreviewButton.setAttribute('aria-pressed', 'false');
+        this.showPreviewButton.setAttribute('title', 'Show Preview');
+      }
     }
-
-    // Sync mobile buttons with text
+    
+    // Update mobile buttons to match
     this.updateMobileButtons();
   }
 
-  toggleEditorView() {
+  // Simple view state management
+  setView(view) {
     const editorPane = document.querySelector(".editor-pane");
     const previewPane = document.querySelector(".preview-pane");
-    const isEditorVisible = editorPane.style.display !== 'none';
-    const isPreviewVisible = previewPane.style.display !== 'none';
+    const footer = document.querySelector(".app-footer");
+    const appContainer = document.querySelector(".app-container");
     
-    if (this.isMobileLayout()) {
-      // Mobile/tablet layout (1080px and below) - use vertical stacking
-      if (!isEditorVisible) {
-        // Show editor (restore split view)
-        this.clearInlineStyles();
+    // Clear all inline styles first
+    this.clearInlineStyles();
+    
+    switch (view) {
+      case 'split':
+        // Both panes visible
+        this.currentView = 'split';
         this.updateButtonStates(true, true);
-      } else if (!isPreviewVisible) {
-        // Show both panes
-        this.clearInlineStyles();
-        this.updateButtonStates(true, true);
-      } else {
-        // Hide editor - show only preview
-        editorPane.style.display = 'none';
-        previewPane.style.display = 'block';
-        previewPane.style.height = '100%';
+        break;
+        
+      case 'editor-only':
+        // Only editor visible
+        if (this.isMobileLayout()) {
+          previewPane.style.display = 'none';
+          editorPane.style.height = 'auto';
+          editorPane.style.minHeight = '100vh';
+          // Fix editor wrapper height for mobile
+          const editorWrapper = editorPane.querySelector('.editor-wrapper');
+          if (editorWrapper) {
+            editorWrapper.style.height = 'calc(100vh - 44px)';
+          }
+        } else {
+          previewPane.style.display = 'none';
+          editorPane.style.flex = '1';
+          editorPane.style.width = '100%';
+          editorPane.style.height = 'auto';
+          editorPane.style.minHeight = '100vh';
+        }
+        footer.style.display = 'none';
+        appContainer.style.height = 'auto';
+        this.currentView = 'editor-only';
+        this.updateButtonStates(true, false);
+        break;
+        
+      case 'preview-only':
+        // Only preview visible
+        if (this.isMobileLayout()) {
+          editorPane.style.display = 'none';
+          previewPane.style.height = 'auto';
+          previewPane.style.minHeight = '100vh';
+        } else {
+          editorPane.style.display = 'none';
+          previewPane.style.flex = '1';
+          previewPane.style.width = '100%';
+          previewPane.style.height = 'auto';
+          previewPane.style.minHeight = '100vh';
+        }
+        footer.style.display = 'none';
+        appContainer.style.height = 'auto';
+        this.currentView = 'preview-only';
         this.updateButtonStates(false, true);
-      }
+        break;
+    }
+  }
+
+  toggleEditorView() {
+    // "Hide Editor" button clicked
+    // If we're in split view or editor-only, hide editor and show preview-only
+    // If we're in preview-only, show split view
+    if (this.currentView === 'split' || this.currentView === 'editor-only') {
+      this.setView('preview-only');
     } else {
-      // Desktop layout (above 1080px) - use horizontal layout
-      if (!isEditorVisible) {
-        // Show editor (restore split view)
-        editorPane.style.display = 'block';
-        previewPane.style.display = 'block';
-        editorPane.style.flex = '1';
-        previewPane.style.flex = '1';
-        editorPane.style.width = '50%';
-        previewPane.style.width = '50%';
-        this.updateButtonStates(true, true);
-      } else if (!isPreviewVisible) {
-        // Show both panes
-        editorPane.style.display = 'block';
-        previewPane.style.display = 'block';
-        editorPane.style.flex = '1';
-        previewPane.style.flex = '1';
-        editorPane.style.width = '50%';
-        previewPane.style.width = '50%';
-        this.updateButtonStates(true, true);
-      } else {
-        // Hide editor
-        editorPane.style.display = 'none';
-        previewPane.style.display = 'block';
-        previewPane.style.flex = '1';
-        previewPane.style.width = '100%';
-        this.updateButtonStates(false, true);
-      }
+      // We're in preview-only, go back to split
+      this.setView('split');
     }
   }
 
   togglePreviewView() {
-    const editorPane = document.querySelector(".editor-pane");
-    const previewPane = document.querySelector(".preview-pane");
-    const isEditorVisible = editorPane.style.display !== 'none';
-    const isPreviewVisible = previewPane.style.display !== 'none';
-    
-    if (this.isMobileLayout()) {
-      // Mobile/tablet layout (1080px and below) - use vertical stacking
-      if (!isPreviewVisible) {
-        // Show preview (restore split view)
-        this.clearInlineStyles();
-        this.updateButtonStates(true, true);
-      } else if (!isEditorVisible) {
-        // Show both panes
-        this.clearInlineStyles();
-        this.updateButtonStates(true, true);
-      } else {
-        // Hide preview - show only editor
-        previewPane.style.display = 'none';
-        editorPane.style.display = 'block';
-        editorPane.style.height = '100%';
-        this.updateButtonStates(true, false);
-      }
+    // "Hide Preview" button clicked  
+    // If we're in split view or preview-only, hide preview and show editor-only
+    // If we're in editor-only, show split view
+    if (this.currentView === 'split' || this.currentView === 'preview-only') {
+      this.setView('editor-only');
     } else {
-      // Desktop layout (above 1080px) - use horizontal layout
-      if (!isPreviewVisible) {
-        // Show preview (restore split view)
-        editorPane.style.display = 'block';
-        previewPane.style.display = 'block';
-        editorPane.style.flex = '1';
-        previewPane.style.flex = '1';
-        editorPane.style.width = '50%';
-        previewPane.style.width = '50%';
-        this.updateButtonStates(true, true);
-      } else if (!isEditorVisible) {
-        // Show both panes
-        editorPane.style.display = 'block';
-        previewPane.style.display = 'block';
-        editorPane.style.flex = '1';
-        previewPane.style.flex = '1';
-        editorPane.style.width = '50%';
-        previewPane.style.width = '50%';
-        this.updateButtonStates(true, true);
-      } else {
-        // Hide preview
-        previewPane.style.display = 'none';
-        editorPane.style.display = 'block';
-        editorPane.style.flex = '1';
-        editorPane.style.width = '100%';
-        this.updateButtonStates(true, false);
-      }
+      // We're in editor-only, go back to split
+      this.setView('split');
     }
   }
 }

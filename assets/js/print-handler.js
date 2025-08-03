@@ -16,9 +16,14 @@ class PrintHandler {
   printPreview() {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
-    document.title = "MarkTide Document";
     
-    const markdownEditor = document.getElementById("markdown-editor");
+    // Get smart filename from markdown content
+    const markdownEditor = document.getElementById('markdown-editor');
+    let smartTitle = 'MarkTide Document';
+    if (markdownEditor && window.MarkTideImportExport) {
+      smartTitle = window.MarkTideImportExport.generateSmartFilename(markdownEditor.value, '') || 'MarkTide Document';
+    }
+    document.title = smartTitle;
     const markdown = markdownEditor.value;
     const html = marked.parse(markdown);
     const sanitizedHtml = DOMPurify.sanitize(html, {
@@ -45,14 +50,64 @@ class PrintHandler {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarkTide Document</title>
+  <title>${smartTitle}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
   <style>
     @media print {
       @page {
-        margin: 0.5in;
+        margin: 0.75in 0.5in;
         size: A4;
+      }
+      
+      /* Force all text to wrap and prevent overflow */
+      *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      
+      /* Override any fixed widths that might cause overflow */
+      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
+        width: auto !important;
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+      }
+      
+      /* Preserve mermaid diagram layout */
+      .mermaid, .mermaid-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        white-space: initial !important;
+        word-wrap: initial !important;
+        overflow-wrap: initial !important;
+        word-break: initial !important;
+      }
+      
+      /* Preserve code block formatting */
+      .markdown-body pre, .markdown-body pre * {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        max-width: 100% !important;
+                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+        font-feature-settings: "liga" 1, "calt" 1 !important;
+      }
+      
+      .markdown-body code {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+        font-feature-settings: "liga" 1, "calt" 1 !important;
       }
       
       * {
@@ -69,9 +124,11 @@ class PrintHandler {
         overflow: visible !important;
         background: white !important;
         color: #24292e !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         line-height: 1.6 !important;
         font-size: 14px !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
       }
       
       body {
@@ -92,9 +149,11 @@ class PrintHandler {
       padding: 0;
       background-color: #ffffff !important;
       color: #24292e !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       line-height: 1.6;
       overflow-x: hidden;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
     
       .markdown-body {
@@ -107,6 +166,9 @@ class PrintHandler {
       color: #24292e !important;
       overflow: visible !important;
       position: relative !important;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
     }
     
     /* Remove any scrollbars */
@@ -125,6 +187,8 @@ class PrintHandler {
       color: #24292e !important;
       background: transparent !important;
       page-break-after: avoid !important;
+      font-weight: 900 !important;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
     }
     
     .markdown-body p, .markdown-body li, .markdown-body span,
@@ -132,6 +196,9 @@ class PrintHandler {
       background: transparent !important;
       color: #24292e !important;
       overflow: visible !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      hyphens: auto !important;
     }
     
     .markdown-body code {
@@ -141,6 +208,8 @@ class PrintHandler {
       border-radius: 3px !important;
       font-size: 85% !important;
       overflow-wrap: break-word !important;
+                  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+      font-feature-settings: "liga" 1, "calt" 1 !important;
     }
     
     .markdown-body pre {
@@ -159,6 +228,8 @@ class PrintHandler {
       border-radius: 0 !important;
       overflow-wrap: break-word !important;
       white-space: pre-wrap !important;
+                  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+      font-feature-settings: "liga" 1, "calt" 1 !important;
     }
     
     .markdown-body table {
@@ -182,6 +253,9 @@ class PrintHandler {
       padding: 9px 20px !important;
       border: 1px solid #e1e4e8 !important;
       overflow: visible !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      hyphens: auto !important;
     }
     
     .markdown-body blockquote {
@@ -195,6 +269,10 @@ class PrintHandler {
     .markdown-body ul, .markdown-body ol {
       padding-left: 2em !important;
       margin: 0 0 16px 0 !important;
+    }
+    
+    .markdown-body ul {
+      list-style-type: disc !important;
     }
     
     .markdown-body li {
@@ -222,7 +300,7 @@ class PrintHandler {
     
     .mermaid .node .label {
       color: #24292e !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
     }
     
     /* Specific styling for flowchart decision nodes */
@@ -282,19 +360,33 @@ class PrintHandler {
       page-break-inside: avoid !important;
     }
     
-    /* Print-specific adjustments */
-    @media print {
+          /* Print-specific adjustments */
+      @media print {
           .markdown-body {
-        padding: 0 !important;
+        padding: 10px !important;
         margin: 0 !important;
         width: 100% !important;
-        max-width: none !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
       }
       
-      /* Ensure content uses full width */
+      /* Ensure content uses full width but prevent overflow */
       .markdown-body > * {
-        max-width: none !important;
-        width: 100% !important;
+        max-width: 100% !important;
+        width: auto !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
+      }
+      
+      /* Specific handling for paragraphs and text elements */
+      .markdown-body p, .markdown-body li, .markdown-body span, 
+      .markdown-body div, .markdown-body td, .markdown-body th {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
       }
       
       /* Better code block handling for print */
@@ -304,25 +396,39 @@ class PrintHandler {
         overflow-wrap: break-word !important;
         max-width: 100% !important;
         padding: 12px !important;
+                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+        font-feature-settings: "liga" 1, "calt" 1 !important;
+        background-color: #f6f8fa !important;
+        border-radius: 6px !important;
       }
       
       .markdown-body pre code {
         white-space: pre-wrap !important;
         word-break: break-word !important;
         overflow-wrap: break-word !important;
+                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+        font-feature-settings: "liga" 1, "calt" 1 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
       }
       
       /* Table responsiveness for print */
       .markdown-body table {
         font-size: 90% !important;
         word-break: break-word !important;
+        table-layout: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
       }
       
       .markdown-body table th, .markdown-body table td {
-        padding: 9px 20px !important;
+        padding: 6px 12px !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
-          }
+        hyphens: auto !important;
+        max-width: 200px !important;
+      }
       }
   </style>
 </head>
@@ -334,6 +440,23 @@ class PrintHandler {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
   <script>
+    // Initialize mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: { useMaxWidth: true },
+      securityLevel: 'loose'
+    });
+    
+    // Re-render mermaid diagrams
+    setTimeout(() => {
+      try {
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+      } catch (e) {
+        console.warn('Mermaid rendering error:', e);
+      }
+    }, 1000);
+
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],

@@ -8,32 +8,35 @@
    - Light mode specific overrides
    ================================================================= */
 
-/* ===== LIGHT THEME VARIABLES ===== */
+/* ===== GROK LIGHT THEME VARIABLES ===== */
 :root[data-theme="light"] {
-  /* Base colors */
+  /* Base colors - Grok's clean aesthetic */
   --bg-color: #ffffff;
-  --text-color: #24292e;
-  --border-color: #e1e4e8;
-  --accent-color: #4338ca;
-  --accent-color-rgb: 67, 56, 202;
+  --text-color: #000000;
+  --border-color: #e0e0e0;
+  --accent-color: #4fc3f7; /* Light blue accent */
+  --accent-color-rgb: 79, 195, 247;
 
   /* Header colors */
-  --header-bg: #fafbfc;
-  --header-gradient: #f6f8fa;
+  --header-bg: #ffffff;
+  --header-gradient: #f8f9fa;
   
-  /* Button colors */
-  --button-bg: #fafbfc;
-  --button-hover: #f3f4f6;
-  --button-active: #e5e7eb;
+  /* Button colors - Grok's minimal style */
+  --button-bg: #f8f9fa;
+  --button-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
+  --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
+  --button-active: #e9ecef;
   
   /* Stats and dropdown backgrounds */
-  --stats-bg: rgba(255, 255, 255, 0.8);
+  --stats-bg: rgba(255, 255, 255, 0.9);
   --dropdown-bg: rgba(255, 255, 255, 0.95);
   
-  /* Editor and preview colors */
-  --editor-bg: #ffffff;
-  --preview-bg: #ffffff;
-  --preview-text-color: #24292e;
+  /* Editor and preview colors - Different for visual separation */
+  --editor-bg: #f8f9fa; /* Light gray for editor */
+  --editor-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
+  --preview-bg: #ffffff; /* Pure white for preview */
+  --preview-bg-rgb: 255, 255, 255; /* RGB values for frosted glass */
+  --preview-text-color: #000000;
   
   /* Scrollbar colors */
   --scrollbar-track: #f1f3f4;
@@ -43,7 +46,7 @@
   --dropzone-bg: #f8f9fa;
   
   /* Code highlighting */
-  --code-bg: #f6f8fa;
+  --code-bg: #f8f9fa;
   
   /* Danger colors */
   --color-danger-fg: #dc3545;
@@ -97,6 +100,83 @@
   --color-danger-fg: #d73a49;
 }
 
+/* ===== GROK LIGHT THEME FROSTED GLASS EFFECTS ===== */
+
+/* ===== LIGHT THEME LOADING SCREEN ===== */
+[data-theme="light"] .loading-screen {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .loading-content {
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .loading-title {
+  background: linear-gradient(45deg, #ffffff, #f0f8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+[data-theme="light"] .loading-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .loading-progress {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+[data-theme="light"] .progress-bar {
+  background: linear-gradient(90deg, #ffffff, #f0f8ff, #ffffff);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] .loading-designer {
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme loading pulse animation */
+[data-theme="light"] .loading-screen {
+  animation: loadingPulseLight 4s ease-in-out infinite;
+}
+/* Grok's signature frosted glass hover effect for light theme */
+button,
+.btn,
+.nav-item,
+.dropdown-item {
+  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+}
+
+button:hover,
+.btn:hover,
+.nav-item:hover,
+.dropdown-item:hover {
+  background-color: rgba(79, 195, 247, 0.1) !important; /* Light blue with transparency */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
+}
+
+/* Enhanced frosted glass for primary buttons */
+.btn-primary:hover {
+  background-color: rgba(79, 195, 247, 0.15) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+}
+
 /* ===== LIGHT MODE TABLE STYLING ===== */
 /* Table background and border colors */
 .markdown-body table {
@@ -118,14 +198,206 @@
 /* ===== LIGHT MODE CODE BLOCK STYLING ===== */
 /* Pre-formatted code block backgrounds */
 .markdown-body pre {
-  background-color: var(--code-bg);
-  border-radius: 6px;
-  padding: 6px 12px;
+  background-color: #f6f8fa;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Inline code styling */
-.markdown-body code {
-  background-color: var(--code-bg);
+.markdown-body code:not(pre code) {
+  background-color: #FFF8EC;
+  color: #8B4500;
+  font-weight: 600;
   border-radius: 3px;
   padding: 0.2em 0.4em;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* ==============================================
+   LIGHT THEME STYLES
+   ============================================== */
+
+/* Light theme view controls with subtle border */
+[data-theme="light"] .view-controls {
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Semi-transparent black border */
+}
+
+/* Light theme view button hover effects for better contrast */
+[data-theme="light"] .view-btn:hover {
+  background: var(--button-hover); /* Use CSS custom property for consistency */
+  color: #000000; /* Black text for maximum contrast in light mode */
+}
+
+/* Light theme active view button styling */
+[data-theme="light"] .view-btn.active {
+  background: var(--button-hover);
+  color: #000000; /* Black text for better readability */
+  -webkit-backdrop-filter: blur(8px); /* Webkit prefix for Safari support */
+  backdrop-filter: blur(8px); /* Glass-morphism effect */
+}
+
+/* Light theme separator between view buttons */
+[data-theme="light"] .view-btn + .view-btn {
+  border-left: 1px solid rgba(0, 0, 0, 0.2); /* Vertical divider line */
+}
+
+/* Light theme utility button base styling */
+[data-theme="light"] .utility-btn {
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Consistent border style */
+}
+
+/* Light theme utility button hover effects with elevation */
+[data-theme="light"] .utility-btn:hover {
+  background: var(--button-hover);
+  transform: translateY(-1px); /* Subtle lift effect on hover */
+  color: #000000; /* Ensure high contrast text */
+  border-color: var(--accent-color); /* Highlight border with accent color */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+/* Light theme blockquote styling for readability */
+[data-theme="light"] .markdown-body blockquote {
+  color: #666666; /* Medium gray for quoted content */
+}
+
+[data-theme="light"] .markdown-body blockquote p {
+  color: #666666; /* Consistent paragraph color within blockquotes */
+}
+
+/* Light theme quote marks styling */
+[data-theme="light"] .markdown-body blockquote::before,
+[data-theme="light"] .markdown-body blockquote::after {
+  color: #666666; /* Match the blockquote text color */
+}
+
+/* Light theme horizontal rules - clean separator lines */
+[data-theme="light"] .markdown-body hr {
+  background-color: #e0e0e0; /* Light gray horizontal line */
+  border: none; /* Remove default styling */
+  height: 1px; /* Thin, clean line */
+  margin: 2em 0; /* Generous vertical spacing */
+}
+
+/* Light theme scrollbar styling for various panes */
+[data-theme="light"] .editor-pane::-webkit-scrollbar-track,
+[data-theme="light"] .preview-pane::-webkit-scrollbar-track,
+[data-theme="light"] #markdown-editor::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1); /* Light track background */
+  border-radius: 5px; /* Rounded corners */
+}
+
+/* Light theme scrollbar thumb (draggable part) */
+[data-theme="light"] .editor-pane::-webkit-scrollbar-thumb,
+[data-theme="light"] .preview-pane::-webkit-scrollbar-thumb,
+[data-theme="light"] #markdown-editor::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3); /* Semi-transparent dark thumb */
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Subtle border */
+}
+
+/* Light theme scrollbar thumb hover effects */
+[data-theme="light"] .editor-pane::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] .preview-pane::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] #markdown-editor::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5); /* Darker on hover */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Glow effect */
+}
+
+/* Light theme toolbar separator styling */
+[data-theme="light"] .toolbar-separator {
+  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent divider */
+}
+
+/* Light theme dropzone (drag & drop area) base styling */
+[data-theme="light"] .dropzone {
+  border: 2px dashed rgba(0, 0, 0, 0.3); /* Dashed border indicates drop area */
+  background-color: rgba(0, 0, 0, 0.02); /* Very subtle background tint */
+}
+
+/* Light theme active dropzone (when dragging over) */
+[data-theme="light"] .dropzone.active {
+  border-color: rgba(0, 0, 0, 0.6); /* Stronger border when active */
+  background-color: rgba(0, 0, 0, 0.05); /* Slight background change */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Elevation shadow */
+}
+
+/* Light theme dropzone text styling */
+[data-theme="light"] .dropzone p {
+  color: #666666; /* Medium gray instructional text */
+}
+
+/* Light theme dropzone hover effects */
+[data-theme="light"] .dropzone:hover {
+  border-color: rgba(0, 0, 0, 0.5); /* Darker border on hover */
+  background-color: rgba(0, 0, 0, 0.03); /* Slightly more visible background */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Soft hover shadow */
+}
+
+[data-theme="light"] .dropzone:hover p {
+  color: #333333; /* Darker text on hover for better visibility */
+}
+
+/* Light theme logo icon styling */
+[data-theme="light"] .logo-icon {
+  background: rgba(0, 0, 0, 0.1); /* Light semi-transparent background */
+  border: 1px solid rgba(0, 0, 0, 0.3); /* Defined border */
+  color: #333333; /* Dark text for contrast */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Depth shadow */
+}
+
+/* Light theme logo icon hover effects */
+[data-theme="light"] .logo-icon:hover {
+  background: rgba(0, 0, 0, 0.15); /* Slightly darker on hover */
+  border-color: rgba(0, 0, 0, 0.5); /* Stronger border */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
+}
+
+/* Light theme brand title hover effects */
+[data-theme="light"] .brand-title:hover {
+  color: #333333;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Subtle text glow */
+}
+
+[data-theme="light"] .brand-subtitle:hover {
+  color: #333333; /* Consistent dark text on hover */
+}
+
+/* Light theme GitHub badge styling */
+[data-theme="light"] .github-badge {
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Consistent border styling */
+}
+
+/* Light theme action button base styling */
+[data-theme="light"] .action-btn {
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Standard border */
+}
+
+/* Light theme action button hover effects with elevation */
+[data-theme="light"] .action-btn:hover {
+  background: var(--button-hover);
+  transform: translateY(-1px); /* Lift effect */
+  color: #000000; /* High contrast text */
+  border-color: var(--accent-color); /* Accent color border */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Hover shadow */
+}
+
+/* Light theme sync button disabled state */
+[data-theme="light"] .action-btn.sync-disabled {
+  border-color: rgba(0, 0, 0, 0.2); /* Muted border for disabled state */
+  background: var(--button-bg); /* Default background */
+}
+
+/* Light theme sync button enabled state */
+[data-theme="light"] .action-btn.sync-enabled {
+  background: var(--button-hover); /* Active background */
+  color: #000000; /* High contrast text */
+  -webkit-backdrop-filter: blur(8px); /* Safari compatibility */
+  backdrop-filter: blur(8px); /* Glass-morphism effect */
 }

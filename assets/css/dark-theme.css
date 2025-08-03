@@ -8,70 +8,134 @@
    - Dark mode specific overrides and enhancements
    ================================================================= */
 
-/* ===== DARK THEME VARIABLES ===== */
+/* ===== GROK DARK THEME VARIABLES ===== */
 :root[data-theme="dark"] {
-  /* Base colors */
-  --bg-color: #0F1729;
-  --text-color: #E2E8F0;
-  --border-color: #2D3748;
-  --accent-color: #8B7CF8;
-  --accent-color-rgb: 139, 124, 248;
+  /* Base colors - Grok's pure black aesthetic */
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #1a1a1a;
+  --accent-color: #4fc3f7; /* Subtle light blue accent */
+  --accent-color-rgb: 79, 195, 247;
 
   /* Header colors */
-  --header-bg: #1A1B3A;
-  --header-gradient: #252447;
+  --header-bg: #000000;
+  --header-gradient: #1a1a1a;
   
-  /* Button colors */
-  --button-bg: #2D3748;
-  --button-hover: #4A5568;
-  --button-active: #2C3A47;
+  /* Button colors - Grok's frosted glass style */
+  --button-bg: #1a1a1a;
+  --button-bg-rgb: 26, 26, 26; /* RGB values for frosted glass */
+  --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
+  --button-active: #1a1a1a;
   
   /* Stats and dropdown backgrounds */
-  --stats-bg: rgba(45, 55, 72, 0.8);
-  --dropdown-bg: rgba(26, 27, 58, 0.95);
+  --stats-bg: rgba(0, 0, 0, 0.8);
+  --dropdown-bg: rgba(26, 26, 26, 0.95);
   
-  /* Editor and preview colors */
-  --editor-bg: #1A1B3A;
-  --preview-bg: #0F1729;
-  --preview-text-color: #E2E8F0;
+  /* Editor and preview colors - Different for visual separation */
+  --editor-bg: #1a1a1a; /* Dark gray for editor */
+  --editor-bg-rgb: 26, 26, 26; /* RGB values for frosted glass */
+  --preview-bg: #000000; /* Pure black for preview */
+  --preview-bg-rgb: 0, 0, 0; /* RGB values for frosted glass */
+  --preview-text-color: #ffffff;
   
   /* Scrollbar colors */
-  --scrollbar-track: #2D3748;
-  --scrollbar-thumb: #4A5568;
+  --scrollbar-track: #1a1a1a;
+  --scrollbar-thumb: #333333;
   
   /* Dropzone colors */
-  --dropzone-bg: rgba(26, 27, 58, 0.8);
+  --dropzone-bg: rgba(26, 26, 26, 0.8);
   
   /* Code highlighting */
-  --code-bg: #2D3748;
+  --code-bg: #1a1a1a;
   
   /* Danger colors */
-  --color-danger-fg: #E53E3E;
+  --color-danger-fg: #ff6b6b;
 }
 
-/* ===== DARK THEME CSS VARIABLES ===== */
-/* Dark theme custom properties - only applied when data-theme="dark" */
-[data-theme="dark"] {
-  --bg-color: #0F1729; /* Deep Navy Blue - User Specified */
-  --editor-bg: #1E293B; /* Dark Slate Blue */
-  --preview-bg: #0F1729; /* Deep Navy Blue */
-  --text-color: #E2E8F0; /* Light Slate Gray - for high contrast */
-  --preview-text-color: #E2E8F0; /* Light Slate Gray */
-  --border-color: #334155; /* Slate Gray - for subtle borders */
-  --header-bg: #1E293B; /* Dark Slate Blue */
-  --button-bg: #4338CA; /* Indigo-600 - Deep, rich purple-blue */
-  --button-hover: #4F46E5; /* Indigo-500 - Brighter for hover */
-  --button-active: #3730A3; /* Indigo-700 - Deeper for active state */
-  --dropzone-bg: rgba(15, 23, 41, 0.8); /* Deep Navy Blue with alpha, matches new --bg-color */
-  --scrollbar-thumb: #475569; /* Slate Gray - for scrollbar */
-  --scrollbar-track: #1E293B; /* Dark Slate Blue */
-  --accent-color: #7C3AED; /* Purple-600 - Vibrant purple for highlights */
-  --table-bg: #1E293B; /* Dark Slate Blue */
-  --code-bg: #1E293B; /* Dark Slate Blue - same as editor for integrated look */
+/* =================================================================
+   GROK FROSTED GLASS HOVER EFFECTS
+   ================================================================= */
+
+/* ===== GROK FROSTED GLASS HOVER EFFECTS ===== */
+
+/* ===== DARK THEME LOADING SCREEN ===== */
+[data-theme="dark"] .loading-screen {
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 195, 247, 0.2);
+}
+
+[data-theme="dark"] .loading-content {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .loading-title {
+  background: linear-gradient(45deg, #ffffff, #4fc3f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(79, 195, 247, 0.3));
+}
+
+[data-theme="dark"] .loading-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .loading-progress {
+  background: rgba(79, 195, 247, 0.1);
+  border: 1px solid rgba(79, 195, 247, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+[data-theme="dark"] .progress-bar {
+  background: linear-gradient(90deg, #4fc3f7, #ffffff, #4fc3f7);
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+}
+
+[data-theme="dark"] .loading-designer {
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark theme loading pulse animation */
+[data-theme="dark"] .loading-screen {
+  animation: loadingPulseDark 4s ease-in-out infinite;
+}
+/* Grok's signature frosted glass hover effect for buttons and interactive elements */
+[data-theme="dark"] button,
+[data-theme="dark"] .btn,
+[data-theme="dark"] .nav-item,
+[data-theme="dark"] .dropdown-item {
+  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+}
+
+[data-theme="dark"] button:hover,
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .nav-item:hover,
+[data-theme="dark"] .dropdown-item:hover {
+  background-color: rgba(79, 195, 247, 0.1) !important; /* Light blue with transparency */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
+}
+
+/* Enhanced frosted glass for primary buttons */
+[data-theme="dark"] .btn-primary:hover {
+  background-color: rgba(79, 195, 247, 0.15) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
 }
 
 /* ===== DARK MODE LINE NUMBERS ===== */
-/* Removed legacy line-number gutter rule */
+/* Line number styling for numbered code blocks in dark mode */
 
 /* ===== GITHUB MARKDOWN DARK THEME ===== */
 /* GitHub's official dark mode syntax highlighting */
@@ -94,7 +158,7 @@
   --color-prettylights-syntax-markup-list: #f2cc60;
   --color-prettylights-syntax-markup-heading: #1f6feb;
   --color-prettylights-syntax-markup-italic: #c9d1d9;
-  --color-prettylights-syntax-markup-bold: #c9d1d9;
+  --color-prettylights-syntax-markup-bold: #ffffff;
   --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
   --color-prettylights-syntax-markup-deleted-bg: #67060c;
   --color-prettylights-syntax-markup-inserted-text: #aff5b4;
@@ -135,14 +199,23 @@
 /* ===== DARK MODE CODE BLOCK STYLING ===== */
 /* Pre-formatted code block backgrounds in dark mode */
 [data-theme="dark"] .markdown-body pre {
-  background-color: var(--code-bg);
-  border-radius: 6px;
-  padding: 6px 12px;
+  background-color: #242628;
+  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Inline code styling for dark mode */
-[data-theme="dark"] .markdown-body code {
-  background-color: var(--code-bg);
+[data-theme="dark"] .markdown-body code:not(pre code) {
+  background-color: #29241E;
+  color: #FFD085;
+  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+[data-theme="dark"] .markdown-body pre code {
+  background: transparent;
+  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Syntax highlighting text color */
@@ -159,6 +232,34 @@
 }
 
 /* ===== DARK MODE HEADER ELEMENTS ===== */
+/* H4 styling */
+[data-theme="dark"] .markdown-body h4 {
+  font-weight: bold;
+}
+
+/* Bold text styling for dark mode */
+[data-theme="dark"] .markdown-body strong,
+[data-theme="dark"] .markdown-body b {
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  font-style: normal !important;
+}
+
+/* Handle nested formatting in dark mode */
+[data-theme="dark"] .markdown-body strong em,
+[data-theme="dark"] .markdown-body strong i,
+[data-theme="dark"] .markdown-body b em,
+[data-theme="dark"] .markdown-body b i {
+  font-weight: 900 !important;
+  color: #ffffff !important;
+}
+
+/* Blockquote bold text should be less aggressive */
+[data-theme="dark"] .markdown-body blockquote strong,
+[data-theme="dark"] .markdown-body blockquote b {
+  font-weight: 700 !important;
+  color: #E2E8F0 !important;
+}
 /* App header title color in dark mode */
 [data-theme="dark"] .app-header .h4 {
   color: var(--text-color); /* Use dark theme text color for MarkTide Viewer title */
@@ -172,4 +273,51 @@
 /* GitHub link hover state in dark mode */
 [data-theme="dark"] .app-header .github-link:hover {
   color: var(--accent-color); /* Use dark theme accent color for GitHub icon on hover */
+}
+
+/* =================================================================
+   DEPRECATED LOADING SCREEN STYLES - REMOVE IN PRODUCTION
+   ================================================================= */
+/* TODO: Remove these loading screen styles as they're not used in production */
+
+/* Dark theme numbered list styling - Grok-style improvements */
+[data-theme="dark"] .markdown-body ol li::marker {
+  color: #ffffff; /* White numbers for list items */
+  font-weight: 600; /* Bold font weight for better visibility */
+}
+
+[data-theme="dark"] .markdown-body ol li {
+  color: #ffffff; /* White text for list items */
+}
+
+/* Dark theme blockquote styling for better readability */
+[data-theme="dark"] .markdown-body blockquote {
+  color: #cccccc; /* Light gray text for quoted content */
+}
+
+[data-theme="dark"] .markdown-body blockquote p {
+  color: #cccccc; /* Consistent color for paragraphs within blockquotes */
+}
+
+/* Dark theme quote marks styling within blockquotes */
+[data-theme="dark"] .markdown-body blockquote::before,
+[data-theme="dark"] .markdown-body blockquote::after {
+  color: #cccccc; /* Light gray for decorative quote marks */
+}
+
+/* Dark theme horizontal rules - Grok-style separators */
+[data-theme="dark"] .markdown-body hr {
+  background-color: #333333; /* Dark gray horizontal line */
+  border: none; /* Remove default border */
+  height: 1px; /* Thin line */
+  margin: 2em 0; /* Generous spacing above and below */
+}
+
+/* Dark theme bullet points styling for unordered lists */
+[data-theme="dark"] .markdown-body ul {
+  list-style-type: disc; /* Standard bullet points */
+}
+
+[data-theme="dark"] .markdown-body ul li::marker {
+  color: #ffffff; /* White bullet points for better visibility */
 }
