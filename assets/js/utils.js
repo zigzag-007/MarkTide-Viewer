@@ -119,11 +119,10 @@ async function copyToClipboard(text) {
  */
 function showCopiedMessage() {
   const copyMarkdownButton = document.getElementById("copy-markdown-button");
-  const originalText = copyMarkdownButton.innerHTML;
-  copyMarkdownButton.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+  copyMarkdownButton.innerHTML = '<i class="bi bi-check-lg"></i>';
 
   setTimeout(() => {
-    copyMarkdownButton.innerHTML = originalText;
+    copyMarkdownButton.innerHTML = '<i class="bi bi-clipboard"></i>';
   }, 2000);
 }
 

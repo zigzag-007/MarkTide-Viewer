@@ -22,6 +22,9 @@ class MarkTideCore {
   }
 
   showLoadingScreen() {
+    // Apply theme immediately for loading screen
+    this.applyInitialTheme();
+    
     // Ensure loading screen is visible and hide main content initially
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.querySelector('.app-container');
@@ -86,7 +89,7 @@ class MarkTideCore {
       this.setupEventListeners();
       
       this.initialized = true;
-      console.log("MarkTide Viewer initialized successfully");
+      // Initialization completed successfully (for debugging, can be re-enabled if needed)
     } catch (error) {
       console.error('Failed to initialize MarkTide Viewer:', error);
     }
@@ -188,11 +191,22 @@ class MarkTideCore {
     const savedTheme = localStorage.getItem('marktide-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
   }
+  
+  applyInitialTheme() {
+    // Apply theme immediately for loading screen
+    let savedTheme = localStorage.getItem('marktide-theme');
+    if (!savedTheme) {
+      // Detect system theme
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      savedTheme = prefersDark ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
 
   loadSampleContent() {
     if (!this.markdownEditor || this.markdownEditor.value.trim()) return;
 
-    const sampleMarkdown = `# 🚀 Welcome to MarkTide Viewer
+        const sampleMarkdown = `# Welcome to MarkTide Viewer
 
 > **The Ultimate Free Online Markdown Editor** - Where creativity meets simplicity in perfect harmony.
 
@@ -214,6 +228,7 @@ MarkTide Viewer is a powerful, **free online markdown editor and converter** tha
 ### 📝 **Markdown Editor**
 
 - Real-time live preview
+     - Instant rendering of changes
 - Syntax highlighting with 190+ programming languages
 - Line numbers and formatting toolbar
 - Drag & drop file support
@@ -222,6 +237,7 @@ MarkTide Viewer is a powerful, **free online markdown editor and converter** tha
 ### 🔄 **Format Conversion**
 
 - **Markdown to PDF** - Professional document export
+     - High-quality print output
 - **Markdown to HTML** - Web-ready conversion
 - **Markdown to Text** - Plain text extraction
 - **GitHub-flavored Markdown** support
@@ -318,7 +334,7 @@ $$
 
 ---
 
-**Ready to get started?** Just start typing above or drag and drop your markdown file! 🚀`;
+**Ready to get started?** Just start typing above or drag and drop your markdown file!`;
 
     this.markdownEditor.value = sampleMarkdown;
     
@@ -339,16 +355,34 @@ $$
   setupEventListeners() {
     if (!this.markdownEditor) return;
 
+    // Track if content has been modified
+    let hasUnsavedChanges = false;
+    const originalContent = this.markdownEditor.value;
+
     // Editor input events
     this.markdownEditor.addEventListener('input', () => {
       if (window.MarkTideRenderer) {
         window.MarkTideRenderer.debouncedRender();
+      }
+      
+      // Check if content differs from original
+      if (this.markdownEditor.value !== originalContent) {
+        hasUnsavedChanges = true;
       }
     });
 
     this.markdownEditor.addEventListener('keydown', (e) => {
       if (window.MarkTideUndoRedo) {
         window.MarkTideUndoRedo.saveToUndoStack();
+      }
+    });
+
+    // Handle page refresh/close warning
+    window.addEventListener('beforeunload', (e) => {
+      if (hasUnsavedChanges && this.markdownEditor.value !== originalContent) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
       }
     });
 

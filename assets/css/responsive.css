@@ -1,0 +1,209 @@
+/* =================================================================
+   RESPONSIVE.CSS - Responsive Design Breakpoints
+   
+   This file contains all responsive design rules:
+   - Mobile-first responsive breakpoints
+   - Tablet and desktop optimizations
+   - Formatting toolbar responsive adjustments
+   - Layout changes for different screen sizes
+   ================================================================= */
+
+/* ===== LARGE SCREENS (1400px+) ===== */
+/* Desktop and large displays - show full interface */
+@media (min-width: 1400px) {
+  .github-text {
+    display: inline;
+  }
+  
+  .formatting-toolbar {
+    gap: 4px;
+    padding: 7px 10px 10px 10px;
+    justify-content: center;
+  }
+  
+  .format-button {
+    padding: 6px 8px;
+    min-width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+  
+  .format-button i {
+    font-size: 14px;
+  }
+  
+  #format-h1, #format-h2, #format-h3 {
+    min-width: 32px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  
+  .toolbar-separator {
+    height: 20px;
+    margin: 0 4px;
+  }
+}
+
+/* ===== MEDIUM SCREENS (1200px - 1399px) ===== */
+/* Laptop and medium displays */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .header-container {
+    gap: 1.5rem;
+  }
+  
+  .header-actions {
+    gap: 1rem;
+  }
+  
+  .btn-text {
+    display: none;
+  }
+  
+  .formatting-toolbar {
+    gap: 3px;
+    padding: 7px 10px 10px 10px;
+    justify-content: center;
+  }
+  
+  .format-button {
+    padding: 5px 7px;
+    min-width: 27px;
+    height: 27px;
+    font-size: 11px;
+  }
+  
+  .format-button i {
+    font-size: 13px;
+  }
+  
+  #format-h1, #format-h2, #format-h3 {
+    min-width: 29px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  
+  .toolbar-separator {
+    height: 18px;
+    margin: 0 3px;
+  }
+}
+
+/* ===== SMALL SCREENS (1080px - 1199px) ===== */
+/* Compact laptop displays */
+@media (max-width: 1199px) and (min-width: 1080px) {
+  .formatting-toolbar {
+    gap: 2px;
+    padding: 7px 10px 10px 10px;
+    justify-content: center;
+  }
+  
+  .format-button {
+    padding: 4px 5px;
+    min-width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .format-button i {
+    font-size: 12px;
+  }
+  
+  #format-h1, #format-h2, #format-h3 {
+    min-width: 26px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  
+  .toolbar-separator {
+    height: 16px;
+    margin: 0 2px;
+    width: 0.8px;
+  }
+}
+
+/* ===== TABLET LAYOUT (769px - 1200px) ===== */
+/* Tablet displays - show hamburger menu */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .header-actions {
+    display: none;
+  }
+  
+  .mobile-menu {
+    display: block !important;
+  }
+}
+
+/* ===== MOBILE LAYOUT (768px and below) ===== */
+/* Mobile devices - simplified interface */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+  }
+  
+  .header-divider {
+    display: none;
+  }
+  
+  .github-badge {
+    display: none;
+  }
+  
+  .header-actions {
+    display: none;
+  }
+  
+  .mobile-menu {
+    display: block !important;
+  }
+  
+  /* Ensure preview content is properly centered on small mobile screens */
+  .markdown-body {
+    max-width: 98% !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+  }
+}
+
+/* ===== MOBILE/TABLET LAYOUT ADJUSTMENTS (1080px and below) ===== */
+/* Switch to vertical layout for smaller screens */
+@media (max-width: 1080px) {
+  /* Switch to vertical layout */
+  .content-container {
+    flex-direction: column;
+  }
+  
+  .editor-pane, .preview-pane {
+    flex: none;
+    height: 50%;
+    border-right: none;
+  }
+  
+  .editor-pane {
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  /* Hide formatting toolbar on mobile */
+  .formatting-toolbar {
+    display: none !important;
+  }
+  
+  .editor-wrapper {
+    height: 100%; /* Remove toolbar height offset on mobile */
+  }
+  
+  /* Ensure preview content stays centered on mobile */
+  .markdown-body {
+    max-width: 95% !important;
+    margin: 0 auto !important;
+  }
+  
+
+}
+  
