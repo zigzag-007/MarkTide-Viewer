@@ -393,44 +393,99 @@ $$
       }
     });
 
-    // Handle fullscreen changes (including ESC key)
+    // Handle fullscreen changes (including ESC key and browser fullscreen)
     document.addEventListener('fullscreenchange', () => {
-      const fullscreenBtn = document.getElementById('format-fullscreen');
-      if (fullscreenBtn) {
-        if (document.fullscreenElement) {
-          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
-          fullscreenBtn.title = 'Exit Fullscreen';
-        } else {
-          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
-          fullscreenBtn.title = 'Toggle Fullscreen';
-        }
-      }
+      this.updateFullscreenButtonState();
     });
+
+    // Handle browser fullscreen changes (F11 key)
+    document.addEventListener('webkitfullscreenchange', () => {
+      this.updateFullscreenButtonState();
+    });
+
+    document.addEventListener('mozfullscreenchange', () => {
+      this.updateFullscreenButtonState();
+    });
+
+    document.addEventListener('MSFullscreenChange', () => {
+      this.updateFullscreenButtonState();
+    });
+
+    // Handle browser fullscreen exit with F11
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      // Debounce resize events to avoid excessive calls
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // Check if we're in browser fullscreen but not element fullscreen
+        const isBrowserFullscreen = window.innerHeight === screen.height && window.innerWidth === screen.width;
+        const isElementFullscreen = !!document.fullscreenElement;
+        
+        if (isBrowserFullscreen && !isElementFullscreen) {
+          // Browser fullscreen active, update button state
+          this.updateFullscreenButtonState(true);
+        } else if (!isBrowserFullscreen && !isElementFullscreen) {
+          // Neither browser nor element fullscreen
+          this.updateFullscreenButtonState(false);
+        }
+      }, 100);
+    });
+
+    // Initial button state update
+    this.updateFullscreenButtonState();
+  }
+
+  updateFullscreenButtonState(forceState = null) {
+    const fullscreenBtn = document.getElementById('format-fullscreen');
+    if (!fullscreenBtn) return;
+
+    // Check if we're in browser fullscreen (F11)
+    const isBrowserFullscreen = window.innerHeight === screen.height && window.innerWidth === screen.width;
+    const isElementFullscreen = !!document.fullscreenElement;
+    
+    // Determine the actual fullscreen state
+    let isFullscreen = false;
+    if (forceState !== null) {
+      isFullscreen = forceState;
+    } else {
+      isFullscreen = isElementFullscreen || isBrowserFullscreen;
+    }
+
+    if (isFullscreen) {
+      fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+      fullscreenBtn.title = 'Exit Fullscreen';
+    } else {
+      fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+      fullscreenBtn.title = 'Toggle Fullscreen';
+    }
   }
 
   toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      // Enter fullscreen
-      document.documentElement.requestFullscreen().then(() => {
-        // Update button icon to exit fullscreen
-        const fullscreenBtn = document.getElementById('format-fullscreen');
-        if (fullscreenBtn) {
-          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
-          fullscreenBtn.title = 'Exit Fullscreen';
-        }
+    // Check if we're in browser fullscreen (F11)
+    const isBrowserFullscreen = window.innerHeight === screen.height && window.innerWidth === screen.width;
+    const isElementFullscreen = !!document.fullscreenElement;
+
+    if (isBrowserFullscreen && !isElementFullscreen) {
+      // We're in browser fullscreen but not element fullscreen
+      // Exit browser fullscreen first, then enter element fullscreen
+      document.exitFullscreen().then(() => {
+        // Small delay to ensure browser fullscreen is fully exited
+        setTimeout(() => {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.warn('Error attempting to enable element fullscreen:', err);
+          });
+        }, 100);
       }).catch(err => {
+        console.warn('Error attempting to exit browser fullscreen:', err);
+      });
+    } else if (!document.fullscreenElement) {
+      // Enter fullscreen
+      document.documentElement.requestFullscreen().catch(err => {
         console.warn('Error attempting to enable fullscreen:', err);
       });
     } else {
       // Exit fullscreen
-      document.exitFullscreen().then(() => {
-        // Update button icon back to fullscreen
-        const fullscreenBtn = document.getElementById('format-fullscreen');
-        if (fullscreenBtn) {
-          fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
-          fullscreenBtn.title = 'Toggle Fullscreen';
-        }
-      }).catch(err => {
+      document.exitFullscreen().catch(err => {
         console.warn('Error attempting to exit fullscreen:', err);
       });
     }
@@ -440,3 +495,6 @@ $$
 // Initialize the application
 const markTideApp = new MarkTideCore();
 markTideApp.init();
+
+// Expose core instance globally for keyboard shortcuts
+window.MarkTideCore = markTideApp;
