@@ -13,6 +13,15 @@ class KeyboardShortcutManager {
   }
 
   handleKeydown(e) {
+    // Handle F11 key for fullscreen
+    if (e.key === 'F11') {
+      e.preventDefault();
+      if (window.MarkTideCore && window.MarkTideCore.toggleFullscreen) {
+        window.MarkTideCore.toggleFullscreen();
+      }
+      return;
+    }
+
     // Tab indentation (like Sublime Text)
     if (e.key === 'Tab') {
       e.preventDefault();
