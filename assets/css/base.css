@@ -820,12 +820,13 @@
     background-color: var(--editor-bg);
     color: var(--text-color);
     resize: none;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    font-size: 14px;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+    font-size: 16px;
     line-height: 1.5;
     padding: 10px 10px 50px 10px;
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-y: auto;
+    font-feature-settings: "liga" 1, "calt" 1;
   }
   
   #markdown-editor:focus {
