@@ -833,6 +833,13 @@
     outline: none;
   }
   
+  /* Editor-only mode: Make textarea expand to fit content */
+  .editor-pane.native-scrollbars #markdown-editor {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  
   /* =================================================================
      10. EDITOR STATISTICS
      ================================================================= */
