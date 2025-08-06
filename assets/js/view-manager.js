@@ -76,6 +76,13 @@ class ViewManager {
       editorWrapper.style.height = '';
     }
     
+    // Reset textarea height and remove native-scrollbars class
+    const markdownEditor = document.getElementById('markdown-editor');
+    if (markdownEditor) {
+      markdownEditor.style.height = '';
+      markdownEditor.classList.remove('native-scrollbars');
+    }
+    
     // Show footer when returning to split view
     if (footer) {
       footer.style.display = 'block';
@@ -175,6 +182,19 @@ class ViewManager {
         appContainer.style.height = 'auto';
         this.currentView = 'editor-only';
         this.updateButtonStates(true, false);
+        
+        // Fix textarea height for editor-only mode
+        const markdownEditor = document.getElementById('markdown-editor');
+        if (markdownEditor) {
+          // Add native-scrollbars class FIRST to hide blue scrollbar immediately
+          markdownEditor.classList.add('native-scrollbars');
+          // Force browser to apply the class immediately
+          markdownEditor.offsetHeight; // Trigger layout recalculation
+          // Then set the height (small delay to ensure class is applied)
+          setTimeout(() => {
+            markdownEditor.style.height = markdownEditor.scrollHeight + 'px';
+          }, 5); // Very small timeout for smooth transition
+        }
         break;
         
       case 'preview-only':
