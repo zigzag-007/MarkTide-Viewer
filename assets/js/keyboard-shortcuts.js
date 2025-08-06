@@ -78,12 +78,7 @@ class KeyboardShortcutManager {
             window.MarkTideUndoRedo.redoAction();
           }
           break;
-        case 'S':
-          e.preventDefault();
-          if (window.MarkTideScrollSync) {
-            window.MarkTideScrollSync.toggleSyncScrolling();
-          }
-          break;
+
         case 'Backspace':
           e.preventDefault();
           this.deleteToLineStart();
