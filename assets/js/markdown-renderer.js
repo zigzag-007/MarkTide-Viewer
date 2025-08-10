@@ -43,11 +43,18 @@ class MarkdownRenderer {
       }
       
       const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
-      const highlightedCode = hljs.highlight(code, {
-        language: validLanguage,
-      }).value;
-      
-      return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+      try {
+        const highlightedCode = hljs.highlight(code, {
+          language: validLanguage,
+          ignoreIllegals: true  // Prevent HTML injection
+        }).value;
+        
+        return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+      } catch (e) {
+        // Fallback to plain text if highlighting fails
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre><code class="hljs plaintext">${escapedCode}</code></pre>`;
+      }
     };
 
     marked.setOptions({
@@ -62,7 +69,15 @@ class MarkdownRenderer {
         }
         
         const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
-        return hljs.highlight(code, { language: validLanguage }).value;
+        try {
+          return hljs.highlight(code, { 
+            language: validLanguage,
+            ignoreIllegals: true  // Prevent HTML injection
+          }).value;
+        } catch (e) {
+          // Fallback to escaped plain text
+          return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
       },
     });
   }
@@ -84,10 +99,16 @@ class MarkdownRenderer {
       this.markdownPreview.querySelectorAll("pre code").forEach((block) => {
         try {
           if (!block.classList.contains('mermaid')) {
+            // Sanitize content before highlighting to prevent HTML injection
+            const content = block.textContent || block.innerText || '';
+            block.textContent = content; // This removes any HTML
             hljs.highlightElement(block);
           }
         } catch (e) {
           console.warn("Syntax highlighting failed for a code block:", e);
+          // Fallback: ensure content is escaped
+          const content = block.textContent || block.innerText || '';
+          block.textContent = content;
         }
       });
 

@@ -6,6 +6,62 @@ class ImportExportManager {
     this.dropzone = null;
     this.closeDropzoneBtn = null;
     this.markdownEditor = null;
+    this.editorPane = null;
+  }
+
+  // SINGLE SOURCE OF TRUTH: plain text conversion used by both copy-as-text and export-as-txt
+  generatePlainTextFromMarkdown(markdown) {
+    // First, normalize Markdown tables into readable rows
+    const convertTables = (text) => {
+      const lines = text.split('\n');
+      const output = [];
+      let buffer = [];
+      const isSeparatorRow = (line) => /^(\s*\|)?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+(\|\s*)?$/.test(line.trim());
+      const isTableRow = (line) => /\|/.test(line) && !/^\s*\|\s*$/.test(line.trim());
+      const flushTable = () => {
+        if (buffer.length === 0) return;
+        const rows = [];
+        for (const raw of buffer) {
+          const line = raw.trim();
+          if (isSeparatorRow(line)) continue; // skip --- separator row
+          // Strip leading/trailing pipe and split
+          const cols = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+          if (cols.every(c => c === '')) continue; // skip empty rows like ||||
+          rows.push(cols.join(' \u2502 ')); // nice vertical separator
+        }
+        if (rows.length) {
+          output.push(rows.join('\n'));
+          output.push(''); // blank line after table
+        }
+        buffer = [];
+      };
+      for (const line of lines) {
+        if (isTableRow(line)) {
+          buffer.push(line);
+        } else {
+          flushTable();
+          output.push(line);
+        }
+      }
+      flushTable();
+      return output.join('\n');
+    };
+
+    const withTables = convertTables(markdown);
+
+    return withTables
+      .replace(/#{1,6}\s+/g, '') // Remove headers
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic
+      .replace(/`(.*?)`/g, '$1') // Remove inline code
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+      .replace(/!\[(.*?)\]\(.*?\)/g, '$1') // Remove images, keep alt text
+      .replace(/^[\s]*[-\*\+]\s+/gm, '• ') // Convert lists to bullets
+      .replace(/^[\s]*\d+\.\s+/gm, '• ') // Convert numbered lists to bullets
+      .replace(/^>\s+/gm, '') // Remove blockquotes
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks (incl. mermaid)
+      .replace(/---+/g, '') // Remove horizontal rules
+      .trim();
   }
 
   init() {
@@ -13,6 +69,7 @@ class ImportExportManager {
     this.dropzone = document.getElementById("dropzone");
     this.closeDropzoneBtn = document.getElementById("close-dropzone");
     this.markdownEditor = document.getElementById("markdown-editor");
+    this.editorPane = document.querySelector(".editor-pane");
     
     this.setupEventListeners();
     this.setupDragAndDrop();
@@ -33,7 +90,9 @@ class ImportExportManager {
   setupEventListeners() {
     const importButton = document.getElementById("import-button");
     const mobileImportBtn = document.getElementById("mobile-import-button");
-    const copyMarkdownButton = document.getElementById("copy-markdown-button");
+    const copyDropdownBtn = document.getElementById("copy-button");
+    const copyAsMarkdown = document.getElementById("copy-as-markdown");
+    const copyAsText = document.getElementById("copy-as-text");
 
     // Export buttons
     const exportMarkdown = document.getElementById("export-markdown");
@@ -65,16 +124,34 @@ class ImportExportManager {
       });
     }
 
-    if (copyMarkdownButton) {
-      copyMarkdownButton.addEventListener("click", () => {
+    // Copy dropdown actions (markdown/text)
+    if (copyAsMarkdown && copyDropdownBtn) {
+      copyAsMarkdown.addEventListener("click", (e) => {
+        e.preventDefault();
         try {
           const markdownText = this.markdownEditor.value;
           if (window.MarkTideUtils && window.MarkTideUtils.copyToClipboard) {
-            window.MarkTideUtils.copyToClipboard(markdownText);
+            window.MarkTideUtils.copyToClipboard(markdownText, copyDropdownBtn);
           }
         } catch (e) {
           console.error("Copy failed:", e);
-          alert("Failed to copy Markdown: " + e.message);
+          alert("Failed to copy text: " + e.message);
+        }
+      });
+    }
+
+    if (copyAsText && copyDropdownBtn) {
+      copyAsText.addEventListener("click", (e) => {
+        e.preventDefault();
+        try {
+          const markdownText = this.markdownEditor.value;
+          const plainText = this.generatePlainTextFromMarkdown(markdownText);
+          if (window.MarkTideUtils && window.MarkTideUtils.copyToClipboard) {
+            window.MarkTideUtils.copyToClipboard(plainText, copyDropdownBtn);
+          }
+        } catch (e) {
+          console.error("Copy failed:", e);
+          alert("Failed to copy text: " + e.message);
         }
       });
     }
@@ -166,6 +243,37 @@ class ImportExportManager {
     });
 
     this.dropzone.addEventListener("drop", (e) => this.handleDrop(e), false);
+
+    // Enable drag & drop directly on the editor area
+    if (this.editorPane) {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        this.editorPane.addEventListener(eventName, this.preventDefaults, false);
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        this.editorPane.addEventListener(eventName, () => this.highlightEditor(), false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        this.editorPane.addEventListener(eventName, () => this.unhighlightEditor(), false);
+      });
+
+      this.editorPane.addEventListener("drop", (e) => this.handleDrop(e), false);
+    }
+
+    // Also guard the textarea itself to avoid default text drop behavior
+    if (this.markdownEditor) {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        this.markdownEditor.addEventListener(eventName, this.preventDefaults, false);
+      });
+      ["dragenter", "dragover"].forEach((eventName) => {
+        this.markdownEditor.addEventListener(eventName, () => this.highlightEditor(), false);
+      });
+      ["dragleave", "drop"].forEach((eventName) => {
+        this.markdownEditor.addEventListener(eventName, () => this.unhighlightEditor(), false);
+      });
+      this.markdownEditor.addEventListener("drop", (e) => this.handleDrop(e), false);
+    }
   }
 
   preventDefaults(e) {
@@ -181,31 +289,102 @@ class ImportExportManager {
     this.dropzone.classList.remove("active");
   }
 
+  highlightEditor() {
+    if (this.editorPane) {
+      this.editorPane.classList.add("drop-active");
+    }
+  }
+
+  unhighlightEditor() {
+    if (this.editorPane) {
+      this.editorPane.classList.remove("drop-active");
+    }
+  }
+
   handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    if (files.length) {
-      const file = files[0];
-      const isMarkdownFile =
-        file.type === "text/markdown" ||
-        file.name.endsWith(".md") ||
-        file.name.endsWith(".markdown");
-      if (isMarkdownFile) {
-        this.importMarkdownFile(file);
-      } else {
-        alert("Please upload a Markdown file (.md or .markdown)");
+    const getDroppedFile = (event) => {
+      // Prefer DataTransferItemList when available (more reliable across OS integrations)
+      const items = event?.dataTransfer?.items;
+      if (items && items.length) {
+        for (let i = 0; i < items.length; i += 1) {
+          const item = items[i];
+          if (item.kind === "file") {
+            const f = item.getAsFile();
+            if (f) return f;
+          }
+        }
       }
+      const files = event?.dataTransfer?.files;
+      if (files && files.length) return files[0];
+      return null;
+    };
+
+    const file = getDroppedFile(e);
+    if (!file) return;
+
+    // Normalize and validate by extension (case-insensitive), as some OSes leave type empty
+    const fileName = (file.name || "").trim();
+    const lowerName = fileName.toLowerCase();
+    const validExtensions = [".md", ".markdown", ".mkdn", ".mdown", ".mkd"]; // accept common md variants
+    const hasValidExt = validExtensions.some((ext) => lowerName.endsWith(ext));
+
+    const isMarkdownMime = (file.type || "").toLowerCase() === "text/markdown";
+    const looksLikeMarkdown = isMarkdownMime || hasValidExt;
+
+    if (looksLikeMarkdown) {
+      this.importMarkdownFile(file);
+    } else {
+      alert(`Please upload a Markdown file (.md or .markdown)\nReceived: "${fileName || "unknown"}"`);
     }
   }
 
   importMarkdownFile(file) {
+    // Warn if replacing existing content
+    if (this.markdownEditor && this.markdownEditor.value.trim().length > 0) {
+      const proceed = window.confirm(
+        `loading "${file.name}" will replace the current editor content. continue?`
+      );
+      if (!proceed) {
+        return;
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       this.markdownEditor.value = e.target.result;
       if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
         window.MarkTideRenderer.renderMarkdown();
       }
+      // Close dropzone and clear highlight state
       this.dropzone.style.display = "none";
+      if (this.editorPane) {
+        this.editorPane.classList.remove('drop-active');
+      }
+
+      // Normalize editor scrolling after import to avoid stale styles
+      try {
+        const viewMgr = window.MarkTideViewManager;
+        const inSplitView = !viewMgr || viewMgr.currentView === 'split';
+        const inEditorOnly = viewMgr && viewMgr.currentView === 'editor-only';
+        if (inSplitView && this.markdownEditor) {
+          // Ensure textarea behaves like split view defaults
+          this.markdownEditor.classList.remove('native-scrollbars');
+          this.markdownEditor.style.height = '100%';
+          this.markdownEditor.style.overflow = 'auto';
+          this.markdownEditor.style.overflowY = 'auto';
+        } else if (inEditorOnly && this.markdownEditor) {
+          // Ensure textarea expands in editor-only so page can scroll
+          this.markdownEditor.classList.add('native-scrollbars');
+          requestAnimationFrame(() => {
+            this.markdownEditor.style.height = 'auto';
+            this.markdownEditor.style.height = this.markdownEditor.scrollHeight + 'px';
+            this.markdownEditor.style.overflow = 'visible';
+            this.markdownEditor.style.overflowY = 'visible';
+          });
+        }
+      } catch (err) {
+        console.warn('Post-import normalization failed:', err);
+      }
     };
     reader.readAsText(file);
   }
@@ -283,7 +462,7 @@ class ImportExportManager {
         body { 
             box-sizing: border-box;
             min-width: 200px;
-            max-width: 980px;
+            max-width: 920px;
             margin: 0 auto;
             padding: 45px;
             background-color: #000000 !important;
@@ -295,7 +474,14 @@ class ImportExportManager {
             color: #ffffff !important;
             color-scheme: dark;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+            max-width: 920px !important;
+            font-size: 1.05rem !important;
+            line-height: 1.7 !important;
         }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
+        .markdown-body h1 { font-size: 2.1em !important; }
+        .markdown-body h2 { font-size: 1.7em !important; }
+        .markdown-body h3 { font-size: 1.4em !important; }
         
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
@@ -362,24 +548,10 @@ class ImportExportManager {
         }
         
         /* Grok dark mode table styles */
-        .markdown-body table {
-            background-color: #1a1a1a !important;
-            border-color: #333333 !important;
-        }
-        
-        .markdown-body table tr {
-            background-color: #1a1a1a !important;
-            border-top: 1px solid #333333 !important;
-        }
-        
-        .markdown-body table tr:nth-child(2n) {
-            background-color: #1a1a1a !important;
-        }
-        
-        .markdown-body table th, .markdown-body table td {
-            border: 1px solid #333333 !important;
-            padding: 9px 20px !important;
-        }
+        .markdown-body table { background-color: #0f1318 !important; border-color: #30363d !important; }
+        .markdown-body table tr { background-color: #0f1318 !important; border-top: 1px solid #30363d !important; }
+        .markdown-body table tr:nth-child(2n) { background-color: #141a22 !important; }
+        .markdown-body table th, .markdown-body table td { border: 1px solid #30363d !important; padding: 9px 20px !important; }
         
         /* Grok dark mode code blocks */
         .markdown-body pre {
@@ -492,7 +664,7 @@ class ImportExportManager {
         body { 
             box-sizing: border-box;
             min-width: 200px;
-            max-width: 980px;
+            max-width: 920px;
             margin: 0 auto;
             padding: 45px;
             background-color: #ffffff !important;
@@ -504,7 +676,14 @@ class ImportExportManager {
             color: #000000 !important;
             color-scheme: light;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+            max-width: 920px !important;
+            font-size: 1.05rem !important;
+            line-height: 1.7 !important;
         }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
+        .markdown-body h1 { font-size: 2.1em !important; }
+        .markdown-body h2 { font-size: 1.7em !important; }
+        .markdown-body h3 { font-size: 1.4em !important; }
         
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
@@ -571,24 +750,10 @@ class ImportExportManager {
         }
         
         /* Grok light mode table styles */
-        .markdown-body table {
-            background-color: #ffffff !important;
-            border-color: #e0e0e0 !important;
-        }
-        
-        .markdown-body table tr {
-            background-color: #ffffff !important;
-            border-top: 1px solid #e0e0e0 !important;
-        }
-        
-        .markdown-body table tr:nth-child(2n) {
-            background-color: #f8f9fa !important;
-        }
-        
-        .markdown-body table th, .markdown-body table td {
-            border: 1px solid #e0e0e0 !important;
-            padding: 9px 20px !important;
-        }
+        .markdown-body table { background-color: #ffffff !important; border-color: #e0e0e0 !important; }
+        .markdown-body table tr { background-color: #ffffff !important; border-top: 1px solid #e0e0e0 !important; }
+        .markdown-body table tr:nth-child(2n) { background-color: #f8f9fa !important; }
+        .markdown-body table th, .markdown-body table td { border: 1px solid #e0e0e0 !important; padding: 9px 20px !important; }
         
         /* Grok light mode code blocks */
         .markdown-body pre {
@@ -803,19 +968,8 @@ class ImportExportManager {
   exportAsText() {
     const content = this.markdownEditor.value;
     const filename = this.generateSmartFilename(content, '.txt');
-    // Remove markdown formatting for plain text
-    const plainText = content
-      .replace(/#{1,6}\s+/g, '') // Remove headers
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-      .replace(/\*(.*?)\*/g, '$1') // Remove italic
-      .replace(/`(.*?)`/g, '$1') // Remove inline code
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
-      .replace(/!\[(.*?)\]\(.*?\)/g, '$1') // Remove images, keep alt text
-      .replace(/^[\s]*[-\*\+]\s+/gm, '• ') // Convert lists to bullets
-      .replace(/^[\s]*\d+\.\s+/gm, '• ') // Convert numbered lists to bullets
-      .replace(/^>\s+/gm, '') // Remove blockquotes
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/---+/g, ''); // Remove horizontal rules
+    // Use shared converter (same as Copy as Text)
+    const plainText = this.generatePlainTextFromMarkdown(content);
     
     const blob = new Blob([plainText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);

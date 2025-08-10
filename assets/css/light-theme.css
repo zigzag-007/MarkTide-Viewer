@@ -27,9 +27,8 @@
   --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
   --button-active: #e9ecef;
   
-  /* Stats and dropdown backgrounds */
+  /* Stats background */
   --stats-bg: rgba(255, 255, 255, 0.9);
-  --dropdown-bg: rgba(255, 255, 255, 0.95);
   
   /* Editor and preview colors - Different for visual separation */
   --editor-bg: #f8f9fa; /* Light gray for editor */
@@ -38,15 +37,69 @@
   --preview-bg-rgb: 255, 255, 255; /* RGB values for frosted glass */
   --preview-text-color: #000000;
   
+  /* Table colors */
+  --table-bg: #ffffff;
+  --table-row-alt: #f8f9fa;
+  --table-border: #e0e0e0;
+  
   /* Scrollbar colors */
-  --scrollbar-track: #f1f3f4;
-  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-track-light: rgba(0, 0, 0, 0.1);
+  --scrollbar-thumb-light: rgba(0, 0, 0, 0.3);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.5);
   
   /* Dropzone colors */
   --dropzone-bg: #f8f9fa;
+  --dropzone-border: rgba(0, 0, 0, 0.3);
+  --dropzone-bg-subtle: rgba(0, 0, 0, 0.02);
+  --dropzone-active-border: rgba(0, 0, 0, 0.6);
+  --dropzone-active-bg: rgba(0, 0, 0, 0.05);
+  --dropzone-hover-border: rgba(0, 0, 0, 0.5);
+  --dropzone-hover-bg: rgba(0, 0, 0, 0.03);
   
   /* Code highlighting */
   --code-bg: #f8f9fa;
+  --code-pre-bg: #f6f8fa;
+  --code-inline-bg: #FFF8EC;
+  --code-inline-color: #8B4500;
+  
+  /* Loading screen colors */
+  --loading-bg-start: #667eea;
+  --loading-bg-end: #764ba2;
+  --loading-content-color: #ffffff;
+  --loading-text-shadow: rgba(0, 0, 0, 0.3);
+  --loading-title-bg-start: #ffffff;
+  --loading-title-bg-end: #f0f8ff;
+  --loading-title-shadow: rgba(0, 0, 0, 0.2);
+  --loading-subtitle-color: rgba(255, 255, 255, 0.9);
+  --loading-subtitle-shadow: rgba(0, 0, 0, 0.2);
+  --loading-progress-bg: rgba(255, 255, 255, 0.2);
+  --loading-progress-border: rgba(255, 255, 255, 0.3);
+  --loading-progress-bar-start: #ffffff;
+  --loading-progress-bar-end: #f0f8ff;
+  --loading-progress-shadow: rgba(255, 255, 255, 0.5);
+  --loading-designer-color: rgba(255, 255, 255, 0.8);
+  --loading-designer-shadow: rgba(0, 0, 0, 0.2);
+  
+  /* Hover effects */
+  --hover-accent: rgba(79, 195, 247, 0.1);
+  --hover-primary: rgba(79, 195, 247, 0.15);
+  --hover-shadow: rgba(79, 195, 247, 0.2);
+  --hover-shadow-primary: rgba(79, 195, 247, 0.3);
+  
+  /* UI element colors */
+  --view-border: rgba(0, 0, 0, 0.2);
+  --button-border: rgba(0, 0, 0, 0.2);
+  --separator-color: rgba(0, 0, 0, 0.3);
+  --blockquote-color: #666666;
+  --hr-color: #e0e0e0;
+  --logo-bg: rgba(0, 0, 0, 0.1);
+  --logo-border: rgba(0, 0, 0, 0.3);
+  --logo-text: #333333;
+  --logo-hover-bg: rgba(0, 0, 0, 0.15);
+  --logo-hover-border: rgba(0, 0, 0, 0.5);
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-medium: rgba(0, 0, 0, 0.2);
+  --shadow-strong: rgba(0, 0, 0, 0.3);
   
   /* Danger colors */
   --color-danger-fg: #dc3545;
@@ -104,44 +157,44 @@
 
 /* ===== LIGHT THEME LOADING SCREEN ===== */
 [data-theme="light"] .loading-screen {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 100%);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 [data-theme="light"] .loading-content {
-  color: white;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: var(--loading-content-color);
+  text-shadow: 0 2px 10px var(--loading-text-shadow);
 }
 
 [data-theme="light"] .loading-title {
-  background: linear-gradient(45deg, #ffffff, #f0f8ff);
+  background: linear-gradient(45deg, var(--loading-title-bg-start), var(--loading-title-bg-end));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 2px 4px var(--loading-title-shadow));
 }
 
 [data-theme="light"] .loading-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: var(--loading-subtitle-color);
+  text-shadow: 0 1px 3px var(--loading-subtitle-shadow);
 }
 
 [data-theme="light"] .loading-progress {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(5px);
+  background: var(--loading-progress-bg);
+  border: 1px solid var(--loading-progress-border);
   -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 [data-theme="light"] .progress-bar {
-  background: linear-gradient(90deg, #ffffff, #f0f8ff, #ffffff);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  background: linear-gradient(90deg, var(--loading-progress-bar-start), var(--loading-progress-bar-end), var(--loading-progress-bar-start));
+  box-shadow: 0 0 10px var(--loading-progress-shadow);
 }
 
 [data-theme="light"] .loading-designer {
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: var(--loading-designer-color);
+  text-shadow: 0 1px 2px var(--loading-designer-shadow);
 }
 
 /* Light theme loading pulse animation */
@@ -162,51 +215,40 @@ button:hover,
 .btn:hover,
 .nav-item:hover,
 .dropdown-item:hover {
-  background-color: rgba(79, 195, 247, 0.1) !important; /* Light blue with transparency */
+  background-color: var(--hover-accent) !important; /* Light blue with transparency */
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-radius: 4px;
-  box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
+  box-shadow: 0 0 10px var(--hover-shadow);
 }
 
 /* Enhanced frosted glass for primary buttons */
 .btn-primary:hover {
-  background-color: rgba(79, 195, 247, 0.15) !important;
+  background-color: var(--hover-primary) !important;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+  box-shadow: 0 0 15px var(--hover-shadow-primary);
 }
 
 /* ===== LIGHT MODE TABLE STYLING ===== */
-/* Table background and border colors */
-.markdown-body table {
-  background-color: var(--table-bg);
-  border-color: var(--border-color);
-}
-
-/* Table row styling */
-.markdown-body table tr {
-  background-color: var(--table-bg);
-  border-top: 1px solid var(--border-color);
-}
-
-/* Alternating row colors for better readability */
-.markdown-body table tr:nth-child(2n) {
-  background-color: var(--bg-color);
-}
+/* Table background and border colors (match HTML export) */
+.markdown-body table { background-color: var(--table-bg); border-color: var(--border-color); }
+.markdown-body table tr { background-color: var(--table-bg); border-top: 1px solid var(--border-color); }
+.markdown-body table tr:nth-child(2n) { background-color: var(--table-row-alt); }
+.markdown-body table th, .markdown-body table td { border: 1px solid var(--border-color); }
 
 /* ===== LIGHT MODE CODE BLOCK STYLING ===== */
 /* Pre-formatted code block backgrounds */
 .markdown-body pre {
-  background-color: #f6f8fa;
+  background-color: var(--code-pre-bg);
   font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
   font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Inline code styling */
 .markdown-body code:not(pre code) {
-  background-color: #FFF8EC;
-  color: #8B4500;
+  background-color: var(--code-inline-bg);
+  color: var(--code-inline-color);
   font-weight: 600;
   border-radius: 3px;
   padding: 0.2em 0.4em;
@@ -226,60 +268,60 @@ button:hover,
 
 /* Light theme view controls with subtle border */
 [data-theme="light"] .view-controls {
-  border: 1px solid rgba(0, 0, 0, 0.2); /* Semi-transparent black border */
+  border: 1px solid var(--view-border); /* Semi-transparent black border */
 }
 
 /* Light theme view button hover effects for better contrast */
 [data-theme="light"] .view-btn:hover {
   background: var(--button-hover); /* Use CSS custom property for consistency */
-  color: #000000; /* Black text for maximum contrast in light mode */
+  color: var(--text-color); /* Black text for maximum contrast in light mode */
 }
 
 /* Light theme active view button styling */
 [data-theme="light"] .view-btn.active {
   background: var(--button-hover);
-  color: #000000; /* Black text for better readability */
+  color: var(--text-color); /* Black text for better readability */
   -webkit-backdrop-filter: blur(8px); /* Webkit prefix for Safari support */
   backdrop-filter: blur(8px); /* Glass-morphism effect */
 }
 
 /* Light theme separator between view buttons */
 [data-theme="light"] .view-btn + .view-btn {
-  border-left: 1px solid rgba(0, 0, 0, 0.2); /* Vertical divider line */
+  border-left: 1px solid var(--view-border); /* Vertical divider line */
 }
 
 /* Light theme utility button base styling */
 [data-theme="light"] .utility-btn {
-  border: 1px solid rgba(0, 0, 0, 0.2); /* Consistent border style */
+  border: 1px solid var(--button-border); /* Consistent border style */
 }
 
 /* Light theme utility button hover effects with elevation */
 [data-theme="light"] .utility-btn:hover {
   background: var(--button-hover);
   transform: translateY(-1px); /* Subtle lift effect on hover */
-  color: #000000; /* Ensure high contrast text */
+  color: var(--text-color); /* Ensure high contrast text */
   border-color: var(--accent-color); /* Highlight border with accent color */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  box-shadow: 0 4px 12px var(--shadow-light); /* Soft shadow for depth */
 }
 
 /* Light theme blockquote styling for readability */
 [data-theme="light"] .markdown-body blockquote {
-  color: #666666; /* Medium gray for quoted content */
+  color: var(--blockquote-color); /* Medium gray for quoted content */
 }
 
 [data-theme="light"] .markdown-body blockquote p {
-  color: #666666; /* Consistent paragraph color within blockquotes */
+  color: var(--blockquote-color); /* Consistent paragraph color within blockquotes */
 }
 
 /* Light theme quote marks styling */
 [data-theme="light"] .markdown-body blockquote::before,
 [data-theme="light"] .markdown-body blockquote::after {
-  color: #666666; /* Match the blockquote text color */
+  color: var(--blockquote-color); /* Match the blockquote text color */
 }
 
 /* Light theme horizontal rules - clean separator lines */
 [data-theme="light"] .markdown-body hr {
-  background-color: #e0e0e0; /* Light gray horizontal line */
+  background-color: var(--hr-color); /* Light gray horizontal line */
   border: none; /* Remove default styling */
   height: 1px; /* Thin, clean line */
   margin: 2em 0; /* Generous vertical spacing */
@@ -289,7 +331,7 @@ button:hover,
 [data-theme="light"] .editor-pane::-webkit-scrollbar-track,
 [data-theme="light"] .preview-pane::-webkit-scrollbar-track,
 [data-theme="light"] #markdown-editor::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1); /* Light track background */
+  background: var(--scrollbar-track-light); /* Light track background */
   border-radius: 5px; /* Rounded corners */
 }
 
@@ -297,107 +339,107 @@ button:hover,
 [data-theme="light"] .editor-pane::-webkit-scrollbar-thumb,
 [data-theme="light"] .preview-pane::-webkit-scrollbar-thumb,
 [data-theme="light"] #markdown-editor::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3); /* Semi-transparent dark thumb */
+  background: var(--scrollbar-thumb-light); /* Semi-transparent dark thumb */
   border-radius: 5px;
-  border: 1px solid rgba(0, 0, 0, 0.2); /* Subtle border */
+  border: 1px solid var(--view-border); /* Subtle border */
 }
 
 /* Light theme scrollbar thumb hover effects */
 [data-theme="light"] .editor-pane::-webkit-scrollbar-thumb:hover,
 [data-theme="light"] .preview-pane::-webkit-scrollbar-thumb:hover,
 [data-theme="light"] #markdown-editor::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5); /* Darker on hover */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Glow effect */
+  background: var(--scrollbar-thumb-hover); /* Darker on hover */
+  box-shadow: 0 0 10px var(--shadow-strong); /* Glow effect */
 }
 
 /* Light theme toolbar separator styling */
 [data-theme="light"] .toolbar-separator {
-  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent divider */
+  background-color: var(--separator-color); /* Semi-transparent divider */
 }
 
 /* Light theme dropzone (drag & drop area) base styling */
 [data-theme="light"] .dropzone {
-  border: 2px dashed rgba(0, 0, 0, 0.3); /* Dashed border indicates drop area */
-  background-color: rgba(0, 0, 0, 0.02); /* Very subtle background tint */
+  border: 2px dashed var(--dropzone-border); /* Dashed border indicates drop area */
+  background-color: var(--dropzone-bg-subtle); /* Very subtle background tint */
 }
 
 /* Light theme active dropzone (when dragging over) */
 [data-theme="light"] .dropzone.active {
-  border-color: rgba(0, 0, 0, 0.6); /* Stronger border when active */
-  background-color: rgba(0, 0, 0, 0.05); /* Slight background change */
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Elevation shadow */
+  border-color: var(--dropzone-active-border); /* Stronger border when active */
+  background-color: var(--dropzone-active-bg); /* Slight background change */
+  box-shadow: 0 8px 25px var(--shadow-light); /* Elevation shadow */
 }
 
 /* Light theme dropzone text styling */
 [data-theme="light"] .dropzone p {
-  color: #666666; /* Medium gray instructional text */
+  color: var(--blockquote-color); /* Medium gray instructional text */
 }
 
 /* Light theme dropzone hover effects */
 [data-theme="light"] .dropzone:hover {
-  border-color: rgba(0, 0, 0, 0.5); /* Darker border on hover */
-  background-color: rgba(0, 0, 0, 0.03); /* Slightly more visible background */
+  border-color: var(--dropzone-hover-border); /* Darker border on hover */
+  background-color: var(--dropzone-hover-bg); /* Slightly more visible background */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Soft hover shadow */
 }
 
 [data-theme="light"] .dropzone:hover p {
-  color: #333333; /* Darker text on hover for better visibility */
+  color: var(--logo-text); /* Darker text on hover for better visibility */
 }
 
 /* Light theme logo icon styling */
 [data-theme="light"] .logo-icon {
-  background: rgba(0, 0, 0, 0.1); /* Light semi-transparent background */
-  border: 1px solid rgba(0, 0, 0, 0.3); /* Defined border */
-  color: #333333; /* Dark text for contrast */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Depth shadow */
+  background: var(--logo-bg); /* Light semi-transparent background */
+  border: 1px solid var(--logo-border); /* Defined border */
+  color: var(--logo-text); /* Dark text for contrast */
+  box-shadow: 0 4px 12px var(--shadow-medium); /* Depth shadow */
 }
 
 /* Light theme logo icon hover effects */
 [data-theme="light"] .logo-icon:hover {
-  background: rgba(0, 0, 0, 0.15); /* Slightly darker on hover */
-  border-color: rgba(0, 0, 0, 0.5); /* Stronger border */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
+  background: var(--logo-hover-bg); /* Slightly darker on hover */
+  border-color: var(--logo-hover-border); /* Stronger border */
+  box-shadow: 0 6px 20px var(--shadow-strong); /* Enhanced shadow */
 }
 
 /* Light theme brand title hover effects */
 [data-theme="light"] .brand-title:hover {
-  color: #333333;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Subtle text glow */
+  color: var(--logo-text);
+  text-shadow: 0 0 10px var(--shadow-strong); /* Subtle text glow */
 }
 
 [data-theme="light"] .brand-subtitle:hover {
-  color: #333333; /* Consistent dark text on hover */
+  color: var(--logo-text); /* Consistent dark text on hover */
 }
 
 /* Light theme GitHub badge styling */
 [data-theme="light"] .github-badge {
-  border: 1px solid rgba(0, 0, 0, 0.2); /* Consistent border styling */
+  border: 1px solid var(--button-border); /* Consistent border styling */
 }
 
 /* Light theme action button base styling */
 [data-theme="light"] .action-btn {
-  border: 1px solid rgba(0, 0, 0, 0.2); /* Standard border */
+  border: 1px solid var(--button-border); /* Standard border */
 }
 
 /* Light theme action button hover effects with elevation */
 [data-theme="light"] .action-btn:hover {
   background: var(--button-hover);
   transform: translateY(-1px); /* Lift effect */
-  color: #000000; /* High contrast text */
+  color: var(--text-color); /* High contrast text */
   border-color: var(--accent-color); /* Accent color border */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Hover shadow */
+  box-shadow: 0 4px 12px var(--shadow-light); /* Hover shadow */
 }
 
 /* Light theme sync button disabled state */
 [data-theme="light"] .action-btn.sync-disabled {
-  border-color: rgba(0, 0, 0, 0.2); /* Muted border for disabled state */
+  border-color: var(--button-border); /* Muted border for disabled state */
   background: var(--button-bg); /* Default background */
 }
 
 /* Light theme sync button enabled state */
 [data-theme="light"] .action-btn.sync-enabled {
   background: var(--button-hover); /* Active background */
-  color: #000000; /* High contrast text */
+  color: var(--text-color); /* High contrast text */
   -webkit-backdrop-filter: blur(8px); /* Safari compatibility */
   backdrop-filter: blur(8px); /* Glass-morphism effect */
 }

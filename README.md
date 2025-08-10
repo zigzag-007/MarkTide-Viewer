@@ -25,9 +25,9 @@ MarkTide Viewer is a powerful, **free online markdown editor and converter** tha
 
 - Real-time live preview
 - Syntax highlighting with 190+ programming languages
-- Line numbers and formatting toolbar
+- Formatting toolbar (bold/italic/code, lists, etc.)
 - Drag & drop file support
-- Auto-save functionality
+- Drag & drop file support (with replace warning)
 
 ### 🔄 **Format Conversion**
 

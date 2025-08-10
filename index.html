@@ -266,8 +266,17 @@
                     </div>
 
                     <div class="utility-group">
-                        <button id="copy-markdown-button" class="utility-btn" title="Copy Markdown">
-                            <i class="bi bi-clipboard"></i>
+                        <div class="dropdown">
+                            <button id="copy-button" class="utility-btn" title="Copy" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end modern-dropdown">
+                                <li><a class="dropdown-item" href="#" id="copy-as-markdown"><i class="bi bi-markdown me-2"></i>Copy as Markdown</a></li>
+                                <li><a class="dropdown-item" href="#" id="copy-as-text"><i class="bi bi-file-text me-2"></i>Copy as Text</a></li>
+                            </ul>
+                        </div>
+                        <button id="header-fullscreen-toggle" class="utility-btn" title="Toggle Fullscreen">
+                            <i class="bi bi-fullscreen"></i>
                         </button>
                         <button id="theme-toggle" class="utility-btn theme-btn" title="Toggle Dark Mode">
                             <i class="bi bi-moon"></i>
@@ -319,7 +328,7 @@
                                     <i class="bi bi-download"></i>
                                     <span>Export</span>
                                 </button>
-                                <ul class="dropdown-menu export-dropdown">
+                                <ul class="dropdown-menu modern-dropdown">
                                     <li><a class="dropdown-item" href="#" id="mobile-export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
                                     <li><a class="dropdown-item" href="#" id="mobile-export-html"><i class="bi bi-file-earmark-code me-2"></i>Export as HTML</a></li>
                                     <li><a class="dropdown-item" href="#" id="mobile-export-txt"><i class="bi bi-file-earmark me-2"></i>Export as Text</a></li>
@@ -359,7 +368,7 @@
         </div>
 
         <!-- Hidden file input for upload functionality -->
-        <input type="file" id="file-input" accept=".md,.markdown,text/markdown" style="display: none;">
+        <input type="file" id="file-input" accept=".md,.markdown,text/markdown" class="visually-hidden" aria-label="Upload Markdown file">
 
         <!-- Main content area with editor and preview panes -->
         <div class="content-container">
@@ -425,11 +434,6 @@
                     <button id="format-redo" class="format-button" title="Redo" data-format="redo">
                         <i class="bi bi-arrow-clockwise"></i>
                     </button>
-                    <div class="toolbar-separator"></div>
-                    <!-- Fullscreen button -->
-                    <button id="format-fullscreen" class="format-button" title="Toggle Fullscreen" data-format="fullscreen">
-                        <i class="bi bi-fullscreen"></i>
-                    </button>
                 </div>
                 
                 <!-- Wrapper for the editor textarea and line numbers -->
@@ -473,6 +477,7 @@
     <!-- MarkTide Viewer Modular JavaScript Files -->
     <!-- Load in dependency order: utilities first, then core modules, then initialization -->
     <script src="assets/js/utils.js"></script>
+    <script src="assets/js/sample-content.js"></script>
     <script src="assets/js/undo-redo.js"></script>
     <script src="assets/js/mermaid-handler.js"></script>
     <script src="assets/js/theme-manager.js"></script>
