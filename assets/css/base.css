@@ -14,10 +14,15 @@
    1. CSS RESET & UNIVERSAL STYLES
    ================================================================= */
 
-   * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+/* Utility Classes */
+.visually-hidden {
+  display: none !important;
+}
+
+  * {
+   box-sizing: border-box;
+   margin: 0;
+   padding: 0;
   }
   
   html, body {
@@ -53,8 +58,8 @@
     justify-content: center;
     z-index: 9999;
     transition: opacity 0.5s ease, visibility 0.5s ease;
-    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
   }
   
   .loading-screen.fade-out {
@@ -68,8 +73,8 @@
     background: rgba(255, 255, 255, 0.05);
     padding: 3rem;
     border-radius: 20px;
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     animation: contentFloat 3s ease-in-out infinite;
@@ -116,15 +121,15 @@
     border-radius: 10px;
     overflow: hidden;
     margin: 0 auto;
-    backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .progress-bar {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #fff, #f0f8ff, #fff);
+    background: linear-gradient(90deg, var(--text-color), #f0f8ff, var(--text-color));
     border-radius: 10px;
     animation: progressFill 2s ease-in-out forwards;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
@@ -169,10 +174,23 @@
   .content-container {
     display: flex;
     flex: 1;
-    overflow: hidden;
+    overflow: hidden; /* default: no page scroll */
     transition: all 0.3s ease;
     min-height: 0;
   }
+
+  /* In editor-only, let the PAGE control scrolling (no container clamp) */
+  body.editor-only-active .content-container {
+    height: auto;
+  }
+
+  /* In preview-only, let document scroll from the top (no clamping) */
+  body.preview-only-active .content-container {
+    height: auto;
+  }
+
+  /* Expose header height as a CSS var; updated via JS compute path */
+  .app-header { --header-height: 0px; }
   
   /* =================================================================
      5. HEADER COMPONENTS
@@ -731,31 +749,50 @@
      ================================================================= */
   
   .modern-dropdown {
-    background: var(--dropdown-bg) !important;
-    border: 1px solid var(--border-color) !important;
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)) !important;
+    border: 1px solid rgba(79, 195, 247, 0.25) !important;
     border-radius: 12px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35) !important;
     padding: 0.5rem !important;
     margin-top: 0.5rem !important;
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(22px) saturate(200%);
+    backdrop-filter: blur(22px) saturate(200%);
+    min-width: 230px;
+  }
+
+  .modern-dropdown::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    pointer-events: none;
   }
   
   .modern-dropdown .dropdown-item {
     display: flex !important;
     align-items: center !important;
     gap: 0.75rem !important;
-    padding: 0.75rem 1rem !important;
+    padding: 0.7rem 0.95rem !important;
     border-radius: 8px !important;
-    margin: 0 !important;
+    margin: 2px 0 !important;
     color: var(--text-color) !important;
     font-weight: 500 !important;
-    transition: all 0.2s ease !important;
+    transition: transform 0.15s ease, background 0.15s ease !important;
   }
   
   .modern-dropdown .dropdown-item:hover {
-    background: var(--button-hover) !important;
-    transform: translateX(4px) !important;
+    background: rgba(79, 195, 247, 0.12) !important;
+    transform: translateX(3px) !important;
+  }
+
+  .modern-dropdown .dropdown-item i {
+    opacity: 0.9 !important;
+  }
+
+  .modern-dropdown .dropdown-item:not(:first-child) {
+    border-top: 1px solid rgba(255,255,255,0.06);
   }
   
   .dropdown-menu {
@@ -783,16 +820,46 @@
     position: relative;
     transition: all 0.3s ease;
     background-color: var(--editor-bg);
-    border-right: 1px solid rgba(79, 195, 247, 0.2);
+    border-right: 1px solid rgba(79, 195, 247, 0.12);
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 100%;
+  }
+
+  /* In editor-only, pane should not scroll; page owns the scrollbar */
+  body.editor-only-active .editor-pane {
+    overflow: visible;
+  }
+
+  /* Drag-and-drop highlight for editor pane */
+  .editor-pane.drop-active::after {
+    content: "📥  Drop your file to load";
+    position: absolute;
+    inset: 8px;
+    border: 2px dashed rgba(79, 195, 247, 0.6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.1px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    background: linear-gradient(180deg, rgba(79,195,247,0.045), rgba(79,195,247,0.02));
+    -webkit-backdrop-filter: blur(2px) saturate(140%);
+    backdrop-filter: blur(2px) saturate(140%);
+    box-shadow: inset 0 0 0 2px rgba(79,195,247,0.22), 0 8px 24px rgba(0,0,0,0.22);
+    pointer-events: none;
+    z-index: 9;
+    transition: all 120ms ease;
   }
   
   .preview-pane {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: auto; /* split view default */
     overflow-x: hidden;
     position: relative;
     transition: all 0.3s ease;
@@ -800,6 +867,28 @@
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
     width: 100%;
     max-width: 100%;
+  }
+
+  /* In preview-only, native page scroll should take over (no inner scroll) */
+  body.preview-only-active .preview-pane {
+    overflow: visible;
+  }
+
+  /* Safety: disable any scoped webkit scrollbar skin when NOT in split */
+  body.editor-only-active .editor-pane::-webkit-scrollbar,
+  body.editor-only-active .editor-pane::-webkit-scrollbar-track,
+  body.editor-only-active .editor-pane::-webkit-scrollbar-thumb,
+  body.editor-only-active #markdown-editor::-webkit-scrollbar,
+  body.editor-only-active #markdown-editor::-webkit-scrollbar-track,
+  body.editor-only-active #markdown-editor::-webkit-scrollbar-thumb,
+  body.preview-only-active .preview-pane::-webkit-scrollbar,
+  body.preview-only-active .preview-pane::-webkit-scrollbar-track,
+  body.preview-only-active .preview-pane::-webkit-scrollbar-thumb {
+    width: auto !important;
+    height: auto !important;
+    background: initial !important;
+    border: initial !important;
+    box-shadow: none !important;
   }
   
   .editor-wrapper {
@@ -825,7 +914,7 @@
     line-height: 1.5;
     padding: 10px 10px 50px 10px;
     transition: background-color 0.3s ease, color 0.3s ease;
-    overflow-y: auto;
+    overflow-y: auto; /* default in split view */
     font-feature-settings: "liga" 1, "calt" 1;
   }
   
@@ -834,6 +923,7 @@
   }
   
   /* Editor-only mode: Make textarea expand to fit content */
+  /* In editor-only, the pane is the scroller, textarea expands and doesn't scroll */
   .editor-pane.native-scrollbars #markdown-editor {
     height: auto;
     min-height: 100%;
@@ -860,6 +950,15 @@
     color: var(--text-color);
     z-index: 5;
     transition: all 0.2s ease;
+  }
+
+  /* Keep stats bubble always visible in editor-only mode (mobile/desktop) */
+  body.editor-only-active .editor-stats {
+    position: fixed;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 1000;
+    pointer-events: none; /* purely informational */
   }
   
   .editor-stat-item {
@@ -932,12 +1031,15 @@
     z-index: 10;
     overflow-x: auto;
     overflow-y: hidden;
-    backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
     animation: toolbarGlow 3s ease-in-out infinite alternate;
+    width: calc(100% - 16px);
+    margin-left: 4px;
+    margin-right: 12px;
   }
   
   .format-button {
@@ -957,8 +1059,8 @@
     transition: all 0.3s ease;
     -webkit-user-select: none;
     user-select: none;
-    backdrop-filter: blur(12px) saturate(150%);
     -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(12px) saturate(150%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
@@ -968,8 +1070,8 @@
     color: var(--accent-color);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(79, 195, 247, 0.3);
-    backdrop-filter: blur(16px) saturate(200%);
     -webkit-backdrop-filter: blur(16px) saturate(200%);
+    backdrop-filter: blur(16px) saturate(200%);
   }
   
   .format-button:active {
@@ -1014,8 +1116,8 @@
     transition: all 0.3s ease;
     background-color: rgba(79, 195, 247, 0.05);
     position: relative;
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
   
   .dropzone.active {
@@ -1061,8 +1163,8 @@
     height: 48px;
     opacity: 0.8;
     transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin: 8px;
     z-index: 10;
@@ -1071,31 +1173,15 @@
   .close-btn:hover {
     opacity: 1;
     background-color: rgba(255, 107, 107, 0.1);
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    border-color: var(--color-danger-fg);
+    color: var(--color-danger-fg);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
   
-  /* =================================================================
-     13. STATISTICS DISPLAY
-     ================================================================= */
-  
-  .stats-container {
-    font-size: 0.9rem;
-    color: var(--text-color);
-  }
-  
-  .stat-item {
-    align-items: center;
-  }
-  
-  .stat-item i {
-    font-size: 1rem;
-    opacity: 0.8;
-  }
+
   
   /* =================================================================
      14. MARKDOWN PREVIEW CONTENT
@@ -1114,6 +1200,28 @@
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     overflow-x: hidden;
   }
+
+  /* Normalize heading spacing across themes */
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Slightly larger, document-like scale when in preview-only mode */
+  body.preview-only-active .markdown-body {
+    max-width: 920px;
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+
+  body.preview-only-active .markdown-body h1 { font-size: 2.1em; }
+  body.preview-only-active .markdown-body h2 { font-size: 1.7em; }
+  body.preview-only-active .markdown-body h3 { font-size: 1.4em; }
   
   .markdown-body img {
     background-color: transparent !important;
@@ -1164,14 +1272,14 @@
   
   /* --- Block Elements --- */
   .markdown-body blockquote {
-    color: #cccccc;
+    color: var(--blockquote-color, #cccccc);
     border-left: 4px solid var(--accent-color);
     padding-left: 1em;
     margin: 1em 0;
   }
   
   .markdown-body hr {
-    background-color: #333333;
+    background-color: var(--hr-color, #333333);
     border: none;
     height: 1px;
     margin: 2em 0;
@@ -1189,7 +1297,7 @@
   
   /* --- Code Blocks --- */
   .markdown-body pre {
-    background-color: #f6f8fa;
+    background-color: var(--code-pre-bg, #f6f8fa);
     border-radius: 6px;
     padding: 16px;
     margin: 1.5em 0;
@@ -1210,8 +1318,8 @@
   }
   
   .markdown-body code {
-    background-color: #f6f8fa;
-    color: #24292e;
+    background-color: var(--code-inline-bg, #f6f8fa);
+    color: var(--code-inline-color, #24292e);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 85%;
@@ -1219,30 +1327,7 @@
     font-feature-settings: "liga" 1, "calt" 1;
   }
   
-  .code-block-with-numbers {
-    position: relative;
-    padding-left: 3.5em !important;
-  }
-  
-  .code-block-with-numbers .line-number {
-    position: absolute;
-    left: 0;
-    width: 3em;
-    padding-right: 0.5em;
-    text-align: right;
-    color: var(--text-color);
-    opacity: 0.5;
-    font-size: 0.9em;
-    -webkit-user-select: none;
-    user-select: none;
-    border-right: 1px solid var(--border-color);
-    background-color: var(--code-bg);
-  }
-  
-  .code-block-with-numbers .line-content {
-    display: inline-block;
-    padding-left: 0.5em;
-  }
+
   
   /* =================================================================
      15. MERMAID DIAGRAMS
@@ -1289,14 +1374,12 @@
     font-size: 12px;
     animation: heartbeat 2s ease-in-out infinite;
     transition: all 0.3s ease;
-    -webkit-text-stroke: 0.8px #ff6b7a;
-    text-stroke: 0.8px #ff6b7a;
+    -webkit-text-stroke: 0.8px var(--heart-color-light, #ff6b7a);
     filter: drop-shadow(0 0 1px rgba(255, 107, 122, 0.8));
   }
   
   .footer-heart:hover {
-    -webkit-text-stroke: 1px #ff4757;
-    text-stroke: 1px #ff4757;
+    -webkit-text-stroke: 1px var(--heart-color-dark, #ff4757);
     transform: scale(1.05);
     filter: drop-shadow(0 0 2px rgba(255, 71, 87, 0.9));
   }
@@ -1305,32 +1388,35 @@
      17. SCROLLBAR CUSTOMIZATION
      ================================================================= */
   
-  /* --- Main Scrollbars --- */
-  .editor-pane::-webkit-scrollbar,
-  .preview-pane::-webkit-scrollbar,
-  #markdown-editor::-webkit-scrollbar {
+  /* --- Main Scrollbars (Split View Only) ---
+     NOTE: Blue custom scrollbars are intentionally restricted to SPLIT VIEW.
+     In editor-only and preview-only modes, the browser native scrollbars must be used.
+     We scope these rules to body:not(.editor-only-active):not(.preview-only-active) to ensure this. */
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar,
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   
-  .editor-pane::-webkit-scrollbar-track,
-  .preview-pane::-webkit-scrollbar-track,
-  #markdown-editor::-webkit-scrollbar-track {
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-track,
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-track,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-track {
     background: rgba(79, 195, 247, 0.1);
     border-radius: 5px;
   }
   
-  .editor-pane::-webkit-scrollbar-thumb,
-  .preview-pane::-webkit-scrollbar-thumb,
-  #markdown-editor::-webkit-scrollbar-thumb {
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-thumb,
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-thumb,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-thumb {
     background: rgba(79, 195, 247, 0.3);
     border-radius: 5px;
     border: 1px solid rgba(79, 195, 247, 0.2);
   }
   
-  .editor-pane::-webkit-scrollbar-thumb:hover,
-  .preview-pane::-webkit-scrollbar-thumb:hover,
-  #markdown-editor::-webkit-scrollbar-thumb:hover {
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-thumb:hover,
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-thumb:hover,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-thumb:hover {
     background: rgba(79, 195, 247, 0.5);
     box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
   }
@@ -1396,4 +1482,9 @@
   a:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
+  }
+
+  /* Border utility class used by JavaScript */
+  .border-primary {
+    border-color: var(--accent-color) !important;
   }

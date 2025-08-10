@@ -87,11 +87,11 @@ function updateDocumentStats() {
 /**
  * Copy text to clipboard with fallback for older browsers
  */
-async function copyToClipboard(text) {
+async function copyToClipboard(text, targetButton) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
-      showCopiedMessage();
+      showCopiedMessage(targetButton);
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = text;
@@ -103,7 +103,7 @@ async function copyToClipboard(text) {
       const successful = document.execCommand("copy");
       document.body.removeChild(textArea);
       if (successful) {
-        showCopiedMessage();
+        showCopiedMessage(targetButton);
       } else {
         throw new Error("Copy command was unsuccessful");
       }
@@ -117,12 +117,23 @@ async function copyToClipboard(text) {
 /**
  * Show copied confirmation message
  */
-function showCopiedMessage() {
-  const copyMarkdownButton = document.getElementById("copy-markdown-button");
-  copyMarkdownButton.innerHTML = '<i class="bi bi-check-lg"></i>';
-
+function showCopiedMessage(targetButton) {
+  let buttonEl = null;
+  if (targetButton) {
+    if (typeof targetButton === 'string') {
+      buttonEl = document.getElementById(targetButton);
+    } else if (targetButton instanceof HTMLElement) {
+      buttonEl = targetButton;
+    }
+  }
+  if (!buttonEl) {
+    buttonEl = document.getElementById('copy-button') || document.getElementById('copy-markdown-button');
+  }
+  if (!buttonEl) return;
+  const originalHTML = buttonEl.innerHTML;
+  buttonEl.innerHTML = '<i class="bi bi-check-lg"></i>';
   setTimeout(() => {
-    copyMarkdownButton.innerHTML = '<i class="bi bi-clipboard"></i>';
+    buttonEl.innerHTML = originalHTML || '<i class="bi bi-clipboard"></i>';
   }, 2000);
 }
 

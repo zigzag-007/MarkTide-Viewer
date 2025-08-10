@@ -1,4 +1,4 @@
-// Editor functionality for text manipulation and line numbers
+// Editor functionality for text manipulation (no line numbering)
 
 class EditorManager {
   constructor() {

@@ -27,9 +27,8 @@
   --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
   --button-active: #1a1a1a;
   
-  /* Stats and dropdown backgrounds */
+  /* Stats background */
   --stats-bg: rgba(0, 0, 0, 0.8);
-  --dropdown-bg: rgba(26, 26, 26, 0.95);
   
   /* Editor and preview colors - Different for visual separation */
   --editor-bg: #1a1a1a; /* Dark gray for editor */
@@ -38,15 +37,44 @@
   --preview-bg-rgb: 0, 0, 0; /* RGB values for frosted glass */
   --preview-text-color: #ffffff;
   
-  /* Scrollbar colors */
-  --scrollbar-track: #1a1a1a;
-  --scrollbar-thumb: #333333;
+  /* Table colors */
+  --table-bg: #0f1318; /* base cell background */
+  --table-row-alt: #141a22; /* zebra stripe */
+  --table-border: #30363d; /* borders similar to GitHub dark */
+  
+
   
   /* Dropzone colors */
   --dropzone-bg: rgba(26, 26, 26, 0.8);
   
   /* Code highlighting */
   --code-bg: #1a1a1a;
+  --code-pre-bg: #242628;
+  --code-inline-bg: #29241E;
+  --code-inline-color: #FFD085;
+  --hljs-color: #e8eaed;
+  
+  /* Loading screen colors */
+  --loading-bg-start: #1a1a1a;
+  --loading-bg-end: #000000;
+  --loading-border: rgba(79, 195, 247, 0.2);
+  --loading-text-shadow: rgba(0, 0, 0, 0.5);
+  --loading-subtitle-color: rgba(255, 255, 255, 0.9);
+  --loading-progress-bg: rgba(79, 195, 247, 0.1);
+  --loading-progress-border: rgba(79, 195, 247, 0.3);
+  --loading-designer-color: rgba(255, 255, 255, 0.7);
+  
+  /* Hover effects */
+  --hover-accent: rgba(79, 195, 247, 0.1);
+  --hover-primary: rgba(79, 195, 247, 0.15);
+  --hover-shadow: rgba(79, 195, 247, 0.2);
+  --hover-shadow-primary: rgba(79, 195, 247, 0.3);
+  
+  /* List and content colors */
+  --list-marker-color: #ffffff;
+  --blockquote-color: #cccccc;
+  --blockquote-bold-color: #E2E8F0;
+  --hr-color: #333333;
   
   /* Danger colors */
   --color-danger-fg: #ff6b6b;
@@ -60,44 +88,44 @@
 
 /* ===== DARK THEME LOADING SCREEN ===== */
 [data-theme="dark"] .loading-screen {
-  background: linear-gradient(135deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 50%, var(--loading-bg-start) 100%);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(79, 195, 247, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--loading-border);
 }
 
 [data-theme="dark"] .loading-content {
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  color: var(--text-color);
+  text-shadow: 0 2px 10px var(--loading-text-shadow);
 }
 
 [data-theme="dark"] .loading-title {
-  background: linear-gradient(45deg, #ffffff, #4fc3f7);
+  background: linear-gradient(45deg, var(--text-color), var(--accent-color));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(79, 195, 247, 0.3));
+  filter: drop-shadow(0 2px 4px var(--hover-shadow-primary));
 }
 
 [data-theme="dark"] .loading-subtitle {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--loading-subtitle-color);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .loading-progress {
-  background: rgba(79, 195, 247, 0.1);
-  border: 1px solid rgba(79, 195, 247, 0.3);
-  backdrop-filter: blur(5px);
+  background: var(--loading-progress-bg);
+  border: 1px solid var(--loading-progress-border);
   -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 [data-theme="dark"] .progress-bar {
-  background: linear-gradient(90deg, #4fc3f7, #ffffff, #4fc3f7);
+  background: linear-gradient(90deg, var(--accent-color), var(--text-color), var(--accent-color));
   box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
 }
 
 [data-theme="dark"] .loading-designer {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--loading-designer-color);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -119,19 +147,19 @@
 [data-theme="dark"] .btn:hover,
 [data-theme="dark"] .nav-item:hover,
 [data-theme="dark"] .dropdown-item:hover {
-  background-color: rgba(79, 195, 247, 0.1) !important; /* Light blue with transparency */
+  background-color: var(--hover-accent) !important; /* Light blue with transparency */
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-radius: 4px;
-  box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
+  box-shadow: 0 0 10px var(--hover-shadow);
 }
 
 /* Enhanced frosted glass for primary buttons */
 [data-theme="dark"] .btn-primary:hover {
-  background-color: rgba(79, 195, 247, 0.15) !important;
+  background-color: var(--hover-primary) !important;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+  box-shadow: 0 0 15px var(--hover-shadow-primary);
 }
 
 /* ===== DARK MODE LINE NUMBERS ===== */
@@ -186,28 +214,38 @@
 }
 
 /* ===== DARK MODE TABLE STYLING ===== */
-/* Table styling overrides for dark mode */
-[data-theme="dark"] .markdown-body table tr {
+/* Table styling aligned with export/PDF look */
+[data-theme="dark"] .markdown-body table {
   background-color: var(--table-bg);
+  border-color: var(--table-border);
 }
 
-/* Alternating row colors for dark mode tables */
+[data-theme="dark"] .markdown-body table tr {
+  background-color: var(--table-bg);
+  border-top: 1px solid var(--table-border);
+}
+
 [data-theme="dark"] .markdown-body table tr:nth-child(2n) {
-  background-color: #25334a; /* Slightly lighter version of editor-bg for dark mode table stripes */
+  background-color: var(--table-row-alt);
+}
+
+[data-theme="dark"] .markdown-body table th,
+[data-theme="dark"] .markdown-body table td {
+  border: 1px solid var(--table-border);
 }
 
 /* ===== DARK MODE CODE BLOCK STYLING ===== */
 /* Pre-formatted code block backgrounds in dark mode */
 [data-theme="dark"] .markdown-body pre {
-  background-color: #242628;
+  background-color: var(--code-pre-bg);
   font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
   font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Inline code styling for dark mode */
 [data-theme="dark"] .markdown-body code:not(pre code) {
-  background-color: #29241E;
-  color: #FFD085;
+  background-color: var(--code-inline-bg);
+  color: var(--code-inline-color);
   font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
   font-feature-settings: "liga" 1, "calt" 1;
 }
@@ -220,16 +258,11 @@
 
 /* Syntax highlighting text color */
 [data-theme="dark"] .hljs {
-  color: #e8eaed;
+  color: var(--hljs-color);
 }
 
 
-/* ===== DARK MODE LINE NUMBERS IN CODE BLOCKS ===== */
-/* Line number styling for numbered code blocks */
-[data-theme="dark"] .code-block-with-numbers .line-number {
-  border-right-color: var(--border-color);
-  background-color: var(--code-bg);
-}
+
 
 /* ===== DARK MODE HEADER ELEMENTS ===== */
 /* H4 styling */
@@ -241,7 +274,7 @@
 [data-theme="dark"] .markdown-body strong,
 [data-theme="dark"] .markdown-body b {
   font-weight: 900 !important;
-  color: #ffffff !important;
+  color: var(--text-color) !important;
   font-style: normal !important;
 }
 
@@ -251,14 +284,14 @@
 [data-theme="dark"] .markdown-body b em,
 [data-theme="dark"] .markdown-body b i {
   font-weight: 900 !important;
-  color: #ffffff !important;
+  color: var(--text-color) !important;
 }
 
 /* Blockquote bold text should be less aggressive */
 [data-theme="dark"] .markdown-body blockquote strong,
 [data-theme="dark"] .markdown-body blockquote b {
   font-weight: 700 !important;
-  color: #E2E8F0 !important;
+  color: var(--blockquote-bold-color) !important;
 }
 /* App header title color in dark mode */
 [data-theme="dark"] .app-header .h4 {
@@ -282,32 +315,32 @@
 
 /* Dark theme numbered list styling - Grok-style improvements */
 [data-theme="dark"] .markdown-body ol li::marker {
-  color: #ffffff; /* White numbers for list items */
+  color: var(--list-marker-color); /* White numbers for list items */
   font-weight: 600; /* Bold font weight for better visibility */
 }
 
 [data-theme="dark"] .markdown-body ol li {
-  color: #ffffff; /* White text for list items */
+  color: var(--list-marker-color); /* White text for list items */
 }
 
 /* Dark theme blockquote styling for better readability */
 [data-theme="dark"] .markdown-body blockquote {
-  color: #cccccc; /* Light gray text for quoted content */
+  color: var(--blockquote-color); /* Light gray text for quoted content */
 }
 
 [data-theme="dark"] .markdown-body blockquote p {
-  color: #cccccc; /* Consistent color for paragraphs within blockquotes */
+  color: var(--blockquote-color); /* Consistent color for paragraphs within blockquotes */
 }
 
 /* Dark theme quote marks styling within blockquotes */
 [data-theme="dark"] .markdown-body blockquote::before,
 [data-theme="dark"] .markdown-body blockquote::after {
-  color: #cccccc; /* Light gray for decorative quote marks */
+  color: var(--blockquote-color); /* Light gray for decorative quote marks */
 }
 
 /* Dark theme horizontal rules - Grok-style separators */
 [data-theme="dark"] .markdown-body hr {
-  background-color: #333333; /* Dark gray horizontal line */
+  background-color: var(--hr-color); /* Dark gray horizontal line */
   border: none; /* Remove default border */
   height: 1px; /* Thin line */
   margin: 2em 0; /* Generous spacing above and below */
@@ -319,5 +352,5 @@
 }
 
 [data-theme="dark"] .markdown-body ul li::marker {
-  color: #ffffff; /* White bullet points for better visibility */
+  color: var(--list-marker-color); /* White bullet points for better visibility */
 }
