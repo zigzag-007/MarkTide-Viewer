@@ -897,6 +897,12 @@
     height: calc(100% - 44px);
     margin-top: 0;
   }
+
+  /* Fix: Reset wrapper height in editor-only mode */
+  body.editor-only-active .editor-wrapper {
+    height: auto;
+    min-height: 0;
+  }
   
   /* =================================================================
      9. MARKDOWN EDITOR
@@ -920,6 +926,15 @@
   
   #markdown-editor:focus {
     outline: none;
+  }
+
+  /* Fix: Auto-expand textarea in editor-only mode */
+  body.editor-only-active #markdown-editor {
+    height: auto !important;
+    min-height: calc(100vh - 120px) !important;
+    resize: none !important;
+    overflow: hidden !important;
+    field-sizing: content !important;
   }
   
   /* Editor-only mode: Make textarea expand to fit content */
