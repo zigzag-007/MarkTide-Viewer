@@ -217,26 +217,14 @@ class ViewManager {
         bodyEl.classList.remove('preview-only-active');
         bodyEl.classList.add('editor-only-active');
         
-        // Ensure textarea expands and doesn't create an inner scrollbar
+        // Simple CSS-based solution - let CSS handle auto-sizing
         const markdownEditor = document.getElementById('markdown-editor');
         if (markdownEditor) {
-          // Add native-scrollbars class FIRST to hide blue scrollbar immediately
+          // Clear any interfering inline styles and let CSS take over
+          markdownEditor.style.height = '';
+          markdownEditor.style.overflow = '';
+          markdownEditor.style.overflowY = '';
           markdownEditor.classList.add('native-scrollbars');
-          // Force browser to apply the class immediately
-          markdownEditor.offsetHeight; // Trigger layout recalculation
-          // Then set the height (small delay to ensure class is applied)
-          setTimeout(() => {
-            markdownEditor.style.height = markdownEditor.scrollHeight + 'px';
-            // Disable inner textarea scrolling so the pane is the only scroller
-            markdownEditor.style.overflow = 'visible';
-            markdownEditor.style.overflowY = 'visible';
-            // lock height during scroll frames to avoid oscillation
-            this._editorScrollLockHandler = () => {
-              const h = markdownEditor.scrollHeight;
-              markdownEditor.style.height = `${h}px`;
-            };
-            window.addEventListener('scroll', this._editorScrollLockHandler, { passive: true });
-          }, 5); // Very small timeout for smooth transition
         }
         break;
         
