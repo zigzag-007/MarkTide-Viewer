@@ -9,6 +9,38 @@ class ImportExportManager {
     this.editorPane = null;
   }
 
+  // CSS and JavaScript minification utilities
+  minifyCSS(css) {
+    return css
+      // Remove comments
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      // Remove excess whitespace and newlines
+      .replace(/\s+/g, ' ')
+      // Remove spaces around certain characters
+      .replace(/\s*([{}:;,>+~])\s*/g, '$1')
+      // Remove trailing semicolons before closing braces
+      .replace(/;}/g, '}')
+      // Remove leading/trailing whitespace
+      .trim();
+  }
+
+  minifyJS(js) {
+    return js
+      // Remove single-line comments (but preserve URLs and regex)
+      .replace(/\/\/(?![^\r\n]*['"`]).*$/gm, '')
+      // Remove multi-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      // Remove excess whitespace and newlines
+      .replace(/\s+/g, ' ')
+      // Remove spaces around operators and punctuation
+      .replace(/\s*([=+\-*/%<>!&|?:;,(){}[\]])\s*/g, '$1')
+      // Add back necessary spaces for keywords
+      .replace(/}(if|else|for|while|function|var|let|const|return)/g, '} $1')
+      .replace(/(if|else|for|while|function|var|let|const|return)([({])/g, '$1 $2')
+      // Remove leading/trailing whitespace
+      .trim();
+  }
+
   // SINGLE SOURCE OF TRUTH: plain text conversion used by both copy-as-text and export-as-txt
   generatePlainTextFromMarkdown(markdown) {
     // First, normalize Markdown tables into readable rows
@@ -846,23 +878,8 @@ class ImportExportManager {
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
-    const fullHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${documentTitle || 'Exported Markdown'}</title>
-    <link rel="icon" href="https://raw.githubusercontent.com/zigzag-007/MarkTide-Viewer/main/assets/img/icon.jpg" type="image/jpeg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-            <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
-    <link rel="stylesheet" href="${highlightTheme}">
-    <style>
-        ${themeStyles}
-        
+    // Minify CSS for smaller output
+    const mermaidStyles = `
         /* Mermaid diagram styles */
         .mermaid-container, .mermaid {
             text-align: center;
@@ -873,7 +890,25 @@ class ImportExportManager {
             max-width: 100%;
             height: auto;
         }
-    </style>
+    `;
+    
+    const minifiedStyles = this.minifyCSS(themeStyles + mermaidStyles);
+
+    const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${documentTitle || 'Exported Markdown'}</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/zigzag-007/MarkTide-Viewer/main/assets/img/icon.jpg" type="image/jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+    <link rel="stylesheet" href="${highlightTheme}">
+    <style>${minifiedStyles}</style>
 </head>
 <body>
     <article class="markdown-body">
@@ -882,7 +917,7 @@ class ImportExportManager {
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
-    <script>
+    <script>${this.minifyJS(`
         // Apply syntax highlighting to code blocks
         document.querySelectorAll('pre code').forEach((block) => {
             if (!block.classList.contains('mermaid')) {
@@ -891,7 +926,7 @@ class ImportExportManager {
         });
         
         // Initialize and render Mermaid diagrams
-        const isDarkMode = ${isDarkMode}
+        const isDarkMode = ${isDarkMode};
         const mermaidTheme = isDarkMode ? 'dark' : 'base';
         
         let themeVariables = {};
@@ -934,12 +969,12 @@ class ImportExportManager {
         } catch (e) {
             console.warn("Mermaid rendering failed:", e);
         }
-    </script>
-    <script>
+    `)}</script>
+    <script>${this.minifyJS(`
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
                 processEscapes: true,
                 processEnvironments: true
             },
@@ -949,7 +984,7 @@ class ImportExportManager {
                 processHtmlClass: 'tex2jax_process'
             }
         };
-    </script>
+    `)}</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
 </body>
 </html>`;
