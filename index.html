@@ -278,6 +278,9 @@
                         <button id="header-fullscreen-toggle" class="utility-btn" title="Toggle Fullscreen">
                             <i class="bi bi-fullscreen"></i>
                         </button>
+                        <button id="soft-breaks-toggle" class="utility-btn" title="Soft Line Breaks: ON (Single Enter creates line break)">
+                            <i class="bi bi-text-wrap"></i>
+                        </button>
                         <button id="theme-toggle" class="utility-btn theme-btn" title="Toggle Dark Mode">
                             <i class="bi bi-moon"></i>
                         </button>
@@ -344,6 +347,11 @@
                             <button id="mobile-show-preview" class="mobile-menu-item" title="Hide Preview" aria-pressed="true">
                                 <i class="bi bi-eye"></i>
                                 <span>Hide Preview</span>
+                            </button>
+                            
+                            <button id="mobile-soft-breaks-toggle" class="mobile-menu-item" title="Soft Line Breaks: ON">
+                                <i class="bi bi-text-wrap"></i>
+                                <span>Soft Line Breaks: ON</span>
                             </button>
                             
                             <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
@@ -483,6 +491,7 @@
     <script src="assets/js/theme-manager.js"></script>
     <script src="assets/js/editor.js"></script>
     <script src="assets/js/markdown-renderer.js"></script>
+    <script src="assets/js/soft-breaks-manager.js"></script>
     <script src="assets/js/scroll-sync.js"></script>
     <script src="assets/js/view-manager.js"></script>
     <script src="assets/js/import-export.js"></script>

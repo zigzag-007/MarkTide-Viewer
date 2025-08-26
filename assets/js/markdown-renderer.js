@@ -19,9 +19,12 @@ class MarkdownRenderer {
   }
 
   setupMarked() {
+    // Check if soft line breaks are enabled (default: true for user-friendliness)
+    const softLineBreaks = localStorage.getItem('marktide-soft-breaks') !== 'false';
+    
     const markedOptions = {
       gfm: true,
-      breaks: false,
+      breaks: softLineBreaks, // Enable soft line breaks by default
       pedantic: false,
       sanitize: false,
       smartypants: false,
@@ -149,6 +152,26 @@ class MarkdownRenderer {
     this.markdownRenderTimeout = setTimeout(() => {
       this.renderMarkdown();
     }, this.RENDER_DELAY);
+  }
+
+  // Toggle soft line breaks setting
+  toggleSoftLineBreaks() {
+    const currentSetting = localStorage.getItem('marktide-soft-breaks') !== 'false';
+    const newSetting = !currentSetting;
+    localStorage.setItem('marktide-soft-breaks', newSetting.toString());
+    
+    // Re-setup marked with new setting
+    this.setupMarked();
+    
+    // Re-render to apply changes
+    this.renderMarkdown();
+    
+    return newSetting;
+  }
+
+  // Get current soft line breaks setting
+  getSoftLineBreaksSetting() {
+    return localStorage.getItem('marktide-soft-breaks') !== 'false';
   }
 }
 

@@ -528,6 +528,20 @@
     border-color: var(--accent-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+
+  .utility-btn.active {
+    background: var(--button-hover);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(79, 195, 247, 0.2);
+  }
+
+  .utility-btn.active:hover {
+    background: var(--button-hover);
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+  }
   
   /* =================================================================
      6. MOBILE COMPONENTS
@@ -666,6 +680,20 @@
     transform: translateY(-2px);
     border-color: var(--accent-color);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-menu-item.active {
+    background: var(--button-hover);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(79, 195, 247, 0.2);
+  }
+
+  .mobile-menu-item.active:hover {
+    background: var(--button-hover);
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
   }
   
   /* --- Mobile Menu System --- */
@@ -934,7 +962,6 @@
     min-height: calc(100vh - 120px) !important;
     resize: none !important;
     overflow: hidden !important;
-    field-sizing: content !important;
   }
   
   /* Editor-only mode: Make textarea expand to fit content */

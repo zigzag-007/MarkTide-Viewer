@@ -100,6 +100,7 @@ class MarkTideCore {
     if (window.MarkTideTheme) window.MarkTideTheme.init();
     if (window.MarkTideMermaid) window.MarkTideMermaid.initMermaid();
     if (window.MarkTideRenderer) window.MarkTideRenderer.init();
+    if (window.MarkTideSoftBreaks) window.MarkTideSoftBreaks.init();
     if (window.MarkTideEditor) window.MarkTideEditor.init(document.getElementById("markdown-editor"));
     if (window.MarkTideUndoRedo) window.MarkTideUndoRedo.init(document.getElementById("markdown-editor"));
     if (window.MarkTideScrollSync) window.MarkTideScrollSync.init();
