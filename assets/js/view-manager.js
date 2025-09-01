@@ -13,6 +13,7 @@ class ViewManager {
     this._resizeTimer = null;
     this._editorScrollLockHandler = null;
     this._textareaGrowHandler = null;
+    this._textareaGrowRaf = null;
   }
 
   init() {
@@ -90,6 +91,11 @@ class ViewManager {
       markdownEditor.classList.remove('native-scrollbars');
       markdownEditor.style.overflow = '';
       markdownEditor.style.overflowY = '';
+    }
+    // Cancel any pending rAF for grow handler
+    if (this._textareaGrowRaf) {
+      cancelAnimationFrame(this._textareaGrowRaf);
+      this._textareaGrowRaf = null;
     }
     // Remove any editor-only handlers
     if (this._editorScrollLockHandler) {
@@ -232,18 +238,38 @@ class ViewManager {
           markdownEditor.style.overflow = '';
           markdownEditor.style.overflowY = '';
           markdownEditor.classList.add('native-scrollbars');
-
-          const grow = () => {
-            markdownEditor.style.height = 'auto';
-            markdownEditor.style.height = markdownEditor.scrollHeight + 'px';
-          };
-          requestAnimationFrame(grow);
-          markdownEditor.addEventListener('input', grow);
-          this._textareaGrowHandler = grow;
-        }
-        break;
-        
-      case 'preview-only':
+ 
+           // Auto-grow logic that also allows shrinking
+           const grow = () => {
+             if (!markdownEditor) return;
+             
+             const prevSelStart = markdownEditor.selectionStart;
+ 
+             markdownEditor.style.height = 'auto'; // Temporarily shrink to measure scrollHeight
+             const newHeight = markdownEditor.scrollHeight;
+             markdownEditor.style.height = `${newHeight}px`;
+ 
+             try {
+               markdownEditor.setSelectionRange(prevSelStart, prevSelStart);
+             } catch (_) {}
+             
+             this._textareaGrowRaf = null;
+           };
+ 
+           // Kick off a resize check once after view switch
+           this._textareaGrowRaf = requestAnimationFrame(grow);
+           
+           const onInput = () => {
+             if (this._textareaGrowRaf) return; // Coalesce multiple inputs
+             this._textareaGrowRaf = requestAnimationFrame(grow);
+           };
+           
+           markdownEditor.addEventListener('input', onInput);
+           this._textareaGrowHandler = onInput;
+         }
+         break;
+         
+       case 'preview-only':
         // Only preview visible
         if (this.isMobileLayout()) {
           editorPane.style.display = 'none';

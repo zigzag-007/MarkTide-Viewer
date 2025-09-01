@@ -181,8 +181,8 @@
 
   /* In editor-only, let the PAGE control scrolling (no container clamp) */
   body.editor-only-active .content-container {
-    height: auto;
-    overflow: visible; /* allow page to own the scrollbar */
+    height: 100vh;
+    overflow: hidden; /* prevent page scroll when empty */
   }
 
   /* In preview-only, let document scroll from the top (no clamping) */
@@ -962,6 +962,10 @@
     min-height: calc(100vh - 120px) !important;
     resize: none !important;
     overflow: hidden !important;
+    /* Prevent browser scroll anchoring jitter while the textarea grows */
+    overflow-anchor: none;
+    /* Keep scrollbar space stable to avoid layout shifts */
+    scrollbar-gutter: stable;
   }
   
   /* Editor-only mode: Make textarea expand to fit content */
