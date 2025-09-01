@@ -182,6 +182,7 @@
   /* In editor-only, let the PAGE control scrolling (no container clamp) */
   body.editor-only-active .content-container {
     height: auto;
+    overflow: visible; /* allow page to own the scrollbar */
   }
 
   /* In preview-only, let document scroll from the top (no clamping) */
@@ -956,9 +957,8 @@
     outline: none;
   }
 
-  /* Fix: Auto-expand textarea in editor-only mode */
+  /* Editor-only textarea: no fixed height; page owns scroll */
   body.editor-only-active #markdown-editor {
-    height: auto !important;
     min-height: calc(100vh - 120px) !important;
     resize: none !important;
     overflow: hidden !important;

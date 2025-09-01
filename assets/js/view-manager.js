@@ -12,6 +12,7 @@ class ViewManager {
     this.currentView = 'split'; // 'split', 'editor-only', 'preview-only'
     this._resizeTimer = null;
     this._editorScrollLockHandler = null;
+    this._textareaGrowHandler = null;
   }
 
   init() {
@@ -90,10 +91,15 @@ class ViewManager {
       markdownEditor.style.overflow = '';
       markdownEditor.style.overflowY = '';
     }
-    // Remove any editor-only scroll lock handler
+    // Remove any editor-only handlers
     if (this._editorScrollLockHandler) {
       window.removeEventListener('scroll', this._editorScrollLockHandler);
       this._editorScrollLockHandler = null;
+    }
+    const markdownEditorCleanup = document.getElementById('markdown-editor');
+    if (markdownEditorCleanup && this._textareaGrowHandler) {
+      markdownEditorCleanup.removeEventListener('input', this._textareaGrowHandler);
+      this._textareaGrowHandler = null;
     }
     
     // Show footer when returning to split view
@@ -211,13 +217,14 @@ class ViewManager {
           editorWrapperEl.style.height = 'auto';
         }
         footer.style.display = 'none';
+        // Let the whole document own the scroll in editor-only
         appContainer.style.height = 'auto';
         this.currentView = 'editor-only';
         this.updateButtonStates(true, false);
         bodyEl.classList.remove('preview-only-active');
         bodyEl.classList.add('editor-only-active');
         
-        // Simple CSS-based solution - let CSS handle auto-sizing
+        // Ensure textarea expands so document height tracks content
         const markdownEditor = document.getElementById('markdown-editor');
         if (markdownEditor) {
           // Clear any interfering inline styles and let CSS take over
@@ -225,6 +232,14 @@ class ViewManager {
           markdownEditor.style.overflow = '';
           markdownEditor.style.overflowY = '';
           markdownEditor.classList.add('native-scrollbars');
+
+          const grow = () => {
+            markdownEditor.style.height = 'auto';
+            markdownEditor.style.height = markdownEditor.scrollHeight + 'px';
+          };
+          requestAnimationFrame(grow);
+          markdownEditor.addEventListener('input', grow);
+          this._textareaGrowHandler = grow;
         }
         break;
         
