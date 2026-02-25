@@ -5,7 +5,7 @@ class ThemeManager {
     this.currentTheme = null;
     this.themeToggle = null;
     this.mobileThemeToggle = null;
-    this.TRANSITION_DURATION_MS = 550;
+    this.TRANSITION_DURATION_MS = 1200;
   }
 
   init() {
@@ -111,7 +111,7 @@ class ThemeManager {
         },
         {
           duration: this.TRANSITION_DURATION_MS,
-          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
           pseudoElement: "::view-transition-new(root)"
         }
       );
