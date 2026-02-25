@@ -1752,3 +1752,16 @@
   html.radial-theme-transition::view-transition-new(root) {
     z-index: 1;
   }
+
+  /* Fallback ripple for browsers without View Transitions support */
+  .theme-ripple-fallback {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2147483646;
+    transform: scale(0);
+    transform-origin: center;
+    opacity: 0;
+    box-shadow: 0 0 0 1px rgba(127, 127, 127, 0.18), 0 0 24px rgba(0, 0, 0, 0.10);
+    will-change: transform, opacity;
+  }
