@@ -1,14 +1,14 @@
-// Sample content provider for MarkTide Viewer
+// Sample content provider for MarkTide Code Editor & Viewer
 // Exposes a small API to fetch the default sample markdown used on first load
 
 (function initMarkTideSample() {
-  const getDefaultMarkdown = () => `# Welcome to MarkTide Viewer
+  const getDefaultMarkdown = () => `# Welcome to MarkTide Code Editor & Viewer
 
 > **The Ultimate Free Online Markdown Editor** - Where creativity meets simplicity in perfect harmony.
 
-## 🌟 What is MarkTide Viewer?
+## 🌟 What is MarkTide Code Editor & Viewer?
 
-MarkTide Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
+MarkTide Code Editor & Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
 
 ### 🎯 Perfect For:
 
@@ -120,8 +120,8 @@ $$
 
 ## 📊 Table Example
 
-|       Features         | MarkTide Viewer |     Other Tools        |
-|------------------------|-----------------|----------------------- |
+|       Features         | MarkTide Code Editor & Viewer |     Other Tools        |
+|------------------------|-------------------------------|----------------------- |
 | **Free Forever**       |     ✔️ ✔️      |  (Most charge)         |
 | **No Registration**    |     ✔️ ✔️      |  (Most require signup) |
 | **Works Offline**      |     ✔️ ✔️      |  (Most need internet)  |

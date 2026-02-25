@@ -91,7 +91,7 @@ class MarkTideCore {
       this.initialized = true;
       // Initialization completed successfully (for debugging, can be re-enabled if needed)
     } catch (error) {
-      console.error('Failed to initialize MarkTide Viewer:', error);
+      console.error('Failed to initialize MarkTide Code Editor & Viewer:', error);
     }
   }
 
@@ -210,7 +210,7 @@ class MarkTideCore {
 
     const sampleMarkdown = (window.MarkTideSample && window.MarkTideSample.getDefaultMarkdown)
       ? window.MarkTideSample.getDefaultMarkdown()
-      : '# Welcome to MarkTide Viewer\n\nStart typing...';
+      : '# Welcome to MarkTide Code Editor & Viewer\n\nStart typing...';
 
     this.markdownEditor.value = sampleMarkdown;
     
