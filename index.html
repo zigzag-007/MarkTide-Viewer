@@ -106,6 +106,8 @@
           savedTheme = prefersDark ? 'dark' : 'light';
         }
         document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+        document.documentElement.classList.toggle('light', savedTheme === 'light');
       })();
     </script>
     

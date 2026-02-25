@@ -1737,3 +1737,18 @@
   .border-primary {
     border-color: var(--accent-color) !important;
   }
+
+  /* Radial theme reveal powered by View Transitions API */
+  html.radial-theme-transition::view-transition-old(root),
+  html.radial-theme-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  html.radial-theme-transition::view-transition-old(root) {
+    z-index: 0;
+  }
+
+  html.radial-theme-transition::view-transition-new(root) {
+    z-index: 1;
+  }

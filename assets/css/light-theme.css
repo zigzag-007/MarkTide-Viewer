@@ -9,7 +9,9 @@
    ================================================================= */
 
 /* ===== GROK LIGHT THEME VARIABLES ===== */
-:root[data-theme="light"] {
+:root,
+:root[data-theme="light"],
+:root.light {
   /* Base colors - Grok's clean aesthetic */
   --bg-color: #ffffff;
   --text-color: #000000;

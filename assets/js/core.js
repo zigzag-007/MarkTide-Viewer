@@ -192,6 +192,8 @@ class MarkTideCore {
     // Apply saved theme or default
     const savedTheme = localStorage.getItem('marktide-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle('light', savedTheme === 'light');
   }
   
   applyInitialTheme() {
@@ -203,6 +205,8 @@ class MarkTideCore {
       savedTheme = prefersDark ? 'dark' : 'light';
     }
     document.documentElement.setAttribute("data-theme", savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle('light', savedTheme === 'light');
   }
 
   loadSampleContent() {

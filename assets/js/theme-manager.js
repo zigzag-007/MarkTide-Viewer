@@ -5,6 +5,7 @@ class ThemeManager {
     this.currentTheme = null;
     this.themeToggle = null;
     this.mobileThemeToggle = null;
+    this.TRANSITION_DURATION_MS = 550;
   }
 
   init() {
@@ -25,18 +26,18 @@ class ThemeManager {
     
     // Set up event listeners
     if (this.themeToggle) {
-      this.themeToggle.addEventListener("click", () => this.toggleTheme());
+      this.themeToggle.addEventListener("click", (event) => this.toggleTheme(event));
     }
     
     if (this.mobileThemeToggle) {
-      this.mobileThemeToggle.addEventListener("click", () => this.toggleTheme());
+      this.mobileThemeToggle.addEventListener("click", (event) => this.toggleTheme(event));
     }
     // Update toggle button label/icon on init
     this.updateThemeButtons();
   }
 
   applyTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
+    this.applyRootThemeState(theme);
     this.currentTheme = theme;
     
     // Save to localStorage
@@ -54,11 +55,73 @@ class ThemeManager {
     }
   }
 
-  toggleTheme() {
-    this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
-    this.applyTheme(this.currentTheme);
-    
-    this.updateThemeButtons();
+  applyRootThemeState(theme) {
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
+  }
+
+  prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  toggleTheme(event) {
+    const nextTheme = this.currentTheme === "dark" ? "light" : "dark";
+    const hasViewTransitions = typeof document.startViewTransition === "function";
+    const hasPointerOrigin = event &&
+      Number.isFinite(event.clientX) &&
+      Number.isFinite(event.clientY);
+
+    if (!hasViewTransitions || !hasPointerOrigin || this.prefersReducedMotion()) {
+      this.applyTheme(nextTheme);
+      this.updateThemeButtons();
+      return;
+    }
+
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    document.documentElement.classList.add("radial-theme-transition");
+
+    let transition;
+    try {
+      transition = document.startViewTransition(() => {
+        this.applyTheme(nextTheme);
+        this.updateThemeButtons();
+      });
+    } catch (error) {
+      document.documentElement.classList.remove("radial-theme-transition");
+      this.applyTheme(nextTheme);
+      this.updateThemeButtons();
+      return;
+    }
+
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`
+          ]
+        },
+        {
+          duration: this.TRANSITION_DURATION_MS,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          pseudoElement: "::view-transition-new(root)"
+        }
+      );
+    }).catch(() => {
+      // No-op: instant state change already applied in update callback.
+    });
+
+    transition.finished.finally(() => {
+      document.documentElement.classList.remove("radial-theme-transition");
+    });
   }
 
   updateThemeButtons() {
