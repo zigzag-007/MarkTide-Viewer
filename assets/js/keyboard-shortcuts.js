@@ -8,7 +8,8 @@ class KeyboardShortcutManager {
   init() {
     if (this.initialized) return;
     
-    document.addEventListener("keydown", (e) => this.handleKeydown(e));
+    // Capture phase ensures shortcuts still fire when editor internals stop bubbling.
+    document.addEventListener("keydown", (e) => this.handleKeydown(e), true);
     this.initialized = true;
   }
 
@@ -20,11 +21,45 @@ class KeyboardShortcutManager {
     if (!monacoEditor) return false;
 
     monacoEditor.focus();
-    monacoEditor.trigger('keyboard', commandId, null);
-    return true;
+    const action = monacoEditor.getAction && monacoEditor.getAction(commandId);
+    if (action && typeof action.run === 'function') {
+      action.run();
+      return true;
+    }
+
+    // Fallback for environments where the action registry is unavailable.
+    try {
+      monacoEditor.trigger('keyboard', commandId, null);
+      return true;
+    } catch (err) {
+      console.warn(`Failed to run Monaco command: ${commandId}`, err);
+      return false;
+    }
+  }
+
+  isMonacoTextFocused() {
+    if (!window.MarkTideMonaco || typeof window.MarkTideMonaco.getEditor !== 'function') {
+      return false;
+    }
+    const monacoEditor = window.MarkTideMonaco.getEditor();
+    if (!monacoEditor || typeof monacoEditor.hasTextFocus !== 'function') {
+      return false;
+    }
+    return monacoEditor.hasTextFocus();
   }
 
   handleKeydown(e) {
+    const key = (e.key || '').toLowerCase();
+    const hasCtrlOrMeta = e.ctrlKey || e.metaKey;
+
+    // Let Monaco handle its own undo/redo keys when the Monaco text area is focused.
+    // This avoids double-handling and keeps maintenance minimal.
+    if (this.isMonacoTextFocused() && hasCtrlOrMeta && !e.altKey) {
+      if ((!e.shiftKey && (key === 'z' || key === 'y')) || (e.shiftKey && key === 'z')) {
+        return;
+      }
+    }
+
     // Handle F11 key for fullscreen
     if (e.key === 'F11') {
       e.preventDefault();
@@ -46,8 +81,8 @@ class KeyboardShortcutManager {
     }
     
     // Formatting keyboard shortcuts
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-      switch(e.key.toLowerCase()) {
+    if (hasCtrlOrMeta && !e.shiftKey && !e.altKey) {
+      switch(key) {
         case 'b':
           e.preventDefault();
           document.getElementById('format-bold').click();
@@ -90,8 +125,8 @@ class KeyboardShortcutManager {
     }
     
     // Ctrl+Shift shortcuts
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
-      switch(e.key.toLowerCase()) {
+    if (hasCtrlOrMeta && e.shiftKey && !e.altKey) {
+      switch(key) {
         case 'z':
           e.preventDefault();
           if (this.runMonacoCommand('redo')) {
@@ -103,15 +138,23 @@ class KeyboardShortcutManager {
           }
           break;
 
-        case 'Backspace':
+        case 'backspace':
           e.preventDefault();
           this.deleteToLineStart();
           break;
-        case 'ArrowUp':
+        case 'delete':
+          e.preventDefault();
+          this.deleteToLineEnd();
+          break;
+        case 'd':
+          e.preventDefault();
+          this.duplicateLine();
+          break;
+        case 'arrowup':
           e.preventDefault();
           this.moveLineUp();
           break;
-        case 'ArrowDown':
+        case 'arrowdown':
           e.preventDefault();
           this.moveLineDown();
           break;
@@ -120,6 +163,25 @@ class KeyboardShortcutManager {
   }
 
   deleteToLineStart() {
+    // Monaco path: execute line-start delete via edit operations so undo stays native.
+    if (this.isMonacoTextFocused() && window.MarkTideMonaco && typeof window.MarkTideMonaco.getEditor === 'function' && window.monaco) {
+      const monacoEditor = window.MarkTideMonaco.getEditor();
+      const selection = monacoEditor && monacoEditor.getSelection ? monacoEditor.getSelection() : null;
+      if (monacoEditor && selection) {
+        const startPos = selection.getStartPosition();
+        const range = selection.isEmpty()
+          ? new window.monaco.Range(startPos.lineNumber, 1, startPos.lineNumber, startPos.column)
+          : selection;
+        monacoEditor.pushUndoStop();
+        monacoEditor.executeEdits('keyboard-shortcuts', [{ range, text: '' }]);
+        monacoEditor.pushUndoStop();
+        if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+          window.MarkTideRenderer.debouncedRender();
+        }
+        return;
+      }
+    }
+
     const editor = document.getElementById('markdown-editor');
     if (!editor) return;
 
@@ -169,6 +231,106 @@ class KeyboardShortcutManager {
     if (window.MarkTideUtils) {
       window.MarkTideUtils.updateDocumentStats();
     }
+  }
+
+  deleteToLineEnd() {
+    // Monaco path: execute line-end delete via edit operations so undo stays native.
+    if (this.isMonacoTextFocused() && window.MarkTideMonaco && typeof window.MarkTideMonaco.getEditor === 'function' && window.monaco) {
+      const monacoEditor = window.MarkTideMonaco.getEditor();
+      const model = monacoEditor && monacoEditor.getModel ? monacoEditor.getModel() : null;
+      const selection = monacoEditor && monacoEditor.getSelection ? monacoEditor.getSelection() : null;
+      if (monacoEditor && model && selection) {
+        const startPos = selection.getStartPosition();
+        const lineMaxColumn = model.getLineMaxColumn(startPos.lineNumber);
+        const range = selection.isEmpty()
+          ? new window.monaco.Range(startPos.lineNumber, startPos.column, startPos.lineNumber, lineMaxColumn)
+          : selection;
+        monacoEditor.pushUndoStop();
+        monacoEditor.executeEdits('keyboard-shortcuts', [{ range, text: '' }]);
+        monacoEditor.pushUndoStop();
+        if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+          window.MarkTideRenderer.debouncedRender();
+        }
+        return;
+      }
+    }
+
+    const editor = document.getElementById('markdown-editor');
+    if (!editor) return;
+
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+
+    if (start !== end) {
+      // If there is a selection, remove selected text.
+      editor.value = value.substring(0, start) + value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start;
+    } else {
+      const lineEnd = value.indexOf('\n', start);
+
+      if (lineEnd === -1) {
+        // Last line: delete from cursor to end of document.
+        editor.value = value.substring(0, start);
+      } else if (start === lineEnd) {
+        // At EOL: delete newline to join with next line.
+        editor.value = value.substring(0, start) + value.substring(lineEnd + 1);
+      } else {
+        // Delete from cursor to end of current line.
+        editor.value = value.substring(0, start) + value.substring(lineEnd);
+      }
+      editor.selectionStart = editor.selectionEnd = start;
+    }
+
+    editor.focus();
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
+    }
+
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
+    }
+
+    if (window.MarkTideUtils) {
+      window.MarkTideUtils.updateDocumentStats();
+    }
+  }
+
+  duplicateLine() {
+    // Monaco path: use native copy-lines action so undo/redo stays in Monaco history.
+    if (this.isMonacoTextFocused() && this.runMonacoCommand('editor.action.copyLinesDownAction')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
+    const editor = document.getElementById('markdown-editor');
+    if (!editor) return;
+
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+
+    const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+    const lineEnd = value.indexOf('\n', end);
+    const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
+    const blockToDuplicate = value.substring(lineStart, actualLineEnd);
+    if (blockToDuplicate.length === 0) return;
+
+    const insertAt = actualLineEnd;
+    const insertion = '\n' + blockToDuplicate;
+    editor.value = value.substring(0, insertAt) + insertion + value.substring(insertAt);
+
+    // Select the duplicated block (Sublime-like feel for quick repeated duplicate).
+    const newStart = insertAt + 1;
+    const newEnd = newStart + blockToDuplicate.length;
+    editor.selectionStart = newStart;
+    editor.selectionEnd = newEnd;
+    editor.focus();
+
+    this.updateAfterLineMove();
   }
 
   moveLineUp() {

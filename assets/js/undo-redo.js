@@ -73,7 +73,12 @@ class UndoRedoManager {
     const monacoEditor = this.getMonacoEditor();
     if (monacoEditor) {
       monacoEditor.focus();
-      monacoEditor.trigger('keyboard', 'undo', null);
+      const undoAction = monacoEditor.getAction && monacoEditor.getAction('undo');
+      if (undoAction && typeof undoAction.run === 'function') {
+        undoAction.run();
+      } else {
+        monacoEditor.trigger('keyboard', 'undo', null);
+      }
       if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
         window.MarkTideRenderer.debouncedRender();
       }
@@ -95,7 +100,12 @@ class UndoRedoManager {
     const monacoEditor = this.getMonacoEditor();
     if (monacoEditor) {
       monacoEditor.focus();
-      monacoEditor.trigger('keyboard', 'redo', null);
+      const redoAction = monacoEditor.getAction && monacoEditor.getAction('redo');
+      if (redoAction && typeof redoAction.run === 'function') {
+        redoAction.run();
+      } else {
+        monacoEditor.trigger('keyboard', 'redo', null);
+      }
       if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
         window.MarkTideRenderer.debouncedRender();
       }
