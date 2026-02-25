@@ -4,6 +4,7 @@ class MarkdownRenderer {
   constructor() {
     this.markdownRenderTimeout = null;
     this.RENDER_DELAY = 100;
+    this.renderFramePending = false;
     this.markdownEditor = null;
     this.markdownPreview = null;
     this.renderer = null;
@@ -173,10 +174,15 @@ class MarkdownRenderer {
   }
 
   debouncedRender() {
-    clearTimeout(this.markdownRenderTimeout);
-    this.markdownRenderTimeout = setTimeout(() => {
+    // Keep method name for backward compatibility, but use frame-throttled
+    // rendering so preview updates continuously while typing.
+    if (this.renderFramePending) return;
+    this.renderFramePending = true;
+
+    requestAnimationFrame(() => {
+      this.renderFramePending = false;
       this.renderMarkdown();
-    }, this.RENDER_DELAY);
+    });
   }
 
   // Toggle soft line breaks setting
