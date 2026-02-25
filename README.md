@@ -1,4 +1,4 @@
-# 🚀 MarkTide Viewer - Free Online Markdown Editor & Converter
+# 🚀 MarkTide Code Editor & Viewer - Free Online Markdown Editor & Converter
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-brightgreen)](https://marktide.netlify.app/)
 [![GitHub Stars](https://img.shields.io/github/stars/zigzag-007/MarkTide-Viewer?style=social)](https://github.com/zigzag-007/MarkTide-Viewer/stargazers)
@@ -6,9 +6,9 @@
 
 > **The Ultimate Free Online Markdown Editor** - Convert Markdown to PDF, HTML, and Text with Real-time Preview
 
-## 🌟 What is MarkTide Viewer?
+## 🌟 What is MarkTide Code Editor & Viewer?
 
-MarkTide Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
+MarkTide Code Editor & Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
 
 ### 🎯 Perfect For:
 
@@ -23,10 +23,10 @@ MarkTide Viewer is a powerful, **free online markdown editor and converter** tha
 
 ### 📝 **Markdown Editor**
 
+- Monaco-powered markdown editor
 - Real-time live preview
 - Syntax highlighting with 190+ programming languages
 - Formatting toolbar (bold/italic/code, lists, etc.)
-- Drag & drop file support
 - Drag & drop file support (with replace warning)
 
 ### 🔄 **Format Conversion**
@@ -43,6 +43,7 @@ MarkTide Viewer is a powerful, **free online markdown editor and converter** tha
 - Split-screen editor and preview
 - Scroll synchronization
 - Keyboard shortcuts for power users
+- Smooth radial dark/light theme transitions
 
 ### 🚀 **Advanced Features**
 
@@ -96,11 +97,13 @@ No installation needed - works instantly in any modern web browser!
 ## 🛠️ Technology Stack
 
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Editor Engine**: Monaco Editor
 - **Markdown Processing**: Marked.js
 - **Syntax Highlighting**: Highlight.js
 - **PDF Generation**: html2pdf.js
 - **Math Rendering**: MathJax
 - **Diagrams**: Mermaid.js
+- **Theme Transitions**: View Transitions API + ripple fallback
 
 ## 🔧 Local Development
 
@@ -123,9 +126,9 @@ open index.html
 - ✅ Edge
 - ✅ Mobile browsers
 
-## 🌟 Why Choose MarkTide Viewer?
+## 🌟 Why Choose MarkTide Code Editor & Viewer?
 
-| Feature | MarkTide Viewer | Other Tools |
+| Feature | MarkTide Code Editor & Viewer | Other Tools |
 |---------|----------------|-------------|
 | **Free Forever** | ✅ | ❌ (Most charge) |
 | **No Registration** | ✅ | ❌ (Most require signup) |
@@ -173,7 +176,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## ⭐ Support
 
-If you find MarkTide Viewer helpful, please consider:
+If you find MarkTide Code Editor & Viewer helpful, please consider:
 
 - ⭐ **Starring** this repository
 - 🐛 **Reporting** any bugs you find
@@ -182,8 +185,8 @@ If you find MarkTide Viewer helpful, please consider:
 
 ---
 
-### 🚀 Try MarkTide Viewer Now!
+### 🚀 Try MarkTide Code Editor & Viewer Now!
 
-**[Launch MarkTide Viewer →](https://marktide.netlify.app/)**
+**[Launch MarkTide Code Editor & Viewer →](https://marktide.netlify.app/)**
 
 _Free • No Registration • Works in Browser_ 
