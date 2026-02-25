@@ -152,7 +152,7 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     
     <!-- PWA Support -->
-    <meta name="theme-color" content="#7C3AED">
+    <!-- theme-color is set dynamically in ThemeManager to avoid static unsupported meta warning -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -281,6 +281,9 @@
                         <button id="soft-breaks-toggle" class="utility-btn" title="Soft Line Breaks: ON (Single Enter creates line break)">
                             <i class="bi bi-text-wrap"></i>
                         </button>
+                        <button id="format-beautify" class="utility-btn" title="Beautify Markdown">
+                            <i class="bi bi-magic"></i>
+                        </button>
                         <button id="theme-toggle" class="utility-btn theme-btn" title="Toggle Dark Mode">
                             <i class="bi bi-moon"></i>
                         </button>
@@ -352,6 +355,12 @@
                             <button id="mobile-soft-breaks-toggle" class="mobile-menu-item" title="Soft Line Breaks: ON">
                                 <i class="bi bi-text-wrap"></i>
                                 <span>Soft Line Breaks: ON</span>
+                            </button>
+                            
+                            <!-- Beautify Markdown (mobile) -->
+                            <button id="mobile-format-beautify" class="mobile-menu-item" title="Beautify Markdown">
+                                <i class="bi bi-magic"></i>
+                                <span>Beautify Markdown</span>
                             </button>
                             
                             <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
@@ -446,7 +455,6 @@
                 
                 <!-- Wrapper for the editor textarea and line numbers -->
                 <div class="editor-wrapper">
-                    <!-- Line numbers gutter removed -->
                     <!-- Markdown editor textarea -->
                     <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."></textarea>
                     
@@ -491,6 +499,7 @@
     <script src="assets/js/theme-manager.js"></script>
     <script src="assets/js/editor.js"></script>
     <script src="assets/js/markdown-renderer.js"></script>
+    <script src="assets/js/code-copy-handler.js"></script>
     <script src="assets/js/soft-breaks-manager.js"></script>
     <script src="assets/js/scroll-sync.js"></script>
     <script src="assets/js/view-manager.js"></script>
@@ -498,6 +507,7 @@
     <script src="assets/js/print-handler.js"></script>
     <script src="assets/js/mobile-menu.js"></script>
     <script src="assets/js/keyboard-shortcuts.js"></script>
+    <script src="assets/js/beautify.js"></script>
     <script src="assets/js/core.js"></script>
 </body>
 </html>

@@ -128,6 +128,71 @@ class EditorManager {
     }
   }
 
+  handleKeydown(e) {
+    if (!this.markdownEditor) return;
+    // Only handle plain Enter (no modifiers)
+    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const editor = this.markdownEditor;
+    const pos = editor.selectionStart;
+    if (pos !== editor.selectionEnd) return; // ignore selections
+
+    const value = editor.value;
+    const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
+    const lineEndIdx = value.indexOf('\n', pos);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const leftOfCursor = value.substring(lineStart, pos);
+    const rightOfCursor = value.substring(pos, lineEnd);
+
+    // Only trigger when nothing after cursor on the line
+    if (rightOfCursor.trim().length > 0) return;
+
+    // Match ``` or ```lang (letters, numbers, dash, underscore) with optional trailing spaces
+    const fenceOpenRegex = /^```[A-Za-z0-9_-]*\s*$/;
+
+    const trimmedLeft = leftOfCursor.trim();
+    if (!fenceOpenRegex.test(trimmedLeft)) return;
+
+    // Determine if we're currently inside a fence before this line.
+    // If so, this line is a CLOSING fence and we must not auto-insert another.
+    // Simple, robust heuristic: toggle state on every line that starts with ``` up to current lineStart.
+    const before = value.substring(0, lineStart);
+    const linesBefore = before.split('\n');
+    let inFence = false;
+    for (let i = 0; i < linesBefore.length; i += 1) {
+      const t = linesBefore[i].trim();
+      if (/^```/.test(t)) {
+        inFence = !inFence;
+      }
+    }
+    // If we're inside a fence before this line, current fence is a closer → do nothing
+    if (inFence) return;
+
+    // Avoid duplicate if a closer already follows immediately
+    const after = value.substring(pos);
+    if (/^\n?```/.test(after)) return;
+
+    // Perform insertion: newline, blank line, then closing fence. Caret on the blank line
+    e.preventDefault();
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.saveToUndoStack();
+    }
+
+    const insertText = '\n\n```';
+    editor.value = value.substring(0, pos) + insertText + value.substring(pos);
+    // Place caret on the blank line between fences
+    editor.selectionStart = editor.selectionEnd = pos + 1;
+    editor.focus();
+
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
+    }
+    if (window.MarkTideUtils) {
+      window.MarkTideUtils.updateDocumentStats();
+    }
+  }
   // New: Set heading level (1-6) similar to MS Word
   setHeading(level) {
     if (level < 1 || level > 6) return;

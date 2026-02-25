@@ -234,9 +234,56 @@
   border: 1px solid var(--table-border);
 }
 
-/* ===== DARK MODE CODE BLOCK STYLING ===== */
-/* Pre-formatted code block backgrounds in dark mode */
-[data-theme="dark"] .markdown-body pre {
+/* ===== DARK MODE ENHANCED CODE BLOCK STYLING ===== */
+/* Enhanced code blocks in dark mode */
+[data-theme="dark"] .enhanced-code-block {
+  background-color: var(--code-pre-bg);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .enhanced-code-block:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .code-block-header {
+  --code-header-bg: rgba(255, 255, 255, 0.05);
+  --code-header-border: rgba(255, 255, 255, 0.1);
+  background: var(--code-header-bg);
+  border-bottom: 1px solid var(--code-header-border);
+}
+
+[data-theme="dark"] .code-language {
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .copy-code-btn {
+  background: transparent;
+  color: var(--text-color);
+  --text-color-rgb: 255, 255, 255;
+}
+
+[data-theme="dark"] .enhanced-code-block .copy-code-btn:hover {
+  background: #3a3a3a !important;
+  color: var(--text-color) !important;
+  border-radius: 50% !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .enhanced-code-block .copy-code-btn:active {
+  background: #4a4a4a;
+}
+
+[data-theme="dark"] .enhanced-code-block .copy-code-btn.copied {
+  background: #3a3a3a !important;
+  color: var(--text-color) !important;
+}
+
+/* Legacy code blocks in dark mode */
+[data-theme="dark"] .markdown-body pre:not(.enhanced-code-block pre) {
   background-color: var(--code-pre-bg);
   font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
   font-feature-settings: "liga" 1, "calt" 1;

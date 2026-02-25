@@ -55,10 +55,6 @@
     gap: 1rem;
   }
   
-  .btn-text {
-    display: none;
-  }
-  
   .formatting-toolbar {
     gap: 3px;
     padding: 7px 10px 10px 10px;
@@ -92,7 +88,6 @@
 /* Compact laptop displays */
 @media (max-width: 1199px) and (min-width: 1080px) {
   .formatting-toolbar {
-    gap: 2px;
     padding: 7px 10px 10px 10px;
     justify-content: center;
   }

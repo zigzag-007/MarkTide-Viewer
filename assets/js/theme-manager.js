@@ -44,6 +44,9 @@ class ThemeManager {
     
     // Update highlight.js theme
     this.updateHighlightTheme();
+
+    // Update theme-color meta dynamically for PWA/UA coloring
+    this.updateThemeColorMeta();
     
     // Re-render markdown to apply new theme
     if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
@@ -88,6 +91,18 @@ class ThemeManager {
     } else {
       highlightTheme.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
     }
+  }
+
+  updateThemeColorMeta() {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
+    // Match colors similar to app backgrounds in both modes
+    const color = this.currentTheme === 'dark' ? '#000000' : '#ffffff';
+    meta.setAttribute('content', color);
   }
 }
 

@@ -99,20 +99,20 @@
 /* Light theme loading pulse animation */
 @keyframes loadingPulseLight {
   0%, 100% {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 100%);
   }
   50% {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%, #667eea 0%);
+    background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 100%, var(--loading-bg-start) 0%);
   }
 }
 
 /* Dark theme loading pulse animation */
 @keyframes loadingPulseDark {
   0%, 100% {
-    background: linear-gradient(135deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%);
+    background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 50%, var(--loading-bg-start) 100%);
   }
   50% {
-    background: linear-gradient(135deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%, #1a1a1a 0%);
+    background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 50%, var(--loading-bg-start) 100%, var(--loading-bg-start) 0%);
   }
 }
 

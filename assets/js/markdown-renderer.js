@@ -46,17 +46,40 @@ class MarkdownRenderer {
       }
       
       const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
+      const displayLanguage = language || "text"; // Default to "text" if no language specified
+      const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
+      
       try {
         const highlightedCode = hljs.highlight(code, {
           language: validLanguage,
           ignoreIllegals: true  // Prevent HTML injection
         }).value;
         
-        return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+        return `
+          <div class="enhanced-code-block">
+            <div class="code-block-header">
+              <span class="code-language">${displayLanguage}</span>
+              <button class="copy-code-btn" data-code-id="${uniqueId}">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
+          </div>
+        `;
       } catch (e) {
         // Fallback to plain text if highlighting fails
         const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<pre><code class="hljs plaintext">${escapedCode}</code></pre>`;
+        return `
+          <div class="enhanced-code-block">
+            <div class="code-block-header">
+              <span class="code-language">${displayLanguage}</span>
+              <button class="copy-code-btn" data-code-id="${uniqueId}">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
+          </div>
+        `;
       }
     };
 

@@ -25,7 +25,37 @@ class PrintHandler {
     }
     document.title = smartTitle;
     const markdown = markdownEditor.value;
-    const html = marked.parse(markdown);
+    
+    // Create a clean renderer for print/PDF (without enhanced code blocks)
+    const printRenderer = new marked.Renderer();
+    printRenderer.code = function (code, language) {
+      if (language === 'mermaid') {
+        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
+        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
+      }
+      
+      // Handle batch/bat files
+      if (language === 'batch' || language === 'bat' || language === 'cmd') {
+        language = 'dos'; // Use DOS highlighting for batch files
+      }
+      
+      const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
+      try {
+        const highlightedCode = hljs.highlight(code, {
+          language: validLanguage,
+          ignoreIllegals: true  // Prevent HTML injection
+        }).value;
+        
+        return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+      } catch (e) {
+        // Fallback to plain text if highlighting fails
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre><code class="hljs plaintext">${escapedCode}</code></pre>`;
+      }
+    };
+    
+    // Use the clean renderer for print/PDF
+    const html = marked.parse(markdown, { renderer: printRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
       ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']

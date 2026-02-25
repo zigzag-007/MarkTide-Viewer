@@ -479,7 +479,60 @@ class ImportExportManager {
 
   exportAsHTML() {
     const markdown = this.markdownEditor.value;
-    const html = marked.parse(markdown);
+    
+    // Create an enhanced renderer for HTML export (with copy buttons)
+    const exportRenderer = new marked.Renderer();
+    exportRenderer.code = function (code, language) {
+      if (language === 'mermaid') {
+        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
+        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
+      }
+      
+      // Handle batch/bat files
+      if (language === 'batch' || language === 'bat' || language === 'cmd') {
+        language = 'dos'; // Use DOS highlighting for batch files
+      }
+      
+      const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
+      const displayLanguage = language || "text"; // Default to "text" if no language specified
+      const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
+      
+      try {
+        const highlightedCode = hljs.highlight(code, {
+          language: validLanguage,
+          ignoreIllegals: true  // Prevent HTML injection
+        }).value;
+        
+        return `
+          <div class="enhanced-code-block">
+            <div class="code-block-header">
+              <span class="code-language">${displayLanguage}</span>
+              <button class="copy-code-btn" data-code-id="${uniqueId}">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
+          </div>
+        `;
+      } catch (e) {
+        // Fallback to plain text if highlighting fails
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `
+          <div class="enhanced-code-block">
+            <div class="code-block-header">
+              <span class="code-language">${displayLanguage}</span>
+              <button class="copy-code-btn" data-code-id="${uniqueId}">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
+          </div>
+        `;
+      }
+    };
+    
+    // Use the enhanced renderer for HTML export
+    const html = marked.parse(markdown, { renderer: exportRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
       ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
@@ -509,6 +562,9 @@ class ImportExportManager {
             max-width: 920px !important;
             font-size: 1.05rem !important;
             line-height: 1.7 !important;
+            /* Inline code variables for dark theme */
+            --code-inline-bg: #29241E;
+            --code-inline-color: #FFD085;
         }
         .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
         .markdown-body h1 { font-size: 2.1em !important; }
@@ -594,18 +650,15 @@ class ImportExportManager {
             overflow: auto !important;
             font-size: 85% !important;
             line-height: 1.45 !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
         }
         
         .markdown-body code:not(pre code) {
-            background-color: #29241E !important;
-            color: #FFD085 !important;
-            padding: 0.2em 0.4em !important;
-            border-radius: 3px !important;
-            font-size: 85% !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
+            background-color: #29241E;
+            color: #FFD085;
+            font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
+            font-feature-settings: "liga" 1, "calt" 1;
         }
         
         .markdown-body pre code,
@@ -613,7 +666,7 @@ class ImportExportManager {
             background-color: #242628 !important;
             color: #ffffff !important;
             padding: 0 !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
         }
         
@@ -654,11 +707,15 @@ class ImportExportManager {
             font-weight: 900 !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         }
+        .markdown-body h1 code, .markdown-body h2 code, .markdown-body h3 code,
+        .markdown-body h4 code, .markdown-body h5 code, .markdown-body h6 code {
+            font-weight: 900 !important;
+        }
         
         /* Bold text styling for Grok dark mode */
         .markdown-body strong,
         .markdown-body b {
-            font-weight: 900 !important;
+            font-weight: 700 !important;
             color: #ffffff !important;
             font-style: normal !important;
         }
@@ -711,6 +768,9 @@ class ImportExportManager {
             max-width: 920px !important;
             font-size: 1.05rem !important;
             line-height: 1.7 !important;
+            /* Inline code variables for light theme */
+            --code-inline-bg: #FFF8EC;
+            --code-inline-color: #8B4500;
         }
         .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
         .markdown-body h1 { font-size: 2.1em !important; }
@@ -796,15 +856,17 @@ class ImportExportManager {
             overflow: auto !important;
             font-size: 85% !important;
             line-height: 1.45 !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
         }
         
         .markdown-body code:not(pre code) {
-            background-color: #FFF8EC !important;
-            color: #8B4500 !important;
+            background-color: var(--code-inline-bg) !important;
+            color: var(--code-inline-color) !important;
             font-weight: 600 !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+            border-radius: 3px !important;
+            padding: 0.2em 0.4em !important;
+            font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
         }
         
@@ -813,7 +875,7 @@ class ImportExportManager {
             background-color: #f8f9fa !important;
             color: #000000 !important;
             padding: 0 !important;
-            font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
         }
         
@@ -854,6 +916,17 @@ class ImportExportManager {
             font-weight: 900 !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         }
+        .markdown-body h1 code, .markdown-body h2 code, .markdown-body h3 code,
+        .markdown-body h4 code, .markdown-body h5 code, .markdown-body h6 code {
+            font-weight: 900 !important;
+        }
+        /* Bold text styling for light mode to match preview */
+        .markdown-body strong,
+        .markdown-body b {
+            font-weight: 700 !important;
+            color: #24292e !important;
+            font-style: normal !important;
+        }
         
         /* Math expressions in light mode */
         mjx-container {
@@ -878,7 +951,211 @@ class ImportExportManager {
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
-    // Minify CSS for smaller output
+    // Enhanced code block styles with theme support
+    const enhancedCodeBlockStyles = isDarkMode ? `
+        /* Enhanced code block styles - Dark Mode */
+        .enhanced-code-block {
+            background-color: #242628 !important;
+            border-radius: 12px;
+            margin: 1.5em 0 !important;
+            overflow: hidden;
+            border: 1px solid #30363d !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .enhanced-code-block:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .code-language {
+            color: #ffffff !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            text-transform: lowercase;
+            opacity: 0.8;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .enhanced-code-block .copy-code-btn {
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #ffffff !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+        }
+
+        .enhanced-code-block .copy-code-btn:hover {
+            background: #3a3a3a !important;
+            opacity: 1;
+        }
+
+        .enhanced-code-block .copy-code-btn:active {
+            background: #4a4a4a !important;
+            transform: scale(0.9);
+            transition: transform 0.1s ease;
+        }
+
+        .enhanced-code-block .copy-code-btn.copied {
+            background: #3a3a3a !important;
+            opacity: 1;
+        }
+
+        .enhanced-code-block .copy-code-btn.error { background: rgba(244,67,54,.15) !important; color: #f44336 !important; }
+
+        .enhanced-code-block pre {
+            background: transparent !important;
+            border-radius: 0;
+            padding: 16px;
+            margin: 0;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            font-feature-settings: "liga" 1, "calt" 1;
+        }
+        
+        .enhanced-code-block pre code,
+        .enhanced-code-block pre code.hljs {
+            background: transparent !important;
+            padding: 0;
+            border-radius: 0;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            font-feature-settings: "liga" 1, "calt" 1;
+        }
+
+        /* Override GitHub Markdown CSS margins for enhanced code blocks */
+        .markdown-body .enhanced-code-block {
+            margin: 1.5em 0 !important;
+        }
+
+        .markdown-body .enhanced-code-block pre {
+            margin: 0 !important;
+        }
+    ` : `
+        /* Enhanced code block styles - Light Mode */
+        .enhanced-code-block {
+            background-color: #f6f8fa !important;
+            border-radius: 12px;
+            margin: 1.5em 0 !important;
+            overflow: hidden;
+            border: 1px solid #e1e4e8 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .enhanced-code-block:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.03) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .code-language {
+            color: #24292e !important;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            text-transform: lowercase;
+            opacity: 0.8;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .enhanced-code-block .copy-code-btn {
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #24292e !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+        }
+
+        .enhanced-code-block .copy-code-btn:hover {
+            background: #e0e0e0 !important;
+            opacity: 1;
+        }
+
+        .enhanced-code-block .copy-code-btn:active {
+            background: #d0d0d0 !important;
+            transform: scale(0.9);
+            transition: transform 0.1s ease;
+        }
+
+        .enhanced-code-block .copy-code-btn.copied {
+            background: #e0e0e0 !important;
+            opacity: 1;
+        }
+
+        .enhanced-code-block .copy-code-btn.error { background: rgba(244,67,54,.15) !important; color: #f44336 !important; }
+
+        .enhanced-code-block pre {
+            background: transparent !important;
+            border-radius: 0;
+            padding: 16px;
+            margin: 0;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            font-feature-settings: "liga" 1, "calt" 1;
+        }
+        
+        .enhanced-code-block pre code,
+        .enhanced-code-block pre code.hljs {
+            background: transparent !important;
+            padding: 0;
+            border-radius: 0;
+            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
+            font-feature-settings: "liga" 1, "calt" 1;
+        }
+
+        /* Override GitHub Markdown CSS margins for enhanced code blocks */
+        .markdown-body .enhanced-code-block {
+            margin: 1.5em 0 !important;
+        }
+
+        .markdown-body .enhanced-code-block pre {
+            margin: 0 !important;
+        }
+    `;
+
     const mermaidStyles = `
         /* Mermaid diagram styles */
         .mermaid-container, .mermaid {
@@ -892,7 +1169,7 @@ class ImportExportManager {
         }
     `;
     
-    const minifiedStyles = this.minifyCSS(themeStyles + mermaidStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + mermaidStyles);
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -907,6 +1184,7 @@ class ImportExportManager {
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="${highlightTheme}">
     <style>${minifiedStyles}</style>
 </head>
@@ -986,6 +1264,102 @@ class ImportExportManager {
         };
     `)}</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <script>${this.minifyJS(`
+        class CodeCopyHandler {
+            constructor() {
+                this.initialized = false;
+            }
+
+            init() {
+                if (this.initialized) return;
+                document.addEventListener('click', this.handleCopyClick.bind(this));
+                this.initialized = true;
+            }
+
+            handleCopyClick(event) {
+                const copyBtn = event.target.closest('.copy-code-btn');
+                if (!copyBtn) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const codeId = copyBtn.getAttribute('data-code-id');
+                const codeElement = document.getElementById(codeId);
+                if (!codeElement) {
+                    console.warn('Code element not found for ID:', codeId);
+                    return;
+                }
+                const codeText = codeElement.textContent || codeElement.innerText || '';
+                this.copyToClipboard(codeText, copyBtn);
+            }
+
+            async copyToClipboard(text, button) {
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                        this.showCopySuccess(button);
+                    } else {
+                        this.fallbackCopyToClipboard(text, button);
+                    }
+                } catch (error) {
+                    console.error('Copy failed:', error);
+                    this.fallbackCopyToClipboard(text, button);
+                }
+            }
+
+            fallbackCopyToClipboard(text, button) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                try {
+                    textArea.focus();
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        this.showCopySuccess(button);
+                    } else {
+                        this.showCopyError(button);
+                    }
+                } catch (error) {
+                    console.error('Fallback copy failed:', error);
+                    this.showCopyError(button);
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            }
+
+            showCopySuccess(button) {
+                const originalIcon = button.innerHTML;
+                button.classList.add('copied');
+                button.innerHTML = '<i class="bi bi-check2"></i>';
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = originalIcon;
+                }, 1500);
+            }
+
+            showCopyError(button) {
+                const originalIcon = button.innerHTML;
+                button.classList.add('error');
+                button.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+                setTimeout(() => {
+                    button.classList.remove('error');
+                    button.innerHTML = originalIcon;
+                }, 2000);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const copyHandler = new CodeCopyHandler();
+                copyHandler.init();
+            });
+        } else {
+            const copyHandler = new CodeCopyHandler();
+            copyHandler.init();
+        }
+    `)}</script>
 </body>
 </html>`;
     

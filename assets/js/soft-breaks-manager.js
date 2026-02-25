@@ -77,9 +77,12 @@ class SoftBreaksManager {
   }
 
   showNotification(message) {
+    // Calculate base offset from header height
+    const header = document.querySelector('.app-header');
+    const baseTop = (header ? header.getBoundingClientRect().height : 60) + 20;
     // Calculate position based on existing notifications
     const existingNotifications = document.querySelectorAll('.soft-breaks-notification');
-    let topOffset = 80; // Base offset from top
+    let topOffset = baseTop; // Base offset from top
     
     existingNotifications.forEach(notification => {
       const rect = notification.getBoundingClientRect();
@@ -107,6 +110,7 @@ class SoftBreaksManager {
       fontWeight: '500',
       maxWidth: '300px',
       backdropFilter: 'blur(8px)',
+      pointerEvents: 'none',
       opacity: '0',
       transform: 'translateX(100%)',
       transition: 'all 0.3s ease'
@@ -136,7 +140,8 @@ class SoftBreaksManager {
 
   repositionNotifications() {
     const notifications = document.querySelectorAll('.soft-breaks-notification');
-    let topOffset = 80; // Base offset from top
+    const header = document.querySelector('.app-header');
+    let topOffset = (header ? header.getBoundingClientRect().height : 60) + 20;
     
     notifications.forEach((notification, index) => {
       notification.style.top = `${topOffset}px`;

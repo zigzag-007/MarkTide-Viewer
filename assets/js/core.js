@@ -127,6 +127,8 @@ class MarkTideCore {
       { id: 'format-ul', action: () => window.MarkTideEditor.insertAtLineStart('- ') },
       { id: 'format-ol', action: () => window.MarkTideEditor.insertAtLineStart('1. ') },
       { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
+      { id: 'format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
+      { id: 'mobile-format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
       { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
       { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() }
     ];
@@ -248,6 +250,9 @@ class MarkTideCore {
     this.markdownEditor.addEventListener('keydown', (e) => {
       if (window.MarkTideUndoRedo) {
         window.MarkTideUndoRedo.saveToUndoStack();
+      }
+      if (window.MarkTideEditor && window.MarkTideEditor.handleKeydown) {
+        window.MarkTideEditor.handleKeydown(e);
       }
     });
 
