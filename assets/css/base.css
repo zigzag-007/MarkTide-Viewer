@@ -978,6 +978,17 @@
     background-color: var(--editor-bg) !important;
   }
 
+  /* Force Monaco text selection to stay blue (avoid browser/theme red fallback). */
+  #markdown-editor.monaco-host .monaco-editor .focused .selected-text,
+  #markdown-editor.monaco-host .monaco-editor .selected-text {
+    background-color: rgba(79, 195, 247, 0.28) !important;
+  }
+
+  #markdown-editor.monaco-host *::selection {
+    background: rgba(79, 195, 247, 0.28) !important;
+    color: inherit !important;
+  }
+
   /* Hide VSCode-like IntelliSense widgets for markdown-first UX */
   #markdown-editor.monaco-host .suggest-widget,
   #markdown-editor.monaco-host .parameter-hints-widget {
