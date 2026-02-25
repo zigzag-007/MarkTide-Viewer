@@ -488,13 +488,15 @@ class ImportExportManager {
         return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
       }
       
+      const displayLanguage = language || "text"; // Keep user's original language label
+      let highlightLanguage = language;
+      
       // Handle batch/bat files
-      if (language === 'batch' || language === 'bat' || language === 'cmd') {
-        language = 'dos'; // Use DOS highlighting for batch files
+      if (highlightLanguage === 'batch' || highlightLanguage === 'bat' || highlightLanguage === 'cmd') {
+        highlightLanguage = 'dos'; // Use DOS highlighting for batch files
       }
       
-      const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
-      const displayLanguage = language || "text"; // Default to "text" if no language specified
+      const validLanguage = hljs.getLanguage(highlightLanguage) ? highlightLanguage : "plaintext";
       const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
       
       try {

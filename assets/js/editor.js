@@ -162,7 +162,7 @@ class EditorManager {
     let inFence = false;
     for (let i = 0; i < linesBefore.length; i += 1) {
       const t = linesBefore[i].trim();
-      if (/^```/.test(t)) {
+      if (fenceOpenRegex.test(t)) {
         inFence = !inFence;
       }
     }

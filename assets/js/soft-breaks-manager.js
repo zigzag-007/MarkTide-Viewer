@@ -84,9 +84,11 @@ class SoftBreaksManager {
     const existingNotifications = document.querySelectorAll('.soft-breaks-notification');
     let topOffset = baseTop; // Base offset from top
     
-    existingNotifications.forEach(notification => {
-      const rect = notification.getBoundingClientRect();
-      topOffset = Math.max(topOffset, rect.bottom + 10); // 10px gap between notifications
+    existingNotifications.forEach(existingNotification => {
+      const existingTop = parseFloat(existingNotification.style.top);
+      const top = Number.isFinite(existingTop) ? existingTop : existingNotification.getBoundingClientRect().top;
+      const height = existingNotification.offsetHeight || existingNotification.getBoundingClientRect().height;
+      topOffset = Math.max(topOffset, top + height + 10); // 10px gap between notifications
     });
 
     // Create a temporary notification
@@ -143,10 +145,9 @@ class SoftBreaksManager {
     const header = document.querySelector('.app-header');
     let topOffset = (header ? header.getBoundingClientRect().height : 60) + 20;
     
-    notifications.forEach((notification, index) => {
+    notifications.forEach((notification) => {
       notification.style.top = `${topOffset}px`;
-      const rect = notification.getBoundingClientRect();
-      topOffset = rect.bottom + 10; // 10px gap between notifications
+      topOffset += (notification.offsetHeight || 0) + 10; // 10px gap between notifications
     });
   }
 }
