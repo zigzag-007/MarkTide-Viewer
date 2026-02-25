@@ -450,9 +450,19 @@ class ImportExportManager {
         // Run immediate + multi-frame relayout after height changes settle.
         window.MarkTideMonaco.refreshLayout();
         requestAnimationFrame(() => {
-          window.MarkTideMonaco.refreshLayout();
-          requestAnimationFrame(() => {
+          if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
             window.MarkTideMonaco.refreshLayout();
+          } else {
+            document.body.classList.remove('layout-recalc');
+            return;
+          }
+          requestAnimationFrame(() => {
+            if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+              window.MarkTideMonaco.refreshLayout();
+            } else {
+              document.body.classList.remove('layout-recalc');
+              return;
+            }
             setTimeout(() => {
               if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
                 window.MarkTideMonaco.refreshLayout();

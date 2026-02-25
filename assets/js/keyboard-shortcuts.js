@@ -56,6 +56,7 @@ class KeyboardShortcutManager {
     // This avoids double-handling and keeps maintenance minimal.
     if (this.isMonacoTextFocused() && hasCtrlOrMeta && !e.altKey) {
       if ((!e.shiftKey && (key === 'z' || key === 'y')) || (e.shiftKey && key === 'z')) {
+        e.preventDefault();
         return;
       }
     }
