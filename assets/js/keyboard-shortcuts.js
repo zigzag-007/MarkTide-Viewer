@@ -12,6 +12,18 @@ class KeyboardShortcutManager {
     this.initialized = true;
   }
 
+  runMonacoCommand(commandId) {
+    if (!window.MarkTideMonaco || typeof window.MarkTideMonaco.getEditor !== 'function') {
+      return false;
+    }
+    const monacoEditor = window.MarkTideMonaco.getEditor();
+    if (!monacoEditor) return false;
+
+    monacoEditor.focus();
+    monacoEditor.trigger('keyboard', commandId, null);
+    return true;
+  }
+
   handleKeydown(e) {
     // Handle F11 key for fullscreen
     if (e.key === 'F11') {
@@ -35,7 +47,7 @@ class KeyboardShortcutManager {
     
     // Formatting keyboard shortcuts
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-      switch(e.key) {
+      switch(e.key.toLowerCase()) {
         case 'b':
           e.preventDefault();
           document.getElementById('format-bold').click();
@@ -50,13 +62,21 @@ class KeyboardShortcutManager {
           break;
         case 'z':
           e.preventDefault();
-          if (window.MarkTideUndoRedo) {
+          if (this.runMonacoCommand('undo')) {
+            if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+              window.MarkTideRenderer.debouncedRender();
+            }
+          } else if (window.MarkTideUndoRedo) {
             window.MarkTideUndoRedo.undoAction();
           }
           break;
         case 'y':
           e.preventDefault();
-          if (window.MarkTideUndoRedo) {
+          if (this.runMonacoCommand('redo')) {
+            if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+              window.MarkTideRenderer.debouncedRender();
+            }
+          } else if (window.MarkTideUndoRedo) {
             window.MarkTideUndoRedo.redoAction();
           }
           break;
@@ -71,10 +91,14 @@ class KeyboardShortcutManager {
     
     // Ctrl+Shift shortcuts
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
-      switch(e.key) {
-        case 'Z':
+      switch(e.key.toLowerCase()) {
+        case 'z':
           e.preventDefault();
-          if (window.MarkTideUndoRedo) {
+          if (this.runMonacoCommand('redo')) {
+            if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+              window.MarkTideRenderer.debouncedRender();
+            }
+          } else if (window.MarkTideUndoRedo) {
             window.MarkTideUndoRedo.redoAction();
           }
           break;

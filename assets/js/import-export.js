@@ -192,6 +192,8 @@ class ImportExportManager {
       this.closeDropzoneBtn.addEventListener("click", (e) => {
         e.stopPropagation(); 
         this.dropzone.style.display = "none";
+        this.unhighlightEditor();
+        this.refreshLayoutAfterDropzoneChange();
       });
     }
 
@@ -392,6 +394,7 @@ class ImportExportManager {
       if (this.editorPane) {
         this.editorPane.classList.remove('drop-active');
       }
+      this.refreshLayoutAfterDropzoneChange();
 
       // Normalize editor scrolling after import to avoid stale styles
       try {
@@ -419,6 +422,50 @@ class ImportExportManager {
       }
     };
     reader.readAsText(file);
+  }
+
+  // Recompute editor layout when dropzone visibility changes.
+  // Monaco in editor-only mode needs an explicit relayout to avoid clipped overlays.
+  refreshLayoutAfterDropzoneChange() {
+    try {
+      const viewMgr = window.MarkTideViewManager;
+      if (!viewMgr || !this.editorPane || !this.markdownEditor) return;
+
+      const isMonacoHost = this.markdownEditor.classList.contains('monaco-host');
+      if (!isMonacoHost) {
+        if (viewMgr.currentView === 'editor-only' && viewMgr.adjustEditorPaneHeightIfNeeded) {
+          viewMgr.adjustEditorPaneHeightIfNeeded();
+        }
+        return;
+      }
+
+      if (viewMgr.currentView === 'editor-only' && viewMgr.setEditorPaneHeight) {
+        viewMgr.setEditorPaneHeight(this.editorPane);
+      }
+
+      if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+        // Temporarily disable layout transitions during dropzone close relayout to avoid visual flashes.
+        document.body.classList.add('layout-recalc');
+
+        // Run immediate + multi-frame relayout after height changes settle.
+        window.MarkTideMonaco.refreshLayout();
+        requestAnimationFrame(() => {
+          window.MarkTideMonaco.refreshLayout();
+          requestAnimationFrame(() => {
+            window.MarkTideMonaco.refreshLayout();
+            setTimeout(() => {
+              if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+                window.MarkTideMonaco.refreshLayout();
+              }
+              document.body.classList.remove('layout-recalc');
+            }, 60);
+          });
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to refresh layout after dropzone change:', err);
+      document.body.classList.remove('layout-recalc');
+    }
   }
 
   // Generate smart filename from content

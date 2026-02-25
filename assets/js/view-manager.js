@@ -45,6 +45,17 @@ class ViewManager {
       });
     }
 
+    const previewPane = document.querySelector(".preview-pane");
+    if (previewPane) {
+      // More reliable than pseudo-element hover in some browsers.
+      previewPane.addEventListener("mouseenter", () => {
+        document.body.classList.add("preview-scrollbar-hover");
+      });
+      previewPane.addEventListener("mouseleave", () => {
+        document.body.classList.remove("preview-scrollbar-hover");
+      });
+    }
+
     // disable viewport-height recalcs while scrolling to avoid jitter in editor-only
   }
 
@@ -120,6 +131,7 @@ class ViewManager {
     // Remove state classes on body
     document.body.classList.remove('editor-only-active');
     document.body.classList.remove('preview-only-active');
+    document.body.classList.remove('preview-scrollbar-hover');
   }
 
   updateMobileButtons() {
@@ -189,6 +201,7 @@ class ViewManager {
         this.updateButtonStates(true, true);
         bodyEl.classList.remove('preview-only-active');
         bodyEl.classList.remove('editor-only-active');
+        bodyEl.classList.remove('preview-scrollbar-hover');
         // Ensure panes rely on CSS defaults for scrolling in split
         if (editorPane) editorPane.style.overflow = '';
         if (previewPane) previewPane.style.overflow = '';
@@ -209,30 +222,56 @@ class ViewManager {
         
       case 'editor-only':
         // Only editor visible
-        // Editor-only: hide preview and let PAGE scroll from the top
+        // Editor-only: for Monaco, keep editor as the scroller; for textarea, keep legacy grow behavior
+        bodyEl.classList.remove('preview-scrollbar-hover');
         previewPane.style.display = 'none';
         editorPane.style.flex = '1';
         editorPane.style.width = '100%';
-        // remove any fixed heights/overflow so the page can scroll
-        editorPane.style.height = 'auto';
-        editorPane.style.minHeight = '';
-        editorPane.style.overflow = 'visible';
-        // ensure wrapper does not clamp height
+        // ensure wrapper baseline before mode-specific logic
         const editorWrapperEl = editorPane.querySelector('.editor-wrapper');
-        if (editorWrapperEl) {
-          editorWrapperEl.style.height = 'auto';
-        }
         footer.style.display = 'none';
-        // Let the whole document own the scroll in editor-only
-        appContainer.style.height = 'auto';
         this.currentView = 'editor-only';
         this.updateButtonStates(true, false);
         bodyEl.classList.remove('preview-only-active');
         bodyEl.classList.add('editor-only-active');
         
-        // Ensure textarea expands so document height tracks content
+        // Ensure editor behaves correctly by editor type.
         const markdownEditor = document.getElementById('markdown-editor');
         if (markdownEditor) {
+          const isMonacoHost = markdownEditor.classList.contains('monaco-host');
+
+          if (isMonacoHost) {
+            // Monaco should own scrolling in editor-only.
+            appContainer.style.height = '100vh';
+            this.setEditorPaneHeight(editorPane);
+            editorPane.style.overflow = 'hidden';
+
+            if (editorWrapperEl) {
+              editorWrapperEl.style.height = 'calc(100% - 44px)';
+            }
+
+            markdownEditor.style.height = '100%';
+            markdownEditor.style.minHeight = '0';
+            markdownEditor.style.overflow = 'hidden';
+            markdownEditor.style.overflowY = 'hidden';
+            markdownEditor.classList.add('native-scrollbars');
+
+            if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+              requestAnimationFrame(() => window.MarkTideMonaco.refreshLayout());
+              setTimeout(() => window.MarkTideMonaco.refreshLayout(), 50);
+            }
+            break;
+          }
+
+          // Legacy textarea path: page owns scrolling.
+          editorPane.style.height = 'auto';
+          editorPane.style.minHeight = '';
+          editorPane.style.overflow = 'visible';
+          if (editorWrapperEl) {
+            editorWrapperEl.style.height = 'auto';
+          }
+          appContainer.style.height = 'auto';
+
           // Clear any interfering inline styles and let CSS take over
           markdownEditor.style.height = '';
           markdownEditor.style.overflow = '';
@@ -271,6 +310,7 @@ class ViewManager {
          
        case 'preview-only':
         // Only preview visible
+        bodyEl.classList.remove('preview-scrollbar-hover');
         if (this.isMobileLayout()) {
           editorPane.style.display = 'none';
           // Let the PAGE own scrolling in preview-only
@@ -299,11 +339,13 @@ class ViewManager {
   setEditorPaneHeight(editorPane) {
     const header = document.querySelector('.app-header');
     const headerHeight = header ? header.offsetHeight : 0;
+    const isEditorOnly = this.currentView === 'editor-only';
 
     // Account for dropzone if visible (it sits above the editor and consumes vertical space)
+    // In editor-only mode we intentionally ignore dropzone height to keep Monaco viewport stable.
     const dropzone = document.getElementById('dropzone');
     let dropzoneTotal = 0;
-    if (dropzone && dropzone.offsetParent !== null && getComputedStyle(dropzone).display !== 'none') {
+    if (!isEditorOnly && dropzone && dropzone.offsetParent !== null && getComputedStyle(dropzone).display !== 'none') {
       const dzStyles = getComputedStyle(dropzone);
       const marginBottom = parseFloat(dzStyles.marginBottom || '0');
       dropzoneTotal = dropzone.offsetHeight + marginBottom;

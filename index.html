@@ -455,8 +455,8 @@
                 
                 <!-- Wrapper for the editor textarea and line numbers -->
                 <div class="editor-wrapper">
-                    <!-- Markdown editor textarea -->
-                    <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."></textarea>
+                    <!-- Monaco-backed markdown editor host -->
+                    <div id="markdown-editor" role="textbox" aria-multiline="true" aria-label="Markdown editor"></div>
                     
                     <!-- Editor stats in bottom right corner -->
                     <div class="editor-stats">
@@ -490,8 +490,10 @@
 
     <!-- Core JavaScript libraries (Bootstrap bundle and custom script) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
     <!-- MarkTide Viewer Modular JavaScript Files -->
     <!-- Load in dependency order: utilities first, then core modules, then initialization -->
+    <script src="assets/js/monaco-bridge.js"></script>
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/sample-content.js"></script>
     <script src="assets/js/undo-redo.js"></script>

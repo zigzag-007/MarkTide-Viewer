@@ -957,6 +957,53 @@
     outline: none;
   }
 
+  /* Monaco host should own editor chrome while preserving existing panel colors */
+  #markdown-editor.monaco-host {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* Disable transitions while recalculating Monaco layout to prevent flash artifacts */
+  body.layout-recalc .content-container,
+  body.layout-recalc .editor-pane,
+  body.layout-recalc .editor-wrapper,
+  body.layout-recalc #markdown-editor,
+  body.layout-recalc #markdown-editor .monaco-editor {
+    transition: none !important;
+  }
+
+  #markdown-editor.monaco-host .monaco-editor,
+  #markdown-editor.monaco-host .monaco-editor .margin,
+  #markdown-editor.monaco-host .monaco-editor .monaco-editor-background {
+    background-color: var(--editor-bg) !important;
+  }
+
+  /* Hide VSCode-like IntelliSense widgets for markdown-first UX */
+  #markdown-editor.monaco-host .suggest-widget,
+  #markdown-editor.monaco-host .parameter-hints-widget {
+    display: none !important;
+  }
+
+  /* Keep Monaco scrollbar blue like legacy editor */
+  #markdown-editor.monaco-host .monaco-scrollable-element > .scrollbar > .slider {
+    background: rgba(79, 195, 247, 0.35) !important;
+    border: 1px solid rgba(79, 195, 247, 0.18) !important;
+    border-radius: 4px !important;
+  }
+
+  #markdown-editor.monaco-host .monaco-scrollable-element > .scrollbar > .slider:hover {
+    background: rgba(79, 195, 247, 0.55) !important;
+  }
+
+  #markdown-editor.monaco-host .monaco-scrollable-element > .scrollbar > .slider.active {
+    background: rgba(79, 195, 247, 0.7) !important;
+  }
+
+  /* Monaco scrollbar sits on the right edge; move stats bubble inward to avoid overlap */
+  #markdown-editor.monaco-host ~ .editor-stats {
+    right: 30px;
+  }
+
   /* Editor-only textarea: no fixed height; page owns scroll */
   body.editor-only-active #markdown-editor {
     min-height: calc(100vh - 120px) !important;
@@ -966,6 +1013,14 @@
     overflow-anchor: none;
     /* Keep scrollbar space stable to avoid layout shifts */
     scrollbar-gutter: stable;
+  }
+
+  /* Monaco editor-only must not inherit textarea growth sizing rules */
+  body.editor-only-active #markdown-editor.monaco-host {
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    scrollbar-gutter: auto !important;
   }
   
   /* Editor-only mode: Make textarea expand to fit content */
@@ -1005,6 +1060,10 @@
     bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 1000;
     pointer-events: none; /* purely informational */
+  }
+
+  body.editor-only-active #markdown-editor.monaco-host ~ .editor-stats {
+    right: calc(24px + env(safe-area-inset-right));
   }
   
   .editor-stat-item {
@@ -1533,28 +1592,69 @@
   body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar,
   body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar,
   body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   
+  /* Editor-side baseline scrollbar (faint) */
   body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-track,
-  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-track,
   body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-track {
-    background: rgba(79, 195, 247, 0.1);
+    background: rgba(79, 195, 247, 0.06);
     border-radius: 5px;
   }
   
   body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-thumb,
-  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-thumb,
   body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-thumb {
-    background: rgba(79, 195, 247, 0.3);
+    background: rgba(79, 195, 247, 0.22);
     border-radius: 5px;
+    border: 1px solid rgba(79, 195, 247, 0.12);
+    box-shadow: 0 0 0 rgba(79, 195, 247, 0);
+  }
+
+  /* Preview-side scrollbar: hidden by default, reveal on preview hover (Monaco-like) */
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 5px;
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active).preview-scrollbar-hover .preview-pane::-webkit-scrollbar-track {
+    background: rgba(79, 195, 247, 0.1);
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active).preview-scrollbar-hover .preview-pane::-webkit-scrollbar-thumb {
+    background: rgba(79, 195, 247, 0.3);
     border: 1px solid rgba(79, 195, 247, 0.2);
   }
-  
-  body:not(.editor-only-active):not(.preview-only-active) .editor-pane::-webkit-scrollbar-thumb:hover,
-  body:not(.editor-only-active):not(.preview-only-active) .preview-pane::-webkit-scrollbar-thumb:hover,
-  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor::-webkit-scrollbar-thumb:hover {
+
+  body:not(.editor-only-active):not(.preview-only-active).preview-scrollbar-hover .preview-pane::-webkit-scrollbar-thumb:hover {
+    background: rgba(79, 195, 247, 0.5);
+    box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+  }
+
+  /* Make editor-side split-view scrollbar stronger while hovering editor pane */
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover::-webkit-scrollbar-track,
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover #markdown-editor::-webkit-scrollbar-track,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor:hover::-webkit-scrollbar-track {
+    background: rgba(79, 195, 247, 0.1);
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover::-webkit-scrollbar-thumb,
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover #markdown-editor::-webkit-scrollbar-thumb,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor:hover::-webkit-scrollbar-thumb {
+    background: rgba(79, 195, 247, 0.3);
+    border: 1px solid rgba(79, 195, 247, 0.2);
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover::-webkit-scrollbar-thumb:hover,
+  body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover #markdown-editor::-webkit-scrollbar-thumb:hover,
+  body:not(.editor-only-active):not(.preview-only-active) #markdown-editor:hover::-webkit-scrollbar-thumb:hover {
     background: rgba(79, 195, 247, 0.5);
     box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
   }
