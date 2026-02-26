@@ -145,9 +145,13 @@ class MarkdownRenderer {
         const outline = m[2];
         const text = m[3] || '';
         const parts = outline.split('.');
-        const depth = Math.max(1, parts.length - 1);
+        const outlineDepth = Math.max(1, parts.length - 1);
+        const leadingDepth = Math.floor(leading.length / 4);
+        // Avoid doubling nesting when editor already has indentation
+        // and decimal-outline marker at the same depth (e.g. "    1.1. ...").
+        const depth = Math.max(outlineDepth, leadingDepth);
         const marker = parts[parts.length - 1] || '1';
-        const indent = leading + '    '.repeat(depth);
+        const indent = '    '.repeat(depth);
         normalized.push(`${indent}${marker}. ${text}`);
         continue;
       }

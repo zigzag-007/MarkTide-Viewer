@@ -354,31 +354,237 @@
         host.dispatchEvent(new Event("input"));
       });
 
-      // Auto-indent lines after decimal-outline items (e.g. "1.1", "1.2.1")
-      // so typing flow in Monaco matches preview/export nesting behavior.
+      const LIST_INDENT = "    ";
+
+      const parseListLine = (line) => {
+        if (typeof line !== "string") return null;
+
+        let m = line.match(/^(\s*)(\d+(?:\.\d+)+)\.?(?:\s+(.*))?$/);
+        if (m) {
+          return {
+            type: "decimal",
+            indent: m[1] || "",
+            outline: m[2],
+            text: m[3] || ""
+          };
+        }
+
+        m = line.match(/^(\s*)(\d+)\.(?:\s+(.*))?$/);
+        if (m) {
+          return {
+            type: "ordered",
+            indent: m[1] || "",
+            number: parseInt(m[2], 10),
+            text: m[3] || ""
+          };
+        }
+
+        m = line.match(/^(\s*)([-+*])(?:\s+(.*))?$/);
+        if (m) {
+          return {
+            type: "unordered",
+            indent: m[1] || "",
+            marker: m[2],
+            text: m[3] || ""
+          };
+        }
+
+        return null;
+      };
+
+      const findParentListAtIndent = (model, fromLine, indentLength) => {
+        for (let lineNumber = fromLine; lineNumber >= 1; lineNumber -= 1) {
+          const line = model.getLineContent(lineNumber);
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          const parsed = parseListLine(line);
+          if (parsed && parsed.indent.length === indentLength) {
+            return parsed;
+          }
+
+          const currentIndentLength = line.match(/^\s*/)[0].length;
+          if (!parsed && currentIndentLength <= indentLength) {
+            break;
+          }
+        }
+        return null;
+      };
+
+      const getOutlineFromParsed = (parsed) => {
+        if (!parsed) return null;
+        if (parsed.type === "ordered") return String(parsed.number);
+        if (parsed.type === "decimal") return parsed.outline;
+        return null;
+      };
+
+      const computeNextOutline = (model, lineNumber, targetIndentLength) => {
+        if (targetIndentLength <= 0) {
+          let maxTop = 0;
+          for (let ln = 1; ln < lineNumber; ln += 1) {
+            const parsed = parseListLine(model.getLineContent(ln));
+            if (!parsed || parsed.indent.length !== 0) continue;
+            const outline = getOutlineFromParsed(parsed);
+            if (!outline) continue;
+            const top = parseInt(outline.split(".")[0], 10);
+            if (Number.isFinite(top) && top > maxTop) maxTop = top;
+          }
+          return String(maxTop + 1);
+        }
+
+        const parentIndentLength = Math.max(0, targetIndentLength - LIST_INDENT.length);
+        const parent = findParentListAtIndent(model, lineNumber - 1, parentIndentLength);
+        const parentOutline = getOutlineFromParsed(parent) || "1";
+
+        let maxChild = 0;
+        for (let ln = 1; ln < lineNumber; ln += 1) {
+          const parsed = parseListLine(model.getLineContent(ln));
+          if (!parsed || parsed.indent.length !== targetIndentLength) continue;
+
+          if (parsed.type === "decimal") {
+            const parts = parsed.outline.split(".");
+            if (parts.length < 2) continue;
+            const candidateParent = parts.slice(0, -1).join(".");
+            if (candidateParent !== parentOutline) continue;
+            const idx = parseInt(parts[parts.length - 1], 10);
+            if (Number.isFinite(idx) && idx > maxChild) maxChild = idx;
+            continue;
+          }
+
+          if (parsed.type === "ordered") {
+            if (parsed.number > maxChild) maxChild = parsed.number;
+          }
+        }
+
+        return `${parentOutline}.${maxChild + 1}`;
+      };
+
+      const getListContinuationInsertText = (model, lineNumber, beforeCursor, afterCursor) => {
+        const parsed = parseListLine(beforeCursor);
+        if (!parsed) return null;
+
+        const mergedText = `${parsed.text || ""}${afterCursor || ""}`.trim();
+        const hasContent = mergedText.length > 0;
+
+        if (!hasContent) {
+          if (parsed.indent.length === 0) return "\n";
+
+          const outdentedIndent = parsed.indent.slice(0, Math.max(0, parsed.indent.length - LIST_INDENT.length));
+          const parent = findParentListAtIndent(model, lineNumber - 1, outdentedIndent.length);
+          if (!parent) return `\n${outdentedIndent}`;
+
+          if (parent.type === "unordered") {
+            return `\n${outdentedIndent}${parent.marker} `;
+          }
+
+          if (parent.type === "ordered") {
+            return `\n${outdentedIndent}${parent.number + 1}. `;
+          }
+
+          const nextOutline = computeNextOutline(model, lineNumber, outdentedIndent.length);
+          return `\n${outdentedIndent}${nextOutline}. `;
+        }
+
+        if (parsed.type === "decimal") {
+          const parts = parsed.outline.split(".");
+          const lastIndex = parts.length - 1;
+          const current = parseInt(parts[lastIndex], 10);
+          const next = Number.isFinite(current) ? current + 1 : 1;
+          parts[lastIndex] = String(next);
+          return `\n${parsed.indent}${parts.join(".")}. `;
+        }
+
+        if (parsed.type === "ordered") {
+          return `\n${parsed.indent}${parsed.number + 1}. `;
+        }
+
+        return `\n${parsed.indent}${parsed.marker} `;
+      };
+
+      const indentListLines = (model, selection, outdent) => {
+        if (!window.monaco) return false;
+
+        let startLine = selection.startLineNumber;
+        let endLine = selection.endLineNumber;
+        if (!selection.isEmpty() && selection.endColumn === 1 && endLine > startLine) {
+          endLine -= 1;
+        }
+
+        const edits = [];
+        for (let lineNumber = startLine; lineNumber <= endLine; lineNumber += 1) {
+          const line = model.getLineContent(lineNumber);
+          const parsed = parseListLine(line);
+          if (!parsed) continue;
+
+          const oldIndent = parsed.indent;
+          let newIndent = oldIndent;
+
+          if (outdent) {
+            if (!oldIndent.length) continue;
+            newIndent = oldIndent.slice(0, Math.max(0, oldIndent.length - LIST_INDENT.length));
+          } else {
+            newIndent = `${oldIndent}${LIST_INDENT}`;
+          }
+
+          if (newIndent === oldIndent) continue;
+
+          if (parsed.type === "unordered") {
+            const nextText = parsed.text ? `${newIndent}${parsed.marker} ${parsed.text}` : `${newIndent}${parsed.marker} `;
+            edits.push({
+              range: new window.monaco.Range(lineNumber, 1, lineNumber, line.length + 1),
+              text: nextText,
+              forceMoveMarkers: true
+            });
+            continue;
+          }
+
+          const nextOutline = computeNextOutline(model, lineNumber, newIndent.length);
+          const nextText = parsed.text ? `${newIndent}${nextOutline}. ${parsed.text}` : `${newIndent}${nextOutline}. `;
+          edits.push({
+            range: new window.monaco.Range(lineNumber, 1, lineNumber, line.length + 1),
+            text: nextText,
+            forceMoveMarkers: true
+          });
+        }
+
+        if (!edits.length) return false;
+        monacoEditor.executeEdits("list-indent", edits);
+        return true;
+      };
+
+      // Smart list behavior:
+      // - Enter continues/exits list items like Word
+      // - Tab/Shift+Tab indents/outdents list levels
       monacoEditor.onKeyDown((event) => {
         if (!window.monaco) return;
-        if (event.keyCode !== window.monaco.KeyCode.Enter) return;
-        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
-
         const selection = monacoEditor.getSelection();
         const model = monacoEditor.getModel();
-        if (!selection || !model || !selection.isEmpty()) return;
+        if (!selection || !model) return;
+
+        if (event.keyCode === window.monaco.KeyCode.Tab && !event.ctrlKey && !event.altKey && !event.metaKey) {
+          const didIndent = indentListLines(model, selection, event.shiftKey);
+          if (didIndent) {
+            event.preventDefault();
+          }
+          return;
+        }
+
+        if (event.keyCode !== window.monaco.KeyCode.Enter) return;
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+        if (!selection.isEmpty()) return;
 
         const currentLine = model.getLineContent(selection.startLineNumber);
-        const beforeCursor = currentLine.slice(0, Math.max(0, selection.startColumn - 1));
-        const match = beforeCursor.match(/^(\s*)(\d+(?:\.\d+)+)\.?\s*.*$/);
-        if (!match) return;
-
-        const baseIndent = match[1] || "";
-        const depth = Math.max(1, match[2].split(".").length - 1);
-        const nextLineIndent = `${baseIndent}${"    ".repeat(depth)}`;
+        const cursorOffset = Math.max(0, selection.startColumn - 1);
+        const beforeCursor = currentLine.slice(0, cursorOffset);
+        const afterCursor = currentLine.slice(cursorOffset);
+        const insertText = getListContinuationInsertText(model, selection.startLineNumber, beforeCursor, afterCursor);
+        if (!insertText) return;
 
         event.preventDefault();
-        monacoEditor.executeEdits("decimal-outline-auto-indent", [
+        monacoEditor.executeEdits("list-smart-enter", [
           {
             range: selection,
-            text: `\n${nextLineIndent}`,
+            text: insertText,
             forceMoveMarkers: true
           }
         ]);
