@@ -423,7 +423,30 @@ class ImportExportManager {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.markdownEditor.value = e.target.result;
+      const importedContent = typeof e.target.result === 'string' ? e.target.result : String(e.target.result ?? '');
+      let appliedWithMonaco = false;
+
+      if (window.MarkTideEditor &&
+          typeof window.MarkTideEditor.getMonacoEditorAndModel === 'function' &&
+          typeof window.MarkTideEditor.applyMonacoTextUpdate === 'function') {
+        const context = window.MarkTideEditor.getMonacoEditorAndModel();
+        if (context) {
+          const { editor, model } = context;
+          appliedWithMonaco = window.MarkTideEditor.applyMonacoTextUpdate({
+            editor,
+            model,
+            currentValue: model.getValue(),
+            newValue: importedContent,
+            selectionStart: 0,
+            selectionEnd: 0,
+            sourceId: 'import-markdown-file'
+          });
+        }
+      }
+
+      if (!appliedWithMonaco) {
+        this.markdownEditor.value = importedContent;
+      }
       if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
         window.MarkTideRenderer.renderMarkdown();
       }

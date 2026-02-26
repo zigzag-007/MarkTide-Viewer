@@ -223,8 +223,8 @@ class MarkTideCore {
       { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
       { id: 'format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
       { id: 'mobile-format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
-      { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
-      { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() }
+      { id: 'format-undo', action: () => this.undoTextAction() },
+      { id: 'format-redo', action: () => this.redoTextAction() }
     ];
 
     formatButtons.forEach(({ id, action }) => {
@@ -238,45 +238,61 @@ class MarkTideCore {
     });
   }
 
+  runMonacoCommand(commandId) {
+    if (!window.MarkTideKeyboardShortcuts || typeof window.MarkTideKeyboardShortcuts.runMonacoCommand !== 'function') {
+      return false;
+    }
+    return window.MarkTideKeyboardShortcuts.runMonacoCommand(commandId);
+  }
+
+  undoTextAction() {
+    if (this.runMonacoCommand('undo')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.undoAction();
+    }
+  }
+
+  redoTextAction() {
+    if (this.runMonacoCommand('redo')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.redoAction();
+    }
+  }
+
   alignText(alignment) {
+    const prefix = `<div style="text-align: ${alignment};">`;
+    const suffix = `</div>`;
+
+    // Reuse editor wrap path so Monaco keeps native undo/redo history intact.
+    if (window.MarkTideEditor && typeof window.MarkTideEditor.wrapText === 'function') {
+      window.MarkTideEditor.wrapText(prefix, suffix);
+      return;
+    }
+
+    if (!this.markdownEditor) return;
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
-    
-    const prefix = `<div style="text-align: ${alignment};">`;
-    const suffix = `</div>`;
-    
     const start = this.markdownEditor.selectionStart;
     const end = this.markdownEditor.selectionEnd;
     const currentValue = this.markdownEditor.value;
     const selectedText = currentValue.substring(start, end);
-    
-    const hasPrefix = start >= prefix.length && currentValue.substring(start - prefix.length, start) === prefix;
-    const hasSuffix = end + suffix.length <= currentValue.length && currentValue.substring(end, end + suffix.length) === suffix;
-
-    if (hasPrefix && hasSuffix) {
-      // Remove alignment wrapper
-      this.markdownEditor.value = currentValue.substring(0, start - prefix.length) +
-                                  selectedText +
-                                  currentValue.substring(end + suffix.length);
-      this.markdownEditor.selectionStart = start - prefix.length;
-      this.markdownEditor.selectionEnd = end - prefix.length;
-    } else if (selectedText) {
-      // Wrap selected text with alignment div
-      const alignedText = prefix + selectedText + suffix;
-      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
-      this.markdownEditor.selectionStart = start + prefix.length;
-      this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
-    } else {
-      // No selection: insert empty alignment div and place cursor inside
-      const alignedText = prefix + suffix;
-      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
-      this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + prefix.length;
-    }
-    
+    this.markdownEditor.value = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
+    this.markdownEditor.selectionStart = start + prefix.length;
+    this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
     this.markdownEditor.focus();
-    
-    // Trigger re-render
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
     }
