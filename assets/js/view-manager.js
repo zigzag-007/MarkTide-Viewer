@@ -212,6 +212,27 @@ class ViewManager {
           ed.style.height = '100%';
           ed.style.overflow = 'auto';
           ed.style.overflowY = 'auto';
+
+          if (ed.classList.contains('monaco-host') && window.MarkTideMonaco && window.MarkTideMonaco.getEditor) {
+            const monacoEditor = window.MarkTideMonaco.getEditor();
+            if (monacoEditor && typeof monacoEditor.updateOptions === 'function') {
+              monacoEditor.updateOptions({
+                wordWrap: 'on',
+                wordWrapOverride1: 'on',
+                wordWrapOverride2: 'on',
+                wrappingIndent: 'same',
+                wrappingStrategy: 'advanced',
+                scrollbar: {
+                  horizontal: 'auto',
+                  vertical: 'auto',
+                  verticalScrollbarSize: 8,
+                  horizontalScrollbarSize: 8,
+                  useShadows: false
+                }
+              });
+              monacoEditor.layout();
+            }
+          }
         }
         // Remove any editor-only scroll lock handler
         if (this._editorScrollLockHandler) {
@@ -243,8 +264,10 @@ class ViewManager {
           if (isMonacoHost) {
             // Monaco should own scrolling in editor-only.
             appContainer.style.height = '100vh';
-            this.setEditorPaneHeight(editorPane);
+            editorPane.style.height = '';
+            editorPane.style.minHeight = '0';
             editorPane.style.overflow = 'hidden';
+            editorPane.style.overflowY = 'hidden';
 
             if (editorWrapperEl) {
               editorWrapperEl.style.height = 'calc(100% - 44px)';
@@ -255,6 +278,26 @@ class ViewManager {
             markdownEditor.style.overflow = 'hidden';
             markdownEditor.style.overflowY = 'hidden';
             markdownEditor.classList.add('native-scrollbars');
+
+            if (window.MarkTideMonaco && window.MarkTideMonaco.getEditor) {
+              const monacoEditor = window.MarkTideMonaco.getEditor();
+              if (monacoEditor && typeof monacoEditor.updateOptions === 'function') {
+                monacoEditor.updateOptions({
+                  wordWrap: 'on',
+                  wordWrapOverride1: 'on',
+                  wordWrapOverride2: 'on',
+                  wrappingIndent: 'same',
+                  wrappingStrategy: 'advanced',
+                  scrollbar: {
+                    horizontal: 'hidden',
+                    vertical: 'auto',
+                    verticalScrollbarSize: 8,
+                    horizontalScrollbarSize: 0,
+                    useShadows: false
+                  }
+                });
+              }
+            }
 
             if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
               requestAnimationFrame(() => window.MarkTideMonaco.refreshLayout());

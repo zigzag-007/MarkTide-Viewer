@@ -439,10 +439,6 @@ class ImportExportManager {
         return;
       }
 
-      if (viewMgr.currentView === 'editor-only' && viewMgr.setEditorPaneHeight) {
-        viewMgr.setEditorPaneHeight(this.editorPane);
-      }
-
       if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
         // Temporarily disable layout transitions during dropzone close relayout to avoid visual flashes.
         document.body.classList.add('layout-recalc');

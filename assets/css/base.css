@@ -179,10 +179,12 @@
     min-height: 0;
   }
 
-  /* In editor-only, let the PAGE control scrolling (no container clamp) */
+  /* In editor-only, keep split-like flex sizing so header/dropzone consume real space */
   body.editor-only-active .content-container {
-    height: 100vh;
-    overflow: hidden; /* prevent page scroll when empty */
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* In preview-only, let document scroll from the top (no clamping) */

@@ -322,15 +322,21 @@
         const deltaY = Number(event.deltaY) || 0;
         const deltaX = Number(event.deltaX) || 0;
         if (deltaY === 0 && deltaX === 0) return;
+        const unit =
+          event.deltaMode === 1 ? 16 :
+          event.deltaMode === 2 ? window.innerHeight :
+          1;
+        const moveY = deltaY * unit;
+        const moveX = deltaX * unit;
 
         event.preventDefault();
         monacoEditor.focus();
 
-        if (deltaY !== 0) {
-          monacoEditor.setScrollTop(monacoEditor.getScrollTop() + deltaY);
+        if (moveY !== 0) {
+          monacoEditor.setScrollTop(monacoEditor.getScrollTop() + moveY);
         }
-        if (deltaX !== 0) {
-          monacoEditor.setScrollLeft(monacoEditor.getScrollLeft() + deltaX);
+        if (moveX !== 0) {
+          monacoEditor.setScrollLeft(monacoEditor.getScrollLeft() + moveX);
         }
       }, { passive: false, capture: true });
 
