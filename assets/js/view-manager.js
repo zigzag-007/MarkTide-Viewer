@@ -64,6 +64,19 @@ class ViewManager {
     return window.innerWidth <= 1080;
   }
 
+  getVisibleToolbarHeight(editorPane) {
+    if (!editorPane) return 0;
+    const toolbar = editorPane.querySelector('.formatting-toolbar');
+    if (!toolbar) return 0;
+
+    const toolbarStyles = getComputedStyle(toolbar);
+    if (toolbarStyles.display === 'none' || toolbarStyles.visibility === 'hidden') {
+      return 0;
+    }
+
+    return toolbar.offsetHeight || 0;
+  }
+
   // Clear all inline styles to let CSS take control
   clearInlineStyles() {
     const editorPane = document.querySelector(".editor-pane");
@@ -275,7 +288,10 @@ class ViewManager {
             editorPane.style.overflowY = 'hidden';
 
             if (editorWrapperEl) {
-              editorWrapperEl.style.height = 'calc(100% - 44px)';
+              const toolbarHeight = this.getVisibleToolbarHeight(editorPane);
+              editorWrapperEl.style.height = toolbarHeight > 0
+                ? `calc(100% - ${toolbarHeight}px)`
+                : '100%';
             }
 
             markdownEditor.style.height = '100%';
