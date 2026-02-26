@@ -354,6 +354,36 @@
         host.dispatchEvent(new Event("input"));
       });
 
+      // Auto-indent lines after decimal-outline items (e.g. "1.1", "1.2.1")
+      // so typing flow in Monaco matches preview/export nesting behavior.
+      monacoEditor.onKeyDown((event) => {
+        if (!window.monaco) return;
+        if (event.keyCode !== window.monaco.KeyCode.Enter) return;
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+
+        const selection = monacoEditor.getSelection();
+        const model = monacoEditor.getModel();
+        if (!selection || !model || !selection.isEmpty()) return;
+
+        const currentLine = model.getLineContent(selection.startLineNumber);
+        const beforeCursor = currentLine.slice(0, Math.max(0, selection.startColumn - 1));
+        const match = beforeCursor.match(/^(\s*)(\d+(?:\.\d+)+)\.?\s*.*$/);
+        if (!match) return;
+
+        const baseIndent = match[1] || "";
+        const depth = Math.max(1, match[2].split(".").length - 1);
+        const nextLineIndent = `${baseIndent}${"    ".repeat(depth)}`;
+
+        event.preventDefault();
+        monacoEditor.executeEdits("decimal-outline-auto-indent", [
+          {
+            range: selection,
+            text: `\n${nextLineIndent}`,
+            forceMoveMarkers: true
+          }
+        ]);
+      });
+
       // Keep Monaco layout correct when view manager changes editor host dimensions.
       resizeObserver = new ResizeObserver(() => {
         if (monacoEditor) monacoEditor.layout();

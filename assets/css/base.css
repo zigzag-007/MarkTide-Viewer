@@ -1350,33 +1350,31 @@
     list-style-type: disc;
   }
   
-  .markdown-body ol {
-    list-style-type: decimal;
-    padding-left: 2em;
-    counter-reset: section;
-  }
-  
-  .markdown-body ol > li {
-    counter-increment: section;
-  }
-  
-  .markdown-body ol > li > ol > li {
-    counter-increment: subsection;
-  }
-  
-  .markdown-body ol > li > ol > li:before {
-    content: counter(section) "." counter(subsection) " ";
-    float: left;
-    margin-left: -2.5em;
-  }
-  
+  .markdown-body ol,
   .markdown-body ol ol {
-    list-style-type: none;
-    counter-reset: subsection;
+    list-style: none !important;
+    padding-left: 2.2em;
+    margin-left: 0;
+    counter-reset: item;
   }
-  
-  .markdown-body ol ol ol {
-    list-style-type: lower-roman;
+
+  .markdown-body ol li {
+    list-style: none !important;
+  }
+
+  .markdown-body ol li::marker {
+    content: "" !important;
+  }
+
+  .markdown-body ol > li {
+    counter-increment: item;
+  }
+
+  .markdown-body ol > li::before {
+    content: counters(item, ".") ". ";
+    display: inline;
+    font-weight: 600;
+    color: currentColor;
   }
   
   .markdown-body li {

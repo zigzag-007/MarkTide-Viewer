@@ -25,6 +25,9 @@ class PrintHandler {
     }
     document.title = smartTitle;
     const markdown = markdownEditor.value;
+    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
+      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
+      : markdown;
     
     // Create a clean renderer for print/PDF (without enhanced code blocks)
     const printRenderer = new marked.Renderer();
@@ -55,7 +58,7 @@ class PrintHandler {
     };
     
     // Use the clean renderer for print/PDF
-    const html = marked.parse(markdown, { renderer: printRenderer });
+    const html = marked.parse(normalizedMarkdown, { renderer: printRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
       ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
@@ -297,12 +300,39 @@ class PrintHandler {
     }
     
     .markdown-body ul, .markdown-body ol {
-      padding-left: 2em !important;
+      padding-left: 2.2em !important;
       margin: 0 0 16px 0 !important;
     }
     
     .markdown-body ul {
       list-style-type: disc !important;
+    }
+
+    .markdown-body ol,
+    .markdown-body ol ol {
+      list-style: none !important;
+      counter-reset: item !important;
+      margin-left: 0 !important;
+    }
+
+    .markdown-body ol li {
+      list-style: none !important;
+      color: #24292e !important;
+    }
+
+    .markdown-body ol li::marker {
+      content: "" !important;
+    }
+
+    .markdown-body ol > li {
+      counter-increment: item !important;
+    }
+
+    .markdown-body ol > li::before {
+      content: counters(item, ".") ". " !important;
+      display: inline !important;
+      font-weight: 600 !important;
+      color: #24292e !important;
     }
     
     .markdown-body li {

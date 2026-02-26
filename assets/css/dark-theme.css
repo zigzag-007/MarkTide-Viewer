@@ -361,10 +361,10 @@
    ================================================================= */
 /* TODO: Remove these loading screen styles as they're not used in production */
 
-/* Dark theme numbered list styling - Grok-style improvements */
-[data-theme="dark"] .markdown-body ol li::marker {
-  color: var(--list-marker-color); /* White numbers for list items */
-  font-weight: 600; /* Bold font weight for better visibility */
+/* Dark theme numbered list styling */
+[data-theme="dark"] .markdown-body ol > li::before {
+  color: var(--list-marker-color);
+  font-weight: 600;
 }
 
 [data-theme="dark"] .markdown-body ol li {

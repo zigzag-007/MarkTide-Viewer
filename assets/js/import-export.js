@@ -41,6 +41,38 @@ class ImportExportManager {
       .trim();
   }
 
+  getDecimalOutlineListStyles(textColor) {
+    return `
+        .markdown-body ol,
+        .markdown-body ol ol {
+            list-style: none !important;
+            padding-left: 2.2em !important;
+            margin-left: 0 !important;
+            counter-reset: item !important;
+        }
+
+        .markdown-body ol li {
+            list-style: none !important;
+            color: ${textColor} !important;
+        }
+
+        .markdown-body ol li::marker {
+            content: "" !important;
+        }
+
+        .markdown-body ol > li {
+            counter-increment: item !important;
+        }
+
+        .markdown-body ol > li::before {
+            content: counters(item, ".") ". " !important;
+            display: inline !important;
+            font-weight: 600 !important;
+            color: ${textColor} !important;
+        }
+    `;
+  }
+
   // SINGLE SOURCE OF TRUTH: plain text conversion used by both copy-as-text and export-as-txt
   generatePlainTextFromMarkdown(markdown) {
     // First, normalize Markdown tables into readable rows
@@ -638,45 +670,7 @@ class ImportExportManager {
             color: #ffffff !important;
         }
         
-        .markdown-body ol {
-            list-style-type: decimal !important;
-            padding-left: 2em !important;
-            counter-reset: section !important;
-        }
-        
-        .markdown-body ol li::marker {
-            color: #ffffff !important;
-            font-weight: 600 !important;
-        }
-        
-        .markdown-body ol li {
-            color: #ffffff !important;
-        }
-        
-        /* Handle decimal point numbering (e.g., 2.1) */
-        .markdown-body ol > li {
-            counter-increment: section !important;
-        }
-        
-        .markdown-body ol > li > ol > li {
-            counter-increment: subsection !important;
-        }
-        
-        .markdown-body ol > li > ol > li:before {
-            content: counter(section) "." counter(subsection) " " !important;
-            float: left !important;
-            margin-left: -2.5em !important;
-        }
-        
-        /* Nested list styling */
-        .markdown-body ol ol {
-            list-style-type: none !important;
-            counter-reset: subsection !important;
-        }
-        
-        .markdown-body ol ol ol {
-            list-style-type: lower-roman !important;
-        }
+        ${this.getDecimalOutlineListStyles('#ffffff')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
@@ -844,45 +838,7 @@ class ImportExportManager {
             color: #000000 !important;
         }
         
-        .markdown-body ol {
-            list-style-type: decimal !important;
-            padding-left: 2em !important;
-            counter-reset: section !important;
-        }
-        
-        .markdown-body ol li::marker {
-            color: #000000 !important;
-            font-weight: 600 !important;
-        }
-        
-        .markdown-body ol li {
-            color: #000000 !important;
-        }
-        
-        /* Handle decimal point numbering (e.g., 2.1) */
-        .markdown-body ol > li {
-            counter-increment: section !important;
-        }
-        
-        .markdown-body ol > li > ol > li {
-            counter-increment: subsection !important;
-        }
-        
-        .markdown-body ol > li > ol > li:before {
-            content: counter(section) "." counter(subsection) " " !important;
-            float: left !important;
-            margin-left: -2.5em !important;
-        }
-        
-        /* Nested list styling */
-        .markdown-body ol ol {
-            list-style-type: none !important;
-            counter-reset: subsection !important;
-        }
-        
-        .markdown-body ol ol ol {
-            list-style-type: lower-roman !important;
-        }
+        ${this.getDecimalOutlineListStyles('#000000')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
