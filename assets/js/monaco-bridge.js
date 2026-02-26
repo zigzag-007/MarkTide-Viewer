@@ -313,6 +313,7 @@
       monacoModel = monacoEditor.getModel();
       host.dataset.monacoReady = "true";
       host.classList.add("monaco-host");
+      window.dispatchEvent(new CustomEvent("marktide:monaco-ready"));
 
       // Force mouse-wheel to drive Monaco scrolling.
       // Capture phase is used so this still works even if inner Monaco nodes handle wheel first.

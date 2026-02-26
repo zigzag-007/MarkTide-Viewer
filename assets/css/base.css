@@ -30,6 +30,21 @@
     width: 100%;
     max-width: 100vw;
   }
+
+  /* Keep page scrollbars fully hidden while loader is active (all browsers). */
+  html.loading-active,
+  body.loading-active {
+    overflow: hidden !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* Legacy Edge/IE */
+  }
+
+  html.loading-active::-webkit-scrollbar,
+  body.loading-active::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
   
   /* =================================================================
      2. BASE LAYOUT & BODY

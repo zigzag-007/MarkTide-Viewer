@@ -4,6 +4,11 @@ class MarkTideCore {
     this.initialized = false;
     this.markdownEditor = null;
     this.markdownPreview = null;
+    this.loadingStartedAt = 0;
+    this.loadingHidden = false;
+    this.loadingMaxTimer = null;
+    this.LOADING_MIN_DURATION = 1400;
+    this.LOADING_MAX_DURATION = 12000;
   }
 
   init() {
@@ -24,12 +29,16 @@ class MarkTideCore {
   showLoadingScreen() {
     // Apply theme immediately for loading screen
     this.applyInitialTheme();
+    this.loadingStartedAt = performance.now();
+    this.loadingHidden = false;
+    this.setLoadingScrollLock(true);
     
     // Ensure loading screen is visible and hide main content initially
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.querySelector('.app-container');
     
     if (loadingScreen) {
+      loadingScreen.classList.remove('fade-out');
       loadingScreen.style.display = 'flex';
     }
     
@@ -37,13 +46,23 @@ class MarkTideCore {
       appContainer.style.visibility = 'hidden';
     }
     
-    // Hide loading screen after 2 seconds
-    setTimeout(() => {
+    // Safety fallback: never keep wrapper forever if any async dependency fails.
+    if (this.loadingMaxTimer) {
+      clearTimeout(this.loadingMaxTimer);
+    }
+    this.loadingMaxTimer = setTimeout(() => {
       this.hideLoadingScreen();
-    }, 2000);
+    }, this.LOADING_MAX_DURATION);
   }
 
   hideLoadingScreen() {
+    if (this.loadingHidden) return;
+    this.loadingHidden = true;
+    if (this.loadingMaxTimer) {
+      clearTimeout(this.loadingMaxTimer);
+      this.loadingMaxTimer = null;
+    }
+
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.querySelector('.app-container');
     
@@ -59,6 +78,79 @@ class MarkTideCore {
     if (appContainer) {
       appContainer.style.visibility = 'visible';
     }
+
+    this.setLoadingScrollLock(false);
+  }
+
+  setLoadingScrollLock(isLoading) {
+    const root = document.documentElement;
+    if (root) {
+      root.classList.toggle('loading-active', isLoading);
+    }
+    if (document.body) {
+      document.body.classList.toggle('loading-active', isLoading);
+    }
+  }
+
+  waitForMinimumLoadingDuration() {
+    const elapsed = performance.now() - this.loadingStartedAt;
+    const remaining = Math.max(0, this.LOADING_MIN_DURATION - elapsed);
+    return new Promise((resolve) => setTimeout(resolve, remaining));
+  }
+
+  waitForMonacoReady(timeoutMs = 9000) {
+    const editorHost = document.getElementById('markdown-editor');
+    if (!editorHost) return Promise.resolve(false);
+    if (editorHost.dataset.monacoReady === 'true') return Promise.resolve(true);
+
+    return new Promise((resolve) => {
+      let done = false;
+      let pollId = null;
+      let timeoutId = null;
+
+      const finish = (isReady) => {
+        if (done) return;
+        done = true;
+        if (pollId) clearInterval(pollId);
+        if (timeoutId) clearTimeout(timeoutId);
+        window.removeEventListener('marktide:monaco-ready', handleReady);
+        resolve(isReady);
+      };
+
+      const handleReady = () => finish(true);
+      window.addEventListener('marktide:monaco-ready', handleReady, { once: true });
+
+      pollId = setInterval(() => {
+        if (editorHost.dataset.monacoReady === 'true') {
+          finish(true);
+        }
+      }, 50);
+
+      timeoutId = setTimeout(() => finish(false), timeoutMs);
+    });
+  }
+
+  waitForNextPaint(frames = 2) {
+    return new Promise((resolve) => {
+      const step = () => {
+        if (frames <= 0) {
+          resolve();
+          return;
+        }
+        frames -= 1;
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  async completeLoadingWhenReady() {
+    await Promise.all([
+      this.waitForMinimumLoadingDuration(),
+      this.waitForMonacoReady(),
+      this.waitForNextPaint(2)
+    ]);
+    this.hideLoadingScreen();
   }
 
   initializeApp() {
@@ -89,9 +181,11 @@ class MarkTideCore {
       this.setupEventListeners();
       
       this.initialized = true;
+      this.completeLoadingWhenReady();
       // Initialization completed successfully (for debugging, can be re-enabled if needed)
     } catch (error) {
       console.error('Failed to initialize MarkTide Code Editor & Viewer:', error);
+      this.hideLoadingScreen();
     }
   }
 
