@@ -159,10 +159,20 @@ class KeyboardShortcutManager {
           break;
         case 'arrowup':
           e.preventDefault();
+          if (isMonacoFocused) {
+            // Capture-phase shortcut: block Monaco's own Shift+Arrow selection handling
+            // so this combo consistently performs line move.
+            e.stopPropagation();
+          }
           this.moveLineUp();
           break;
         case 'arrowdown':
           e.preventDefault();
+          if (isMonacoFocused) {
+            // Capture-phase shortcut: block Monaco's own Shift+Arrow selection handling
+            // so this combo consistently performs line move.
+            e.stopPropagation();
+          }
           this.moveLineDown();
           break;
       }
