@@ -343,62 +343,6 @@
     display: none;
   }
   
-  /* --- Header Statistics Section --- */
-  .header-stats {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-  }
-  
-  .stat-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: var(--stats-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    transition: all 0.2s ease;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-  
-  .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  }
-  
-  .stat-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--accent-color);
-    border-radius: 6px;
-    color: white;
-    font-size: 0.875rem;
-  }
-  
-  .stat-content {
-    display: flex;
-    flex-direction: column;
-    line-height: 1;
-  }
-  
-  .stat-value {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-color);
-  }
-  
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--text-color);
-    opacity: 0.7;
-    margin-top: 2px;
-  }
-  
   /* --- Header Actions Section --- */
   .header-actions {
     display: flex;
@@ -464,11 +408,6 @@
     transform: translateY(-1px);
     border-color: var(--accent-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .dropdown-arrow {
-    font-size: 0.75rem;
-    opacity: 0.7;
   }
   
   /* --- View Controls --- */
@@ -633,24 +572,6 @@
     color: var(--text-color);
   }
   
-  .mobile-stats-container {
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  
-  .mobile-stats-container .stat-item {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-  }
-  
-  .mobile-stats-container .stat-item i {
-    margin-right: 0.5em;
-    opacity: 0.8;
-  }
-  
   /* --- Mobile Menu Items --- */
   .mobile-menu-item {
     background: var(--button-bg);
@@ -779,15 +700,6 @@
     flex-direction: column;
     gap: 0.5rem;
     flex-grow: 1;
-  }
-  
-  #close-mobile-menu.tool-button {
-    padding: 0.25rem 0.5rem;
-    font-size: 1rem;
-  }
-  
-  .mobile-menu-panel .dropzone {
-    margin-bottom: 0;
   }
   
   /* =================================================================
@@ -1111,40 +1023,6 @@
   /* =================================================================
      11. TOOLBAR COMPONENTS
      ================================================================= */
-  
-  /* --- Base Toolbar --- */
-  .toolbar {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .tool-button {
-    background-color: var(--button-bg);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s ease;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  
-  .tool-button:hover {
-    background-color: var(--button-hover);
-  }
-  
-  .tool-button:active {
-    background-color: var(--button-active);
-  }
-  
-  .tool-button i {
-    font-size: 16px;
-  }
   
   /* --- Formatting Toolbar --- */
   .formatting-toolbar {
@@ -1722,41 +1600,6 @@
   /* =================================================================
      18. UTILITY CLASSES & ACCESSIBILITY
      ================================================================= */
-  
-  .loading {
-    opacity: 0.6;
-    pointer-events: none;
-  }
-  
-  .tooltip {
-    position: absolute;
-    background: var(--button-bg);
-    border: 1px solid var(--border-color);
-    padding: 5px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    z-index: 1000;
-    animation: fadeIn 0.2s ease;
-  }
-  
-  .github-link {
-    color: var(--text-color);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease, color 0.2s ease;
-    margin-right: 2rem;
-  }
-  
-  .github-link:hover {
-    color: var(--accent-color);
-    transform: scale(1.1);
-  }
-  
-  .github-link i {
-    font-size: 1.5rem;
-  }
   
   button:focus,
   a:focus {
