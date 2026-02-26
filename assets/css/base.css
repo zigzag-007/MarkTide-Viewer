@@ -1649,6 +1649,18 @@
     box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
   }
 
+  /* Firefox preview scrollbar parity: thin+transparent by default, blue on hover */
+  body:not(.editor-only-active):not(.preview-only-active) .preview-pane {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  body:not(.editor-only-active):not(.preview-only-active).preview-scrollbar-hover .preview-pane {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(79, 195, 247, 0.45) rgba(79, 195, 247, 0.10);
+  }
+
   /* Make editor-side split-view scrollbar stronger while hovering editor pane */
   body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover::-webkit-scrollbar-track,
   body:not(.editor-only-active):not(.preview-only-active) .editor-pane:hover #markdown-editor::-webkit-scrollbar-track,
