@@ -51,12 +51,18 @@ class KeyboardShortcutManager {
   handleKeydown(e) {
     const key = (e.key || '').toLowerCase();
     const hasCtrlOrMeta = e.ctrlKey || e.metaKey;
+    const isMonacoFocused = this.isMonacoTextFocused();
 
-    // Let Monaco handle its own undo/redo keys when the Monaco text area is focused.
-    // This avoids double-handling and keeps maintenance minimal.
-    if (this.isMonacoTextFocused() && hasCtrlOrMeta && !e.altKey) {
+    // Let Monaco fully own Tab behavior when Monaco text is focused.
+    // This preserves native multi-cursor indentation and Monaco keybindings.
+    if (isMonacoFocused && key === 'tab' && !hasCtrlOrMeta && !e.altKey) {
+      return;
+    }
+
+    // Let Monaco handle its own undo/redo keys when Monaco text is focused.
+    // Avoid intercepting in capture phase to prevent conflicting behavior.
+    if (isMonacoFocused && hasCtrlOrMeta && !e.altKey) {
       if ((!e.shiftKey && (key === 'z' || key === 'y')) || (e.shiftKey && key === 'z')) {
-        e.preventDefault();
         return;
       }
     }
@@ -164,23 +170,12 @@ class KeyboardShortcutManager {
   }
 
   deleteToLineStart() {
-    // Monaco path: execute line-start delete via edit operations so undo stays native.
-    if (this.isMonacoTextFocused() && window.MarkTideMonaco && typeof window.MarkTideMonaco.getEditor === 'function' && window.monaco) {
-      const monacoEditor = window.MarkTideMonaco.getEditor();
-      const selection = monacoEditor && monacoEditor.getSelection ? monacoEditor.getSelection() : null;
-      if (monacoEditor && selection) {
-        const startPos = selection.getStartPosition();
-        const range = selection.isEmpty()
-          ? new window.monaco.Range(startPos.lineNumber, 1, startPos.lineNumber, startPos.column)
-          : selection;
-        monacoEditor.pushUndoStop();
-        monacoEditor.executeEdits('keyboard-shortcuts', [{ range, text: '' }]);
-        monacoEditor.pushUndoStop();
-        if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-          window.MarkTideRenderer.debouncedRender();
-        }
-        return;
+    // Monaco path: native command handles multi-cursor and keeps undo history coherent.
+    if (this.isMonacoTextFocused() && this.runMonacoCommand('deleteAllLeft')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
       }
+      return;
     }
 
     const editor = document.getElementById('markdown-editor');
@@ -235,25 +230,12 @@ class KeyboardShortcutManager {
   }
 
   deleteToLineEnd() {
-    // Monaco path: execute line-end delete via edit operations so undo stays native.
-    if (this.isMonacoTextFocused() && window.MarkTideMonaco && typeof window.MarkTideMonaco.getEditor === 'function' && window.monaco) {
-      const monacoEditor = window.MarkTideMonaco.getEditor();
-      const model = monacoEditor && monacoEditor.getModel ? monacoEditor.getModel() : null;
-      const selection = monacoEditor && monacoEditor.getSelection ? monacoEditor.getSelection() : null;
-      if (monacoEditor && model && selection) {
-        const startPos = selection.getStartPosition();
-        const lineMaxColumn = model.getLineMaxColumn(startPos.lineNumber);
-        const range = selection.isEmpty()
-          ? new window.monaco.Range(startPos.lineNumber, startPos.column, startPos.lineNumber, lineMaxColumn)
-          : selection;
-        monacoEditor.pushUndoStop();
-        monacoEditor.executeEdits('keyboard-shortcuts', [{ range, text: '' }]);
-        monacoEditor.pushUndoStop();
-        if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-          window.MarkTideRenderer.debouncedRender();
-        }
-        return;
+    // Monaco path: native command handles multi-cursor and keeps undo history coherent.
+    if (this.isMonacoTextFocused() && this.runMonacoCommand('deleteAllRight')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
       }
+      return;
     }
 
     const editor = document.getElementById('markdown-editor');
@@ -335,6 +317,14 @@ class KeyboardShortcutManager {
   }
 
   moveLineUp() {
+    // Monaco path: native line move keeps multi-cursor + undo behavior correct.
+    if (this.isMonacoTextFocused() && this.runMonacoCommand('editor.action.moveLinesUpAction')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
     const editor = document.getElementById('markdown-editor');
     if (!editor) return;
 
@@ -377,6 +367,14 @@ class KeyboardShortcutManager {
   }
 
   moveLineDown() {
+    // Monaco path: native line move keeps multi-cursor + undo behavior correct.
+    if (this.isMonacoTextFocused() && this.runMonacoCommand('editor.action.moveLinesDownAction')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
     const editor = document.getElementById('markdown-editor');
     if (!editor) return;
 

@@ -345,28 +345,12 @@ class MarkTideCore {
       }
     });
 
-    this.markdownEditor.addEventListener('keydown', (e) => {
-      if (window.MarkTideUndoRedo) {
-        window.MarkTideUndoRedo.saveToUndoStack();
-      }
-      if (window.MarkTideEditor && window.MarkTideEditor.handleKeydown) {
-        window.MarkTideEditor.handleKeydown(e);
-      }
-    });
-
     // Handle page refresh/close warning
     window.addEventListener('beforeunload', (e) => {
       if (hasUnsavedChanges && this.markdownEditor.value !== originalContent) {
         e.preventDefault();
         e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
         return e.returnValue;
-      }
-    });
-
-    // Fix double-click word selection behavior
-    this.markdownEditor.addEventListener('mouseup', (e) => {
-      if (window.MarkTideEditor) {
-        window.MarkTideEditor.handleMouseUp(e);
       }
     });
 

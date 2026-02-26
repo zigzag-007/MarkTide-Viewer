@@ -210,8 +210,13 @@ class ViewManager {
         if (ed) {
           ed.classList.remove('native-scrollbars');
           ed.style.height = '100%';
-          ed.style.overflow = 'auto';
-          ed.style.overflowY = 'auto';
+          if (ed.classList.contains('monaco-host')) {
+            ed.style.overflow = 'hidden';
+            ed.style.overflowY = 'hidden';
+          } else {
+            ed.style.overflow = 'auto';
+            ed.style.overflowY = 'auto';
+          }
 
           if (ed.classList.contains('monaco-host') && window.MarkTideMonaco && window.MarkTideMonaco.getEditor) {
             const monacoEditor = window.MarkTideMonaco.getEditor();
@@ -221,7 +226,7 @@ class ViewManager {
                 wordWrapOverride1: 'on',
                 wordWrapOverride2: 'on',
                 wrappingIndent: 'same',
-                wrappingStrategy: 'advanced',
+                wrappingStrategy: 'simple',
                 scrollbar: {
                   horizontal: 'auto',
                   vertical: 'auto',
@@ -287,7 +292,7 @@ class ViewManager {
                   wordWrapOverride1: 'on',
                   wordWrapOverride2: 'on',
                   wrappingIndent: 'same',
-                  wrappingStrategy: 'advanced',
+                  wrappingStrategy: 'simple',
                   scrollbar: {
                     horizontal: 'hidden',
                     vertical: 'auto',

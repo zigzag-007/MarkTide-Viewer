@@ -119,6 +119,7 @@ class MarkdownRenderer {
     if (!markdownText || typeof markdownText !== 'string') return markdownText;
 
     const LIST_INDENT = '  ';
+    const NORMALIZED_LIST_INDENT = '   ';
     const LIST_INDENT_SIZE = LIST_INDENT.length;
     const lines = markdownText.split('\n');
     const normalized = [];
@@ -141,7 +142,7 @@ class MarkdownRenderer {
       rawLine = rawLine.replace(/^\t+/, (m) => LIST_INDENT.repeat(m.length));
 
       // Convert decimal-outline numbering (e.g. 1.1, 2.3.4) to nested ordered lists.
-      const m = rawLine.match(/^(\s*)(\d+(?:\.\d+)+)\.?\s+(.*)$/);
+      const m = rawLine.match(/^(\s*)(\d+(?:\.\d+)+)\.?(?:\s+(.*))?$/);
       if (m) {
         const leading = m[1] || '';
         const outline = m[2];
@@ -153,7 +154,7 @@ class MarkdownRenderer {
         // and decimal-outline marker at the same depth (e.g. "  1.1. ...").
         const depth = Math.max(outlineDepth, leadingDepth);
         const marker = parts[parts.length - 1] || '1';
-        const indent = LIST_INDENT.repeat(depth);
+        const indent = NORMALIZED_LIST_INDENT.repeat(depth);
         normalized.push(`${indent}${marker}. ${text}`);
         continue;
       }

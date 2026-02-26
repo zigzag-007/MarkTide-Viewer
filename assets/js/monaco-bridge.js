@@ -287,15 +287,19 @@
         },
         scrollBeyondLastLine: false,
         fontFamily: '"JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace',
+        fontLigatures: false,
         fontSize: 16,
         lineHeight: 24,
         padding: { top: 10, bottom: 50 },
+        editContext: false,
+        experimentalGpuAcceleration: "off",
         smoothScrolling: true,
         renderLineHighlight: "none",
         occurrencesHighlight: "off",
         selectionHighlight: false,
         wordWrap: "on",
         wrappingIndent: "same",
+        wrappingStrategy: "simple",
         overviewRulerLanes: 0,
         hideCursorInOverviewRuler: true,
         quickSuggestions: false,
@@ -314,6 +318,15 @@
       host.dataset.monacoReady = "true";
       host.classList.add("monaco-host");
       window.dispatchEvent(new CustomEvent("marktide:monaco-ready"));
+
+      // Re-measure after webfonts settle to prevent occasional cursor/selection drift.
+      if (document.fonts && typeof document.fonts.ready === "object" && typeof document.fonts.ready.then === "function") {
+        document.fonts.ready.then(() => {
+          if (!window.monaco || !monacoEditor) return;
+          window.monaco.editor.remeasureFonts();
+          monacoEditor.layout();
+        }).catch(() => {});
+      }
 
       // Force mouse-wheel to drive Monaco scrolling.
       // Capture phase is used so this still works even if inner Monaco nodes handle wheel first.
@@ -419,7 +432,7 @@
         return null;
       };
 
-      const computeNextOutline = (model, lineNumber, targetIndentLength) => {
+      const computeNextOutline = (model, lineNumber, targetIndentLength, fallbackChild = "1") => {
         if (targetIndentLength <= 0) {
           let maxTop = 0;
           for (let ln = 1; ln < lineNumber; ln += 1) {
@@ -435,6 +448,9 @@
 
         const parentIndentLength = Math.max(0, targetIndentLength - LIST_INDENT.length);
         const parent = findParentListAtIndent(model, lineNumber - 1, parentIndentLength);
+        if (!parent) {
+          return fallbackChild;
+        }
         const parentOutline = getOutlineFromParsed(parent) || "1";
 
         let maxChild = 0;
@@ -539,7 +555,10 @@
             continue;
           }
 
-          const nextOutline = computeNextOutline(model, lineNumber, newIndent.length);
+          const fallbackChild = parsed.type === "ordered"
+            ? String(parsed.number || 1)
+            : ((parsed.outline || "1").split(".").pop() || "1");
+          const nextOutline = computeNextOutline(model, lineNumber, newIndent.length, fallbackChild);
           const nextText = parsed.text ? `${newIndent}${nextOutline}. ${parsed.text}` : `${newIndent}${nextOutline}. `;
           edits.push({
             range: new window.monaco.Range(lineNumber, 1, lineNumber, line.length + 1),

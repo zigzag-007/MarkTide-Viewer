@@ -978,6 +978,8 @@
   #markdown-editor.monaco-host {
     padding: 0;
     overflow: hidden;
+    font-feature-settings: normal;
+    font-variant-ligatures: none;
   }
 
   /* Disable transitions while recalculating Monaco layout to prevent flash artifacts */
@@ -995,24 +997,19 @@
     background-color: var(--editor-bg) !important;
   }
 
-  /* Force Monaco text selection to stay blue (avoid browser/theme red fallback). */
+  /* Keep Monaco text selection blue for stable visual consistency. */
   #markdown-editor.monaco-host .monaco-editor .focused .selected-text,
   #markdown-editor.monaco-host .monaco-editor .selected-text {
     background-color: rgba(79, 195, 247, 0.28) !important;
   }
 
-  #markdown-editor.monaco-host *::selection {
-    background: rgba(79, 195, 247, 0.28) !important;
-    color: inherit !important;
-  }
-
-  /* Hide VSCode-like IntelliSense widgets for markdown-first UX */
+  /* Hide Monaco suggest widgets for markdown-first UX. */
   #markdown-editor.monaco-host .suggest-widget,
   #markdown-editor.monaco-host .parameter-hints-widget {
     display: none !important;
   }
 
-  /* Keep Monaco scrollbar blue like legacy editor */
+  /* Keep Monaco scrollbar blue like the rest of split-view chrome. */
   #markdown-editor.monaco-host .monaco-scrollable-element > .scrollbar > .slider {
     background: rgba(79, 195, 247, 0.35) !important;
     border: 1px solid rgba(79, 195, 247, 0.18) !important;

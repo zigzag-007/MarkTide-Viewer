@@ -439,13 +439,14 @@ class ImportExportManager {
         const viewMgr = window.MarkTideViewManager;
         const inSplitView = !viewMgr || viewMgr.currentView === 'split';
         const inEditorOnly = viewMgr && viewMgr.currentView === 'editor-only';
-        if (inSplitView && this.markdownEditor) {
+        const isMonacoHost = this.markdownEditor && this.markdownEditor.classList.contains('monaco-host');
+        if (inSplitView && this.markdownEditor && !isMonacoHost) {
           // Ensure textarea behaves like split view defaults
           this.markdownEditor.classList.remove('native-scrollbars');
           this.markdownEditor.style.height = '100%';
           this.markdownEditor.style.overflow = 'auto';
           this.markdownEditor.style.overflowY = 'auto';
-        } else if (inEditorOnly && this.markdownEditor) {
+        } else if (inEditorOnly && this.markdownEditor && !isMonacoHost) {
           // Ensure textarea expands in editor-only so page can scroll
           this.markdownEditor.classList.add('native-scrollbars');
           requestAnimationFrame(() => {
