@@ -587,7 +587,10 @@ class ImportExportManager {
     };
     
     // Use the enhanced renderer for HTML export
-    const html = marked.parse(markdown, { renderer: exportRenderer });
+    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
+      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
+      : markdown;
+    const html = marked.parse(normalizedMarkdown, { renderer: exportRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
       ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']

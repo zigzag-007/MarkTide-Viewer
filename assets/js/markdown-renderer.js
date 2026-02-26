@@ -111,13 +111,60 @@ class MarkdownRenderer {
     });
   }
 
+  // Normalize Word-style list syntax to Markdown-compatible nested lists.
+  // Supports:
+  // - "1.1 Item" / "1.1.1 Item" -> nested ordered list markers
+  // - tab-indented list lines -> 4-space indentation
+  normalizeListSyntax(markdownText) {
+    if (!markdownText || typeof markdownText !== 'string') return markdownText;
+
+    const lines = markdownText.split('\n');
+    const normalized = [];
+    let inFence = false;
+
+    for (let rawLine of lines) {
+      const fenceMatch = rawLine.match(/^\s*(```|~~~)/);
+      if (fenceMatch) {
+        inFence = !inFence;
+        normalized.push(rawLine);
+        continue;
+      }
+
+      if (inFence) {
+        normalized.push(rawLine);
+        continue;
+      }
+
+      // Convert leading tabs to Markdown list-friendly indentation.
+      rawLine = rawLine.replace(/^\t+/, (m) => '    '.repeat(m.length));
+
+      // Convert decimal-outline numbering (e.g. 1.1, 2.3.4) to nested ordered lists.
+      const m = rawLine.match(/^(\s*)(\d+(?:\.\d+)+)\.?\s+(.*)$/);
+      if (m) {
+        const leading = m[1] || '';
+        const outline = m[2];
+        const text = m[3] || '';
+        const parts = outline.split('.');
+        const depth = Math.max(1, parts.length - 1);
+        const marker = parts[parts.length - 1] || '1';
+        const indent = leading + '    '.repeat(depth);
+        normalized.push(`${indent}${marker}. ${text}`);
+        continue;
+      }
+
+      normalized.push(rawLine);
+    }
+
+    return normalized.join('\n');
+  }
+
   renderMarkdown() {
     if (!this.initialized) {
       this.init();
     }
 
     try {
-      const markdown = this.markdownEditor.value;
+      const markdown = this.normalizeListSyntax(this.markdownEditor.value);
       const html = marked.parse(markdown);
       const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: ['mjx-container'],
