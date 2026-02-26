@@ -326,11 +326,17 @@ class PrintHandler {
 
     .markdown-body ol > li {
       counter-increment: item !important;
+      position: relative !important;
     }
 
     .markdown-body ol > li::before {
       content: counters(item, ".") ". " !important;
-      display: inline !important;
+      position: absolute !important;
+      left: -2.2em !important;
+      width: 2.2em !important;
+      padding-right: 0.2em !important;
+      box-sizing: border-box !important;
+      text-align: right !important;
       font-weight: 600 !important;
       color: #24292e !important;
     }

@@ -354,7 +354,7 @@
         host.dispatchEvent(new Event("input"));
       });
 
-      const LIST_INDENT = "    ";
+      const LIST_INDENT = "  ";
 
       const parseListLine = (line) => {
         if (typeof line !== "string") return null;

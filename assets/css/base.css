@@ -1348,6 +1348,7 @@
   /* --- Lists --- */
   .markdown-body ul {
     list-style-type: disc;
+    padding-left: 2.2em;
   }
   
   .markdown-body ol,
@@ -1368,11 +1369,17 @@
 
   .markdown-body ol > li {
     counter-increment: item;
+    position: relative;
   }
 
   .markdown-body ol > li::before {
     content: counters(item, ".") ". ";
-    display: inline;
+    position: absolute;
+    left: -2.2em;
+    width: 2.2em;
+    padding-right: 0.2em;
+    box-sizing: border-box;
+    text-align: right;
     font-weight: 600;
     color: currentColor;
   }

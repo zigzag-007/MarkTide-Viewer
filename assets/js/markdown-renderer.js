@@ -114,10 +114,12 @@ class MarkdownRenderer {
   // Normalize Word-style list syntax to Markdown-compatible nested lists.
   // Supports:
   // - "1.1 Item" / "1.1.1 Item" -> nested ordered list markers
-  // - tab-indented list lines -> 4-space indentation
+  // - tab-indented list lines -> 2-space indentation
   normalizeListSyntax(markdownText) {
     if (!markdownText || typeof markdownText !== 'string') return markdownText;
 
+    const LIST_INDENT = '  ';
+    const LIST_INDENT_SIZE = LIST_INDENT.length;
     const lines = markdownText.split('\n');
     const normalized = [];
     let inFence = false;
@@ -136,7 +138,7 @@ class MarkdownRenderer {
       }
 
       // Convert leading tabs to Markdown list-friendly indentation.
-      rawLine = rawLine.replace(/^\t+/, (m) => '    '.repeat(m.length));
+      rawLine = rawLine.replace(/^\t+/, (m) => LIST_INDENT.repeat(m.length));
 
       // Convert decimal-outline numbering (e.g. 1.1, 2.3.4) to nested ordered lists.
       const m = rawLine.match(/^(\s*)(\d+(?:\.\d+)+)\.?\s+(.*)$/);
@@ -146,12 +148,12 @@ class MarkdownRenderer {
         const text = m[3] || '';
         const parts = outline.split('.');
         const outlineDepth = Math.max(1, parts.length - 1);
-        const leadingDepth = Math.floor(leading.length / 4);
+        const leadingDepth = Math.floor(leading.length / LIST_INDENT_SIZE);
         // Avoid doubling nesting when editor already has indentation
-        // and decimal-outline marker at the same depth (e.g. "    1.1. ...").
+        // and decimal-outline marker at the same depth (e.g. "  1.1. ...").
         const depth = Math.max(outlineDepth, leadingDepth);
         const marker = parts[parts.length - 1] || '1';
-        const indent = '    '.repeat(depth);
+        const indent = LIST_INDENT.repeat(depth);
         normalized.push(`${indent}${marker}. ${text}`);
         continue;
       }
