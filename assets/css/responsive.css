@@ -178,12 +178,6 @@
     border-bottom: 1px solid var(--border-color);
   }
   
-  .toolbar {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-  }
-  
   /* Hide formatting toolbar on mobile */
   .formatting-toolbar {
     display: none !important;

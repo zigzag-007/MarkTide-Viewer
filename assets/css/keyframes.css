@@ -2,15 +2,12 @@
    KEYFRAMES.CSS - Animation Definitions
    
    This file contains all CSS animations and keyframes:
-   - Loading screen animations (DEPRECATED - Remove in production)
+   - Loading screen animations
    - Utility animations for UI elements
    - Transition effects and micro-interactions
    ================================================================= */
 
-/* =================================================================
-   DEPRECATED LOADING SCREEN ANIMATIONS - REMOVE IN PRODUCTION
-   ================================================================= */
-/* TODO: These animations are for the loading screen which is not used in production */
+/* ===== LOADING SCREEN ANIMATIONS ===== */
 
 @keyframes logoFloat {
   0%, 100% { transform: translateY(0px); }
@@ -70,10 +67,6 @@
     transform: scale(1.02);
   }
 }
-
-/* =================================================================
-   ACTIVE ANIMATIONS - USED IN PRODUCTION
-   ================================================================= */
 
 /* ===== UTILITY ANIMATIONS ===== */
 /* Fade in animation for tooltips and notifications */
