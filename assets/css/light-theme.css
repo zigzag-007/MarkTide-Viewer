@@ -429,6 +429,14 @@ button:hover,
   box-shadow: 0 4px 12px var(--shadow-medium); /* Depth shadow */
 }
 
+/* Keep mobile menu logo visually consistent with header logo in light mode */
+[data-theme="light"] .mobile-brand-icon {
+  background: var(--logo-bg);
+  border: 1px solid var(--logo-border);
+  color: var(--logo-text);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
 /* Light theme logo icon hover effects */
 [data-theme="light"] .logo-icon:hover {
   background: var(--logo-hover-bg); /* Slightly darker on hover */
