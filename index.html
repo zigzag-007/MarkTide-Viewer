@@ -329,16 +329,16 @@
              aria-label="Mobile menu"
              @keydown.escape.window="open = false">
             <div class="mobile-menu-header">
-                <div class="mobile-brand">
-                    <div class="mobile-brand-icon">
-                        <i class="bi bi-markdown"></i>
+                <div class="mobile-header-main">
+                    <div class="mobile-brand">
+                        <div class="mobile-brand-icon">
+                            <i class="bi bi-markdown"></i>
+                        </div>
+                        <div class="mobile-brand-text">
+                            <span class="mobile-brand-title">MarkTide</span>
+                            <span class="mobile-brand-subtitle">Code Editor &amp; Viewer</span>
+                        </div>
                     </div>
-                    <div class="mobile-brand-text">
-                        <span class="mobile-brand-title">MarkTide</span>
-                        <span class="mobile-brand-subtitle">Code Editor &amp; Viewer</span>
-                    </div>
-                </div>
-                <div class="mobile-menu-controls">
                     <a class="mobile-github-btn"
                        href="https://github.com/zigzag-007/MarkTide-Viewer"
                        title="View on GitHub"
@@ -347,14 +347,14 @@
                        rel="noopener noreferrer">
                         <i class="bi bi-github"></i>
                     </a>
-                    <button class="mobile-close-btn"
-                            type="button"
-                            @click="open = false"
-                            aria-label="Close menu"
-                            title="Close menu">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
                 </div>
+                <button class="mobile-close-btn"
+                        type="button"
+                        @click="open = false"
+                        aria-label="Close menu"
+                        title="Close menu">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
 
             <div class="mobile-stats-line">

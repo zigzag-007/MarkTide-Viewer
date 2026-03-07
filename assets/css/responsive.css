@@ -181,6 +181,18 @@
   .mobile-menu-footer {
     font-size: 1rem;
   }
+
+  /* On mobile, use full inner width for balanced left/right padding */
+  .mobile-stats-line,
+  .mobile-menu-items,
+  .mobile-menu-footer {
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+
+  .mobile-menu-footer {
+    width: calc(100% - 1.6rem) !important;
+  }
   
   /* Ensure preview content is properly centered on small mobile screens */
   .markdown-body {

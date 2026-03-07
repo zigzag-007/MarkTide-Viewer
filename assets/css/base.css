@@ -616,6 +616,13 @@
     color: var(--text-color);
   }
 
+  .mobile-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
   .mobile-brand-icon {
     width: 42px;
     height: 42px;
@@ -660,12 +667,6 @@
     text-decoration: none;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     border-radius: 10px;
-  }
-
-  .mobile-menu-controls {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
   }
 
   .mobile-close-btn {
@@ -844,6 +845,7 @@
     width: 100%;
     margin-bottom: 0.7rem;
     padding: 0.35rem 0.25rem 0.65rem;
+    gap: 0.5rem;
   }
   
   .mobile-menu-items {
@@ -879,7 +881,7 @@
     background: transparent;
   }
 
-  /* Keep content column narrower than panel to create right-side breathing room */
+  /* Keep content column narrower than panel on wider devices */
   .mobile-stats-line,
   .mobile-menu-items,
   .mobile-menu-footer {
