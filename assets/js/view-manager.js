@@ -56,7 +56,47 @@ class ViewManager {
       });
     }
 
+    // Keep preview-only sizing stable on viewport changes.
+    window.addEventListener('resize', () => {
+      if (this.currentView === 'preview-only') {
+        this.applyPreviewOnlyMinHeight();
+      }
+    });
+
+    // Recompute after dropzone is closed while preview-only is active.
+    const closeDropzoneBtn = document.getElementById('close-dropzone');
+    if (closeDropzoneBtn) {
+      closeDropzoneBtn.addEventListener('click', () => {
+        if (this.currentView === 'preview-only') {
+          requestAnimationFrame(() => this.applyPreviewOnlyMinHeight());
+        }
+      });
+    }
+
     // disable viewport-height recalcs while scrolling to avoid jitter in editor-only
+  }
+
+  applyPreviewOnlyMinHeight(previewPaneOverride = null) {
+    const previewPane = previewPaneOverride || document.querySelector('.preview-pane');
+    if (!previewPane) return;
+
+    const header = document.querySelector('.app-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+
+    const dropzone = document.getElementById('dropzone');
+    let dropzoneTotal = 0;
+    if (dropzone && dropzone.offsetParent !== null && getComputedStyle(dropzone).display !== 'none') {
+      const dzStyles = getComputedStyle(dropzone);
+      const marginBottom = parseFloat(dzStyles.marginBottom || '0');
+      dropzoneTotal = dropzone.offsetHeight + marginBottom;
+    }
+
+    if (header) {
+      header.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+
+    const offset = Math.max(0, Math.round(headerHeight + dropzoneTotal));
+    previewPane.style.minHeight = `max(0px, calc(var(--app-vh, 1vh) * 100 - ${offset}px))`;
   }
 
   // Check if we're in mobile/tablet layout (1080px and below)
@@ -372,21 +412,21 @@ class ViewManager {
          }
          break;
          
-       case 'preview-only':
+      case 'preview-only':
         // Only preview visible
         bodyEl.classList.remove('preview-scrollbar-hover');
         if (this.isMobileLayout()) {
           editorPane.style.display = 'none';
           // Let the PAGE own scrolling in preview-only
           previewPane.style.height = 'auto';
-          previewPane.style.minHeight = '';
+          this.applyPreviewOnlyMinHeight(previewPane);
           previewPane.style.overflow = 'visible';
         } else {
           editorPane.style.display = 'none';
           previewPane.style.flex = '1';
           previewPane.style.width = '100%';
           previewPane.style.height = 'auto';
-          previewPane.style.minHeight = '';
+          this.applyPreviewOnlyMinHeight(previewPane);
           previewPane.style.overflow = 'visible';
         }
         footer.style.display = 'none';
