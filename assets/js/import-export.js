@@ -149,10 +149,13 @@ class ImportExportManager {
   closeMobileMenu() {
     const mobileMenuPanel = document.getElementById("mobile-menu-panel");
     const mobileMenuOverlay = document.getElementById("mobile-menu-overlay");
+    document.body.dispatchEvent(new CustomEvent("marktide-mobile-menu-close", { bubbles: true }));
     if (mobileMenuPanel) {
+      mobileMenuPanel.classList.remove("open");
       mobileMenuPanel.classList.remove("active");
     }
     if (mobileMenuOverlay) {
+      mobileMenuOverlay.classList.remove("open");
       mobileMenuOverlay.classList.remove("active");
     }
   }

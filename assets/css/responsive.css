@@ -122,8 +122,13 @@
   .header-actions {
     display: none;
   }
-  
+
   .mobile-menu {
+    display: block !important;
+  }
+
+  .mobile-menu-panel,
+  .mobile-menu-overlay {
     display: block !important;
   }
 }
@@ -151,12 +156,29 @@
   .mobile-menu {
     display: block !important;
   }
+
+  .mobile-menu-panel,
+  .mobile-menu-overlay {
+    display: block !important;
+  }
   
   /* Ensure preview content is properly centered on small mobile screens */
   .markdown-body {
     max-width: 98% !important;
     margin: 0 auto !important;
     padding: 20px !important;
+  }
+}
+
+/* Force-hide mobile menu controls on desktop widths */
+@media (min-width: 1201px) {
+  .mobile-menu {
+    display: none !important;
+  }
+
+  .mobile-menu-panel,
+  .mobile-menu-overlay {
+    display: none !important;
   }
 }
 

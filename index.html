@@ -76,6 +76,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
     <!-- highlight.js theme (dynamically switched by theme-manager.js) -->
     <link rel="stylesheet" id="highlight-theme" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.2.1/hamburgers.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/extras/css/joypixels.min.css">
     
@@ -135,6 +136,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
 
     
@@ -191,7 +193,11 @@
     }
     </script>
 </head>
-<body>
+<body x-data="{ open: false }"
+      :class="{ 'menu-open': open }"
+      @marktide-mobile-menu-open.window="open = true"
+      @marktide-mobile-menu-close.window="open = false"
+      @marktide-mobile-menu-toggle.window="open = !open">
     <!-- Loading Screen Wrapper -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
@@ -294,89 +300,106 @@
 
                 <!-- Mobile hamburger menu -->
                 <div class="mobile-menu d-xl-none">
-                    <button id="mobile-menu-toggle" class="mobile-toggle" title="Menu">
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
+                    <button id="mobile-menu-toggle"
+                            class="mobile-toggle hamburger hamburger--squeeze"
+                            :class="{ 'is-active': open }"
+                            @click="open = !open"
+                            type="button"
+                            title="Menu"
+                            aria-label="Toggle menu"
+                            :aria-expanded="String(open)">
+                        <span class="hamburger-box">
+                            <span class="hamburger-inner"></span>
+                        </span>
                     </button>
-                    
-                    <!-- Mobile menu panel (slides in) -->
-                    <div id="mobile-menu-panel" class="mobile-menu-panel">
-                        <div class="mobile-menu-header">
-                            <div class="mobile-brand">
-                                <i class="bi bi-markdown"></i>
-                                <span>MarkTide</span>
-                            </div>
-                            <button id="close-mobile-menu" class="mobile-close" title="Close Menu">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Statistics container for mobile menu -->
-                        <div class="mobile-stats">
-                            <div class="mobile-stat-item">
-                                <i class="bi bi-type"></i>
-                                <span><span id="mobile-word-count">0</span> words</span>
-                            </div>
-                            <div class="mobile-stat-item">
-                                <i class="bi bi-fonts"></i>
-                                <span><span id="mobile-char-count">0</span> chars</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Action buttons for mobile menu -->
-                        <div class="mobile-menu-items">
-                            <button id="mobile-toggle-sync" class="mobile-menu-item sync-disabled" title="Toggle Sync Scrolling">
-                                <i class="bi bi-link-45deg"></i>
-                                <span>Sync Off</span>
-                            </button>
-                            
-                            <div class="dropdown">
-                                <button id="mobile-print-button" class="mobile-menu-item dropdown-toggle" title="Export Options" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-download"></i>
-                                    <span>Export</span>
-                                </button>
-                                <ul class="dropdown-menu modern-dropdown">
-                                    <li><a class="dropdown-item" href="#" id="mobile-export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
-                                    <li><a class="dropdown-item" href="#" id="mobile-export-html"><i class="bi bi-file-earmark-code me-2"></i>Export as HTML</a></li>
-                                    <li><a class="dropdown-item" href="#" id="mobile-export-txt"><i class="bi bi-file-earmark me-2"></i>Export as Text</a></li>
-                                    <li><a class="dropdown-item" href="#" id="mobile-export-pdf"><i class="bi bi-file-earmark-pdf me-2"></i>Export as PDF</a></li>
-                                </ul>
-                            </div>
-                            
-                            <button id="mobile-show-code" class="mobile-menu-item" title="Hide Editor" aria-pressed="true">
-                                <i class="bi bi-code-square"></i>
-                                <span>Hide Editor</span>
-                            </button>
-                            
-                            <button id="mobile-show-preview" class="mobile-menu-item" title="Hide Preview" aria-pressed="true">
-                                <i class="bi bi-eye"></i>
-                                <span>Hide Preview</span>
-                            </button>
-                            
-                            <button id="mobile-soft-breaks-toggle" class="mobile-menu-item" title="Soft Line Breaks: ON">
-                                <i class="bi bi-text-wrap"></i>
-                                <span>Soft Line Breaks: ON</span>
-                            </button>
-                            
-                            <!-- Beautify Markdown (mobile) -->
-                            <button id="mobile-format-beautify" class="mobile-menu-item" title="Beautify Markdown">
-                                <i class="bi bi-magic"></i>
-                                <span>Beautify Markdown</span>
-                            </button>
-                            
-                            <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
-                                <i class="bi bi-moon"></i>
-                                <span>Dark Mode</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Overlay for mobile menu (closes menu when clicked) -->
-                    <div id="mobile-menu-overlay"></div>
                 </div>
             </div>
         </header>
+
+        <div id="mobile-menu-overlay"
+             class="mobile-menu-overlay menu-overlay"
+             :class="{ open: open }"
+             @click="open = false"></div>
+
+        <div id="mobile-menu-panel"
+             class="mobile-menu-panel menu-panel"
+             :class="{ open: open }"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Mobile menu"
+             @keydown.escape.window="open = false">
+            <div class="mobile-menu-header">
+                <div class="mobile-brand">
+                    <i class="bi bi-markdown"></i>
+                    <span>MarkTide</span>
+                </div>
+                <button id="close-mobile-menu" class="mobile-close menu-close" @click="open = false" aria-label="Close menu" title="Close menu">✕</button>
+            </div>
+
+            <div class="mobile-stats">
+                <div class="mobile-stat-item">
+                    <i class="bi bi-type"></i>
+                    <span><span id="mobile-word-count">0</span> words</span>
+                </div>
+                <div class="mobile-stat-item">
+                    <i class="bi bi-fonts"></i>
+                    <span><span id="mobile-char-count">0</span> chars</span>
+                </div>
+            </div>
+
+            <ul class="mobile-menu-items menu-links">
+                <li style="--delay: 250ms">
+                    <button id="mobile-toggle-sync" class="mobile-menu-item sync-disabled" title="Toggle Sync Scrolling">
+                        <i class="bi bi-link-45deg"></i>
+                        <span>Sync Off</span>
+                    </button>
+                </li>
+                <li style="--delay: 400ms">
+                    <div class="dropdown">
+                        <button id="mobile-print-button" class="mobile-menu-item dropdown-toggle" title="Export Options" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <ul class="dropdown-menu modern-dropdown">
+                            <li><a class="dropdown-item" href="#" id="mobile-export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
+                            <li><a class="dropdown-item" href="#" id="mobile-export-html"><i class="bi bi-file-earmark-code me-2"></i>Export as HTML</a></li>
+                            <li><a class="dropdown-item" href="#" id="mobile-export-txt"><i class="bi bi-file-earmark me-2"></i>Export as Text</a></li>
+                            <li><a class="dropdown-item" href="#" id="mobile-export-pdf"><i class="bi bi-file-earmark-pdf me-2"></i>Export as PDF</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li style="--delay: 550ms">
+                    <button id="mobile-show-code" class="mobile-menu-item" title="Hide Editor" aria-pressed="true">
+                        <i class="bi bi-code-square"></i>
+                        <span>Hide Editor</span>
+                    </button>
+                </li>
+                <li style="--delay: 700ms">
+                    <button id="mobile-show-preview" class="mobile-menu-item" title="Hide Preview" aria-pressed="true">
+                        <i class="bi bi-eye"></i>
+                        <span>Hide Preview</span>
+                    </button>
+                </li>
+                <li style="--delay: 850ms">
+                    <button id="mobile-soft-breaks-toggle" class="mobile-menu-item" title="Soft Line Breaks: ON">
+                        <i class="bi bi-text-wrap"></i>
+                        <span>Soft Line Breaks: ON</span>
+                    </button>
+                </li>
+                <li style="--delay: 1000ms">
+                    <button id="mobile-format-beautify" class="mobile-menu-item" title="Beautify Markdown">
+                        <i class="bi bi-magic"></i>
+                        <span>Beautify Markdown</span>
+                    </button>
+                </li>
+                <li style="--delay: 1150ms">
+                    <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
+                        <i class="bi bi-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
 
         <!-- Dropzone for file import -->
         <div id="dropzone" class="dropzone container-fluid mt-2">
