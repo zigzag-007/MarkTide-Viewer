@@ -338,14 +338,23 @@
                         <span class="mobile-brand-subtitle">Code Editor &amp; Viewer</span>
                     </div>
                 </div>
-                <a class="mobile-github-btn"
-                   href="https://github.com/zigzag-007/MarkTide-Viewer"
-                   title="View on GitHub"
-                   aria-label="View on GitHub"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    <i class="bi bi-github"></i>
-                </a>
+                <div class="mobile-menu-controls">
+                    <a class="mobile-github-btn"
+                       href="https://github.com/zigzag-007/MarkTide-Viewer"
+                       title="View on GitHub"
+                       aria-label="View on GitHub"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <i class="bi bi-github"></i>
+                    </a>
+                    <button class="mobile-close-btn"
+                            type="button"
+                            @click="open = false"
+                            aria-label="Close menu"
+                            title="Close menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="mobile-stats-line">

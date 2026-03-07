@@ -192,11 +192,11 @@
 
 @media (max-width: 420px) {
   .mobile-menu-panel {
-    width: calc(100vw - 10px);
-    --mobile-panel-inset: 5px;
+    width: calc(100vw - 20px);
+    --mobile-panel-inset: 10px;
     left: var(--mobile-panel-inset);
-    top: 5px;
-    height: calc(100vh - 10px);
+    top: 10px;
+    height: calc(100vh - 20px);
     border-radius: 10px;
   }
 
@@ -210,6 +210,11 @@
   }
 
   .mobile-github-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-close-btn {
     width: 36px;
     height: 36px;
   }
