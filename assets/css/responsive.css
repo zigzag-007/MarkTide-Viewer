@@ -284,9 +284,10 @@
     border-radius: 8px;
   }
 
-  /* Avoid overlap with action rows on short-height phones. */
   .mobile-menu-footer {
-    display: none;
+    font-size: 0.9rem;
+    padding-top: 0.65rem;
+    margin-top: 0.35rem;
   }
 }
 

@@ -806,7 +806,7 @@
     transform: translateX(calc(-100% - var(--mobile-panel-inset) - 4px));
     transition: transform 1.3s var(--menu-ease);
     overflow-y: auto;
-    padding: 0.8rem 0.8rem 5rem;
+    padding: 0.8rem 0.8rem 1rem;
     display: flex;
     flex-direction: column;
     z-index: 300;
@@ -852,7 +852,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.56rem;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     list-style: none;
     padding: 0.35rem 0 1rem;
     margin: 0;
@@ -868,17 +868,18 @@
   }
 
   .mobile-menu-footer {
-    position: absolute;
-    left: 0.8rem;
-    bottom: 0.8rem;
-    width: min(var(--mobile-menu-content-width), calc(100% - 1.6rem));
+    position: relative;
+    left: auto;
+    bottom: auto;
+    width: min(var(--mobile-menu-content-width), 100%);
     border-top: 1px solid color-mix(in srgb, var(--border-color) 88%, transparent);
-    padding: 1.1rem 0.15rem 0.35rem;
+    padding: 0.9rem 0.15rem 0.2rem;
     text-align: center;
     font-size: 0.95rem;
     color: color-mix(in srgb, var(--text-color) 78%, transparent);
     font-weight: 500;
     background: transparent;
+    margin-top: 0.5rem;
   }
 
   /* Keep content column narrower than panel on wider devices */
