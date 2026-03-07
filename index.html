@@ -330,35 +330,45 @@
              @keydown.escape.window="open = false">
             <div class="mobile-menu-header">
                 <div class="mobile-brand">
-                    <i class="bi bi-markdown"></i>
-                    <span>MarkTide</span>
+                    <div class="mobile-brand-icon">
+                        <i class="bi bi-markdown"></i>
+                    </div>
+                    <div class="mobile-brand-text">
+                        <span class="mobile-brand-title">MarkTide</span>
+                        <span class="mobile-brand-subtitle">Code Editor &amp; Viewer</span>
+                    </div>
                 </div>
-                <button id="close-mobile-menu" class="mobile-close menu-close" @click="open = false" aria-label="Close menu" title="Close menu">✕</button>
+                <a class="mobile-github-btn"
+                   href="https://github.com/zigzag-007/MarkTide-Viewer"
+                   title="View on GitHub"
+                   aria-label="View on GitHub"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    <i class="bi bi-github"></i>
+                </a>
             </div>
 
-            <div class="mobile-stats">
-                <div class="mobile-stat-item">
-                    <i class="bi bi-type"></i>
-                    <span><span id="mobile-word-count">0</span> words</span>
-                </div>
-                <div class="mobile-stat-item">
-                    <i class="bi bi-fonts"></i>
-                    <span><span id="mobile-char-count">0</span> chars</span>
-                </div>
+            <div class="mobile-stats-line">
+                <span class="mobile-stats-token">Aa</span>
+                <span><span id="mobile-word-count">0</span> words</span>
+                <span class="mobile-stats-token">T</span>
+                <span><span id="mobile-char-count">0</span> chars</span>
             </div>
 
             <ul class="mobile-menu-items menu-links">
-                <li style="--delay: 250ms">
+                <li class="mobile-action-item" style="--delay: 250ms">
                     <button id="mobile-toggle-sync" class="mobile-menu-item sync-disabled" title="Toggle Sync Scrolling">
                         <i class="bi bi-link-45deg"></i>
                         <span>Sync Off</span>
+                        <span class="mobile-menu-arrow">&#8250;</span>
                     </button>
                 </li>
-                <li style="--delay: 400ms">
+                <li class="mobile-action-item mobile-export-item" style="--delay: 400ms">
                     <div class="dropdown">
                         <button id="mobile-print-button" class="mobile-menu-item dropdown-toggle" title="Export Options" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-download"></i>
                             <span>Export</span>
+                            <span class="mobile-menu-arrow">&#8250;</span>
                         </button>
                         <ul class="dropdown-menu modern-dropdown">
                             <li><a class="dropdown-item" href="#" id="mobile-export-markdown"><i class="bi bi-file-earmark-text me-2"></i>Save as Markdown</a></li>
@@ -368,37 +378,42 @@
                         </ul>
                     </div>
                 </li>
-                <li style="--delay: 550ms">
+                <li class="mobile-action-item" style="--delay: 550ms">
                     <button id="mobile-show-code" class="mobile-menu-item" title="Hide Editor" aria-pressed="true">
                         <i class="bi bi-code-square"></i>
                         <span>Hide Editor</span>
                     </button>
                 </li>
-                <li style="--delay: 700ms">
+                <li class="mobile-action-item" style="--delay: 700ms">
                     <button id="mobile-show-preview" class="mobile-menu-item" title="Hide Preview" aria-pressed="true">
                         <i class="bi bi-eye"></i>
                         <span>Hide Preview</span>
                     </button>
                 </li>
-                <li style="--delay: 850ms">
+                <li class="mobile-action-item" style="--delay: 850ms">
                     <button id="mobile-soft-breaks-toggle" class="mobile-menu-item" title="Soft Line Breaks: ON">
                         <i class="bi bi-text-wrap"></i>
                         <span>Soft Line Breaks: ON</span>
+                        <span class="mobile-menu-arrow">&#8250;</span>
                     </button>
                 </li>
-                <li style="--delay: 1000ms">
+                <li class="mobile-action-item" style="--delay: 1000ms">
                     <button id="mobile-format-beautify" class="mobile-menu-item" title="Beautify Markdown">
                         <i class="bi bi-magic"></i>
                         <span>Beautify Markdown</span>
                     </button>
                 </li>
-                <li style="--delay: 1150ms">
+                <li class="mobile-action-item" style="--delay: 1150ms">
                     <button id="mobile-theme-toggle" class="mobile-menu-item" title="Toggle Dark Mode">
                         <i class="bi bi-moon"></i>
                         <span>Dark Mode</span>
                     </button>
                 </li>
             </ul>
+
+            <div class="mobile-menu-footer">
+                Made with <i class="bi bi-heart footer-heart"></i> by Zig Zag
+            </div>
         </div>
 
         <!-- Dropzone for file import -->
@@ -538,3 +553,4 @@
     <script src="assets/js/core.js"></script>
 </body>
 </html>
+

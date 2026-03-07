@@ -147,16 +147,13 @@ class ImportExportManager {
 
   // helper to close mobile menu
   closeMobileMenu() {
-    const mobileMenuPanel = document.getElementById("mobile-menu-panel");
-    const mobileMenuOverlay = document.getElementById("mobile-menu-overlay");
     document.body.dispatchEvent(new CustomEvent("marktide-mobile-menu-close", { bubbles: true }));
-    if (mobileMenuPanel) {
-      mobileMenuPanel.classList.remove("open");
-      mobileMenuPanel.classList.remove("active");
-    }
-    if (mobileMenuOverlay) {
-      mobileMenuOverlay.classList.remove("open");
-      mobileMenuOverlay.classList.remove("active");
+
+    // Ensure any open mobile export dropdown is closed too.
+    const mobileExportButton = document.getElementById("mobile-print-button");
+    if (mobileExportButton && window.bootstrap && window.bootstrap.Dropdown) {
+      const dropdownInstance = window.bootstrap.Dropdown.getOrCreateInstance(mobileExportButton);
+      dropdownInstance.hide();
     }
   }
 
