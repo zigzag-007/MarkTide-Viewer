@@ -180,7 +180,7 @@
     letter-spacing: 1px;
     opacity: 0;
     transform: translateY(15px) scale(0.9);
-    animation: designerFadeIn 1s ease-out 1.2s both, designerPulse 2s ease-in-out 2.5s infinite;
+    animation: designerFadeIn 1s ease-out 0.8s both, designerPulse 2s ease-in-out 2.1s infinite;
   }
   
   /* =================================================================
