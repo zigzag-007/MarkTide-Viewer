@@ -193,7 +193,8 @@
 @media (max-width: 420px) {
   .mobile-menu-panel {
     width: calc(100vw - 10px);
-    left: 5px;
+    --mobile-panel-inset: 5px;
+    left: var(--mobile-panel-inset);
     top: 5px;
     height: calc(100vh - 10px);
     border-radius: 10px;
