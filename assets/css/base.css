@@ -310,11 +310,33 @@
     font-weight: 500;
     margin-top: 2px;
     transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
   }
   
   .brand-subtitle:hover {
     opacity: 1;
     color: var(--accent-color);
+  }
+
+  .app-version-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.14rem 0.48rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent-color) 40%, var(--border-color));
+    background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+    color: color-mix(in srgb, var(--accent-color) 88%, var(--text-color));
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 1;
+    box-shadow: 0 1px 8px rgba(79, 195, 247, 0.12);
   }
   
   .header-divider {
@@ -657,6 +679,16 @@
     font-size: 0.74rem;
     color: color-mix(in srgb, var(--text-color) 68%, transparent);
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .mobile-version-badge {
+    font-size: 0.62rem;
+    padding: 0.13rem 0.42rem;
+    box-shadow: none;
   }
 
   .mobile-github-btn {

@@ -170,6 +170,10 @@
     font-size: 0.72rem;
   }
 
+  .mobile-version-badge {
+    font-size: 0.6rem;
+  }
+
   .mobile-stats-line {
     font-size: 0.95rem;
   }
@@ -253,6 +257,11 @@
 
   .mobile-brand-subtitle {
     font-size: 0.64rem;
+  }
+
+  .mobile-version-badge {
+    font-size: 0.56rem;
+    padding: 0.11rem 0.34rem;
   }
 
   .mobile-brand-icon {

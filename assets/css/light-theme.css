@@ -153,6 +153,16 @@
 
 /* ===== GROK LIGHT THEME FROSTED GLASS EFFECTS ===== */
 
+/* Light theme version badge needs stronger contrast than dark mode */
+[data-theme="light"] .app-version-badge,
+:root[data-theme="light"] .app-version-badge,
+:root.light .app-version-badge {
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.2) 0%, rgba(79, 195, 247, 0.1) 100%);
+  border-color: rgba(79, 195, 247, 0.65);
+  color: #0d6e9f;
+  box-shadow: 0 1px 10px rgba(79, 195, 247, 0.16);
+}
+
 /* ===== LIGHT THEME LOADING SCREEN ===== */
 [data-theme="light"] .loading-screen {
   background: linear-gradient(135deg, var(--loading-bg-start) 0%, var(--loading-bg-end) 100%);
