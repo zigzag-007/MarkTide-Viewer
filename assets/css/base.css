@@ -1634,6 +1634,52 @@
     gap: 2px;
   }
 
+  /* Preview code header: Grok-style hover/focus hints (fine pointer only; touch has no hover) */
+  #markdown-preview .code-block-header-actions [data-marktide-tip] {
+    position: relative;
+  }
+
+  #markdown-preview .code-block-header-actions [data-marktide-tip]::after {
+    content: attr(data-marktide-tip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    z-index: 60;
+    padding: 0.32rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    color: #f3f4f8;
+    background: rgba(22, 24, 30, 0.96);
+    border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-3px);
+    transition:
+      opacity 0.12s ease,
+      transform 0.12s ease,
+      visibility 0.12s ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    #markdown-preview .code-block-header-actions [data-marktide-tip]:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  #markdown-preview .code-block-header-actions [data-marktide-tip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* Preview-only wrap control (long lines): Grok-style icons, shown only when overflow or while wrapped */
   #markdown-preview .wrap-code-btn {
     display: none;

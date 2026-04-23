@@ -29,8 +29,10 @@
     btn.setAttribute("aria-pressed", wrapped ? "true" : "false");
     const unwrapLabel = "Unwrap lines";
     const wrapLabel = "Wrap long lines";
-    btn.setAttribute("title", wrapped ? unwrapLabel : wrapLabel);
-    btn.setAttribute("aria-label", wrapped ? unwrapLabel : wrapLabel);
+    const tip = wrapped ? unwrapLabel : wrapLabel;
+    btn.setAttribute("title", tip);
+    btn.setAttribute("aria-label", tip);
+    btn.setAttribute("data-marktide-tip", tip);
   }
 
   function refresh(root) {
