@@ -1,5 +1,22 @@
 // Import and export functionality for markdown files
 
+/** Same markup as preview (markdown-renderer.js) for exported HTML code blocks */
+function marktideExportWrapButtonHtml() {
+  const wrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  const unwrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  return (
+    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines" data-marktide-tip="Wrap long lines">' +
+    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
+    wrapSvg +
+    "</span>" +
+    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
+    unwrapSvg +
+    "</span></button>"
+  );
+}
+
 class ImportExportManager {
   constructor() {
     this.fileInput = null;
@@ -624,9 +641,12 @@ class ImportExportManager {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideExportWrapButtonHtml()}
+                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
           </div>
@@ -638,9 +658,12 @@ class ImportExportManager {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideExportWrapButtonHtml()}
+                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
           </div>
@@ -654,8 +677,50 @@ class ImportExportManager {
       : markdown;
     const html = marked.parse(normalizedMarkdown, { renderer: exportRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
-      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
+      ADD_TAGS: [
+        'mjx-container',
+        'svg',
+        'line',
+        'path',
+        'g',
+        'circle',
+        'rect',
+        'marker',
+        'defs',
+        'pattern',
+        'clipPath',
+      ],
+      ADD_ATTR: [
+        'id',
+        'class',
+        'style',
+        'viewBox',
+        'xmlns',
+        'width',
+        'height',
+        'stroke',
+        'stroke-width',
+        'stroke-linecap',
+        'fill',
+        'x1',
+        'y1',
+        'x2',
+        'y2',
+        'd',
+        'transform',
+        'marker-end',
+        'marker-start',
+        'aria-hidden',
+        'focusable',
+        'aria-pressed',
+        'aria-label',
+        'title',
+        'tabindex',
+        'role',
+        'type',
+        'data-marktide-tip',
+        'data-code-id',
+      ],
     });
     
     // Get current theme
@@ -1035,6 +1100,116 @@ class ImportExportManager {
             letter-spacing: 0.5px;
         }
 
+        .code-block-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip] {
+            position: relative;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
+            content: attr(data-marktide-tip);
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            z-index: 60;
+            padding: 0.32rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            color: #f3f4f8;
+            background: rgba(22, 24, 30, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-3px);
+            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .markdown-body .wrap-code-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #ffffff !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+
+        .markdown-body .wrap-code-btn.wrap-code-btn--show {
+            display: flex;
+        }
+
+        .markdown-body .wrap-code-btn:hover {
+            opacity: 1;
+        }
+
+        .markdown-body .wrap-code-btn:active {
+            transform: scale(0.92);
+        }
+
+        .markdown-body .wrap-code-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .markdown-body .wrap-code-svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre {
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
         .enhanced-code-block .copy-code-btn {
             background: transparent;
             border: none;
@@ -1134,6 +1309,116 @@ class ImportExportManager {
             opacity: 0.8;
             font-weight: 600;
             letter-spacing: 0.5px;
+        }
+
+        .code-block-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip] {
+            position: relative;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
+            content: attr(data-marktide-tip);
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            z-index: 60;
+            padding: 0.32rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            color: #f3f4f8;
+            background: rgba(22, 24, 30, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-3px);
+            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .markdown-body .wrap-code-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #24292e !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+
+        .markdown-body .wrap-code-btn.wrap-code-btn--show {
+            display: flex;
+        }
+
+        .markdown-body .wrap-code-btn:hover {
+            opacity: 1;
+        }
+
+        .markdown-body .wrap-code-btn:active {
+            transform: scale(0.92);
+        }
+
+        .markdown-body .wrap-code-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .markdown-body .wrap-code-svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre {
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .enhanced-code-block .copy-code-btn {
@@ -1461,6 +1746,102 @@ class ImportExportManager {
             const copyHandler = new CodeCopyHandler();
             copyHandler.init();
         }
+    `)}</script>
+    <script>${this.minifyJS(`
+(function () {
+  var ROOT_SELECTOR = ".markdown-body";
+  var DEBOUNCE_MS = 64;
+  var debounceId = null;
+  function preHasHorizontalOverflow(pre) {
+    return Math.ceil(pre.scrollWidth) > Math.floor(pre.clientWidth) + 1;
+  }
+  function updateBlock(block) {
+    var pre = block.querySelector(":scope > pre");
+    var btn = block.querySelector(".wrap-code-btn");
+    if (!pre || !btn) return;
+    var wrapped = block.classList.contains("is-wrapped");
+    var show = wrapped || preHasHorizontalOverflow(pre);
+    if (show) {
+      btn.classList.add("wrap-code-btn--show");
+      btn.setAttribute("aria-hidden", "false");
+      btn.removeAttribute("tabindex");
+    } else {
+      btn.classList.remove("wrap-code-btn--show");
+      btn.setAttribute("aria-hidden", "true");
+      btn.setAttribute("tabindex", "-1");
+    }
+    btn.setAttribute("aria-pressed", wrapped ? "true" : "false");
+    var unwrapLabel = "Unwrap lines";
+    var wrapLabel = "Wrap long lines";
+    var tip = wrapped ? unwrapLabel : wrapLabel;
+    btn.setAttribute("title", tip);
+    btn.setAttribute("aria-label", tip);
+    btn.setAttribute("data-marktide-tip", tip);
+  }
+  function refresh(root) {
+    if (!root || !root.nodeType) root = document.querySelector(ROOT_SELECTOR);
+    if (!root) return;
+    root.querySelectorAll(".enhanced-code-block").forEach(updateBlock);
+  }
+  function scheduleRefresh(root) {
+    if (debounceId) clearTimeout(debounceId);
+    debounceId = setTimeout(function () {
+      debounceId = null;
+      requestAnimationFrame(function () {
+        refresh(root);
+      });
+    }, DEBOUNCE_MS);
+  }
+  function onWrapClick(event) {
+    var btn = event.target.closest(".wrap-code-btn");
+    if (!btn) return;
+    var root = document.querySelector(ROOT_SELECTOR);
+    if (!root || !root.contains(btn)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    var block = btn.closest(".enhanced-code-block");
+    if (!block) return;
+    block.classList.toggle("is-wrapped");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        refresh(root);
+      });
+    });
+  }
+  function boot() {
+    document.addEventListener("click", onWrapClick);
+    var root = document.querySelector(ROOT_SELECTOR);
+    if (root && typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(function () {
+        scheduleRefresh(root);
+      }).observe(root);
+    }
+    window.addEventListener("resize", function () {
+      scheduleRefresh(document.querySelector(ROOT_SELECTOR));
+    });
+    var r = document.querySelector(ROOT_SELECTOR);
+    if (r) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          refresh(r);
+        });
+      });
+    }
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      var p = window.MathJax.typesetPromise([document.body]);
+      if (p && typeof p.then === "function") {
+        p.then(function () {
+          scheduleRefresh(document.querySelector(ROOT_SELECTOR));
+        }).catch(function () {});
+      }
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
     `)}</script>
 </body>
 </html>`;

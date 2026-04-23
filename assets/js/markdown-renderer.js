@@ -231,6 +231,7 @@ class MarkdownRenderer {
           "tabindex",
           "role",
           "type",
+          "data-marktide-tip",
         ],
       });
       this.markdownPreview.innerHTML = sanitizedHtml;
