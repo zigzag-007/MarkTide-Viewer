@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.7.8';
+  const CURRENT_VERSION = 'v1.7.9';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: "MarkTide just got a serious editor upgrade.",
-    headline: 'Introducing the new Monaco-powered editor',
+    tagline: 'Smarter code blocks in preview and exported HTML.',
+    headline: 'Wrap long lines, clearer controls',
     highlights: [
       {
-        icon: 'bi-code-square',
-        title: 'VS Code-grade editing',
-        text: 'The editor is now powered by Monaco \u2014 the same engine behind VS Code \u2014 with smarter typing, selection, and keyboard handling.'
+        icon: 'bi-text-wrap',
+        title: 'Wrap / unwrap in preview & HTML export',
+        text: 'Long lines in fenced code can soft-wrap or scroll, with a control that only appears when it matters \u2014 same behavior in the live preview and in downloaded HTML.'
       },
       {
-        icon: 'bi-lightning-charge',
-        title: 'Real-time preview',
-        text: 'Preview now updates as you type, even when holding keys. No more waiting for rendering to catch up.'
+        icon: 'bi-chat-square-text',
+        title: 'Hints on code actions',
+        text: 'Wrap, unwrap, and copy show quick labels on hover (and keyboard focus) so the header stays clean but still self-explanatory.'
       },
       {
-        icon: 'bi-file-earmark-pdf',
-        title: 'Refined exports',
-        text: 'PDF, HTML, and Text exports now reflect exactly what you see in the preview, dark mode included.'
+        icon: 'bi-filetype-html',
+        title: 'Export parity',
+        text: 'Exported HTML bundles the wrap control, styling, and scripts so standalone pages feel like the in-app preview.'
       },
       {
-        icon: 'bi-phone',
-        title: 'Polished mobile menu',
-        text: 'A cleaner mobile experience with smoother animations and a floating export panel.'
+        icon: 'bi-text-center',
+        title: 'Alignment toggle fix',
+        text: 'When the editor falls back to a plain textarea, alignment buttons again remove the wrapper on a second click instead of nesting extra divs.'
       }
     ]
   };
