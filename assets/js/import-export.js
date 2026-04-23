@@ -1202,6 +1202,62 @@ class ImportExportManager {
         }
     `;
 
+    const codeBlockPreScrollbarStyles = `
+        /* hljs: pre>code uses overflow-x:auto — scroll on <pre> so scrollbar styling works */
+        .markdown-body pre code.hljs,
+        .enhanced-code-block pre code.hljs {
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+        }
+        .markdown-body pre,
+        .enhanced-code-block > pre {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+            scrollbar-gutter: stable;
+            transition: scrollbar-color 0.2s ease;
+        }
+        .markdown-body pre:hover,
+        .enhanced-code-block:hover > pre {
+            scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
+        }
+        .markdown-body pre::-webkit-scrollbar,
+        .enhanced-code-block > pre::-webkit-scrollbar {
+            width: 4px !important;
+            height: 4px !important;
+            background: transparent !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-button,
+        .enhanced-code-block > pre::-webkit-scrollbar-button {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-track,
+        .enhanced-code-block > pre::-webkit-scrollbar-track {
+            background: transparent !important;
+            border: 0 !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-thumb,
+        .enhanced-code-block > pre::-webkit-scrollbar-thumb {
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 999px !important;
+            transition: background-color 0.2s ease;
+        }
+        .markdown-body pre:hover::-webkit-scrollbar-thumb,
+        .enhanced-code-block:hover > pre::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.55) !important;
+        }
+        .markdown-body pre:hover::-webkit-scrollbar-thumb:hover,
+        .enhanced-code-block:hover > pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 195, 247, 0.8) !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-corner,
+        .enhanced-code-block > pre::-webkit-scrollbar-corner {
+            background: transparent !important;
+        }
+    `;
+
     const mermaidStyles = `
         /* Mermaid diagram styles */
         .mermaid-container, .mermaid {
@@ -1215,7 +1271,7 @@ class ImportExportManager {
         }
     `;
     
-    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + mermaidStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles);
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en">

@@ -1715,7 +1715,63 @@
     font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
     font-feature-settings: "liga" 1, "calt" 1;
   }
-  
+
+  /* hljs themes (CDN) use `pre code.hljs { overflow-x: auto }`, which attaches the scrollbar to
+     <code> (see DevTools). Turn that off so <pre> is the scroll container and slim ::-webkit
+     rules below actually apply. */
+  #markdown-preview pre code.hljs {
+    display: block;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  /* Code fences: slim horizontal/vertical scrollbar on <pre>, hidden until hover */
+  #markdown-preview pre {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+    transition: scrollbar-color 0.2s ease;
+  }
+
+  #markdown-preview pre:hover {
+    scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
+  }
+
+  #markdown-preview pre::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    background: transparent;
+  }
+
+  #markdown-preview pre::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  #markdown-preview pre::-webkit-scrollbar-track {
+    background: transparent;
+    border: 0;
+  }
+
+  #markdown-preview pre::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    transition: background-color 0.2s ease;
+  }
+
+  #markdown-preview pre:hover::-webkit-scrollbar-thumb {
+    background: rgba(79, 195, 247, 0.55);
+  }
+
+  #markdown-preview pre:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(79, 195, 247, 0.8);
+  }
+
+  #markdown-preview pre::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 
   
   /* =================================================================
