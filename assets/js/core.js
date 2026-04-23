@@ -285,13 +285,33 @@ class MarkTideCore {
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
+
     const start = this.markdownEditor.selectionStart;
     const end = this.markdownEditor.selectionEnd;
     const currentValue = this.markdownEditor.value;
     const selectedText = currentValue.substring(start, end);
-    this.markdownEditor.value = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
-    this.markdownEditor.selectionStart = start + prefix.length;
-    this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
+
+    // Match editor.js wrapText(): toggle off when the same wrapper directly surrounds the selection.
+    const hasPrefix = start >= prefix.length && currentValue.substring(start - prefix.length, start) === prefix;
+    const hasSuffix = end + suffix.length <= currentValue.length && currentValue.substring(end, end + suffix.length) === suffix;
+
+    if (hasPrefix && hasSuffix) {
+      const newValue =
+        currentValue.substring(0, start - prefix.length) + selectedText + currentValue.substring(end + suffix.length);
+      this.markdownEditor.value = newValue;
+      this.markdownEditor.selectionStart = start - prefix.length;
+      this.markdownEditor.selectionEnd = end - prefix.length;
+    } else if (selectedText) {
+      const wrappedText = prefix + selectedText + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + wrappedText + currentValue.substring(end);
+      this.markdownEditor.selectionStart = start + prefix.length;
+      this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
+    } else {
+      const wrappedText = prefix + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + wrappedText + currentValue.substring(end);
+      this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + prefix.length;
+    }
+
     this.markdownEditor.focus();
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
