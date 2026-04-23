@@ -1628,6 +1628,75 @@
     letter-spacing: 0.5px;
   }
 
+  .code-block-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* Preview-only wrap control (long lines): Grok-style icons, shown only when overflow or while wrapped */
+  #markdown-preview .wrap-code-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--text-color, #24292e);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+
+  #markdown-preview .wrap-code-btn.wrap-code-btn--show {
+    display: flex;
+  }
+
+  #markdown-preview .wrap-code-btn:hover {
+    opacity: 1;
+  }
+
+  #markdown-preview .wrap-code-btn:active {
+    transform: scale(0.92);
+  }
+
+  #markdown-preview .wrap-code-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
+  #markdown-preview .wrap-code-svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  #markdown-preview .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
+    display: none !important;
+  }
+
+  #markdown-preview .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
+    display: none !important;
+  }
+
+  #markdown-preview .enhanced-code-block.is-wrapped > pre {
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  #markdown-preview .enhanced-code-block.is-wrapped > pre code.hljs {
+    white-space: pre-wrap !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
   .enhanced-code-block .copy-code-btn {
     background: transparent;
     border: none;

@@ -1,5 +1,22 @@
 // Markdown rendering and processing functionality
 
+/** Grok-style wrap (left staggered) / unwrap (centered staggered) icons for code block header */
+function marktideWrapButtonHtml() {
+  const wrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  const unwrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  return (
+    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines">' +
+    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
+    wrapSvg +
+    "</span>" +
+    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
+    unwrapSvg +
+    "</span></button>"
+  );
+}
+
 class MarkdownRenderer {
   constructor() {
     this.markdownRenderTimeout = null;
@@ -62,9 +79,12 @@ class MarkdownRenderer {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideWrapButtonHtml()}
+                <button class="copy-code-btn" data-code-id="${uniqueId}">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
           </div>
@@ -76,9 +96,12 @@ class MarkdownRenderer {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideWrapButtonHtml()}
+                <button class="copy-code-btn" data-code-id="${uniqueId}">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
           </div>
@@ -174,8 +197,41 @@ class MarkdownRenderer {
       const markdown = this.normalizeListSyntax(this.markdownEditor.value);
       const html = marked.parse(markdown);
       const sanitizedHtml = DOMPurify.sanitize(html, {
-        ADD_TAGS: ['mjx-container'],
-        ADD_ATTR: ['id', 'class', 'style']
+        ADD_TAGS: [
+          "mjx-container",
+          "svg",
+          "line",
+          "path",
+          "g",
+          "circle",
+          "rect",
+        ],
+        ADD_ATTR: [
+          "id",
+          "class",
+          "style",
+          "viewBox",
+          "xmlns",
+          "width",
+          "height",
+          "stroke",
+          "stroke-width",
+          "stroke-linecap",
+          "fill",
+          "x1",
+          "y1",
+          "x2",
+          "y2",
+          "d",
+          "aria-hidden",
+          "focusable",
+          "aria-pressed",
+          "aria-label",
+          "title",
+          "tabindex",
+          "role",
+          "type",
+        ],
       });
       this.markdownPreview.innerHTML = sanitizedHtml;
 
@@ -207,9 +263,18 @@ class MarkdownRenderer {
       
       if (window.MathJax) {
         try {
-          MathJax.typesetPromise([this.markdownPreview]).catch((err) => {
-            console.warn('MathJax typesetting failed:', err);
-          });
+          const mjPromise = MathJax.typesetPromise([this.markdownPreview]);
+          if (mjPromise && typeof mjPromise.then === "function") {
+            mjPromise
+              .then(() => {
+                if (window.MarkTideCodeWrap) {
+                  window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
+                }
+              })
+              .catch((err) => {
+                console.warn("MathJax typesetting failed:", err);
+              });
+          }
         } catch (e) {
           console.warn("MathJax rendering failed:", e);
         }
@@ -217,6 +282,14 @@ class MarkdownRenderer {
 
       if (window.MarkTideUtils && window.MarkTideUtils.updateDocumentStats) {
         window.MarkTideUtils.updateDocumentStats();
+      }
+
+      if (window.MarkTideCodeWrap) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
+          });
+        });
       }
     } catch (e) {
       console.error("Markdown rendering failed:", e);
