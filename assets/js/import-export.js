@@ -1501,8 +1501,7 @@ class ImportExportManager {
             scrollbar-gutter: stable;
             transition: scrollbar-color 0.2s ease;
         }
-        .markdown-body pre:hover,
-        .enhanced-code-block:hover > pre {
+        .markdown-body pre:hover {
             scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
         }
         .markdown-body pre::-webkit-scrollbar,
@@ -1529,12 +1528,10 @@ class ImportExportManager {
             border-radius: 999px !important;
             transition: background-color 0.2s ease;
         }
-        .markdown-body pre:hover::-webkit-scrollbar-thumb,
-        .enhanced-code-block:hover > pre::-webkit-scrollbar-thumb {
+        .markdown-body pre:hover::-webkit-scrollbar-thumb {
             background: rgba(79, 195, 247, 0.55) !important;
         }
-        .markdown-body pre:hover::-webkit-scrollbar-thumb:hover,
-        .enhanced-code-block:hover > pre::-webkit-scrollbar-thumb:hover {
+        .markdown-body pre:hover::-webkit-scrollbar-thumb:hover {
             background: rgba(79, 195, 247, 0.8) !important;
         }
         .markdown-body pre::-webkit-scrollbar-corner,
