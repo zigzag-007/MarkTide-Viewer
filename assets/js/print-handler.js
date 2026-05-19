@@ -13,6 +13,93 @@ class PrintHandler {
     // removed old event listeners since we now use dropdown menu
   }
 
+  preparePrintTables(html) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+
+    const needsSoftWrap = (text) => /https?:\/\/|[A-Za-z]:\\|[_-]{2,}|\S{28,}/.test(text);
+    const addWrappedText = (fragment, text) => {
+      text.split(/(\s+)/).forEach((piece) => {
+        if (!piece) return;
+
+        if (/^\s+$/.test(piece) || piece.length < 28) {
+          fragment.appendChild(document.createTextNode(piece));
+          return;
+        }
+
+        piece.split(/([/\\._-])/).forEach((part) => {
+          if (!part) return;
+
+          if (/[/\\._-]/.test(part)) {
+            fragment.appendChild(document.createTextNode(part));
+            fragment.appendChild(document.createElement('wbr'));
+            return;
+          }
+
+          for (let index = 0; index < part.length; index += 18) {
+            fragment.appendChild(document.createTextNode(part.slice(index, index + 18)));
+
+            if (index + 18 < part.length) {
+              fragment.appendChild(document.createElement('wbr'));
+            }
+          }
+        });
+      });
+    };
+
+    wrapper.querySelectorAll('table').forEach((table) => {
+      const firstRow = table.querySelector('tr');
+      const columnCount = firstRow ? firstRow.children.length : 0;
+      const hasLongValue = Array.from(table.querySelectorAll('td:not(:first-child), th:not(:first-child)'))
+        .some((cell) => needsSoftWrap(cell.textContent || ''));
+
+      if (columnCount > 0) {
+        table.classList.add(`marktide-print-cols-${columnCount}`);
+      }
+
+      if (columnCount >= 5) {
+        table.classList.add('marktide-print-wide-table');
+      }
+
+      if (hasLongValue) {
+        table.classList.add('marktide-print-long-table');
+      }
+    });
+
+    wrapper.querySelectorAll('table td:not(:first-child), table th:not(:first-child)').forEach((cell) => {
+      if (!needsSoftWrap(cell.textContent || '')) return;
+
+      cell.classList.add('marktide-print-soft-wrap');
+
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!needsSoftWrap(node.nodeValue || '')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          if (node.parentElement && node.parentElement.closest('pre')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      const textNodes = [];
+
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+
+      textNodes.forEach((node) => {
+        const fragment = document.createDocumentFragment();
+        addWrappedText(fragment, node.nodeValue || '');
+        node.parentNode.replaceChild(fragment, node);
+      });
+    });
+
+    return wrapper.innerHTML;
+  }
+
   printPreview() {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
@@ -60,9 +147,10 @@ class PrintHandler {
     // Use the clean renderer for print/PDF
     const html = marked.parse(normalizedMarkdown, { renderer: printRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
+      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath', 'wbr'],
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
     });
+    const printableHtml = this.preparePrintTables(sanitizedHtml);
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -103,7 +191,7 @@ class PrintHandler {
         white-space: normal !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
-        word-break: break-word !important;
+        word-break: normal !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
       }
@@ -231,7 +319,59 @@ class PrintHandler {
       overflow: visible !important;
       word-wrap: break-word !important;
       overflow-wrap: break-word !important;
-      hyphens: auto !important;
+      word-break: normal !important;
+      hyphens: manual !important;
+    }
+
+    .markdown-body table th:first-child,
+    .markdown-body table td:first-child {
+      overflow-wrap: normal !important;
+      word-break: normal !important;
+      hyphens: manual !important;
+    }
+
+    .markdown-body table.marktide-print-cols-2 th:first-child,
+    .markdown-body table.marktide-print-cols-2 td:first-child {
+      width: 16% !important;
+      min-width: 88px !important;
+    }
+
+    .markdown-body table.marktide-print-cols-3 th:first-child,
+    .markdown-body table.marktide-print-cols-3 td:first-child {
+      width: 13% !important;
+      min-width: 86px !important;
+    }
+
+    .markdown-body table.marktide-print-cols-3 th:last-child,
+    .markdown-body table.marktide-print-cols-3 td:last-child {
+      width: 12% !important;
+      min-width: 78px !important;
+      overflow-wrap: normal !important;
+      word-break: normal !important;
+      hyphens: manual !important;
+    }
+
+    .markdown-body table.marktide-print-long-table,
+    .markdown-body table.marktide-print-wide-table {
+      table-layout: fixed !important;
+    }
+
+    .markdown-body table.marktide-print-long-table.marktide-print-cols-2 th:first-child,
+    .markdown-body table.marktide-print-long-table.marktide-print-cols-2 td:first-child {
+      width: 14% !important;
+      min-width: 74px !important;
+    }
+
+    .markdown-body table.marktide-print-wide-table th,
+    .markdown-body table.marktide-print-wide-table td {
+      padding: 6px 8px !important;
+    }
+
+    .markdown-body table .marktide-print-soft-wrap,
+    .markdown-body table .marktide-print-soft-wrap code {
+      overflow-wrap: anywhere !important;
+      word-break: normal !important;
+      white-space: normal !important;
     }
     
     .markdown-body code {
@@ -451,7 +591,7 @@ class PrintHandler {
         white-space: normal !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
-        word-break: break-word !important;
+        word-break: normal !important;
         max-width: 100% !important;
       }
       
@@ -482,7 +622,7 @@ class PrintHandler {
       /* Table responsiveness for print */
       .markdown-body table {
         font-size: 90% !important;
-        word-break: break-word !important;
+        word-break: normal !important;
         table-layout: auto !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -492,15 +632,50 @@ class PrintHandler {
         padding: 6px 12px !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
-        hyphens: auto !important;
-        max-width: 200px !important;
+        word-break: normal !important;
+        hyphens: manual !important;
+        max-width: none !important;
+      }
+
+      .markdown-body table.marktide-print-cols-2 th:first-child,
+      .markdown-body table.marktide-print-cols-2 td:first-child {
+        width: 16% !important;
+        min-width: 88px !important;
+      }
+
+      .markdown-body table.marktide-print-cols-3 th:first-child,
+      .markdown-body table.marktide-print-cols-3 td:first-child {
+        width: 13% !important;
+        min-width: 86px !important;
+      }
+
+      .markdown-body table.marktide-print-cols-3 th:last-child,
+      .markdown-body table.marktide-print-cols-3 td:last-child {
+        width: 12% !important;
+        min-width: 78px !important;
+      }
+
+      .markdown-body table.marktide-print-long-table,
+      .markdown-body table.marktide-print-wide-table {
+        table-layout: fixed !important;
+      }
+
+      .markdown-body table.marktide-print-long-table.marktide-print-cols-2 th:first-child,
+      .markdown-body table.marktide-print-long-table.marktide-print-cols-2 td:first-child {
+        width: 14% !important;
+        min-width: 74px !important;
+      }
+
+      .markdown-body table.marktide-print-wide-table th,
+      .markdown-body table.marktide-print-wide-table td {
+        padding: 5px 7px !important;
       }
       }
   </style>
 </head>
 <body>
   <article class="markdown-body">
-      ${sanitizedHtml}
+      ${printableHtml}
   </article>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
