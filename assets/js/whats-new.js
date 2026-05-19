@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.7.9';
+  const CURRENT_VERSION = 'v1.8.0';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'Smarter code blocks in preview and exported HTML.',
-    headline: 'Wrap long lines, clearer controls',
+    tagline: 'Cleaner PDF tables with smarter wrapping and spacing.',
+    headline: 'Better PDF table exports',
     highlights: [
       {
-        icon: 'bi-text-wrap',
-        title: 'Wrap / unwrap in preview & HTML export',
-        text: 'Long lines in fenced code can soft-wrap or scroll, with a control that only appears when it matters \u2014 same behavior in the live preview and in downloaded HTML.'
+        icon: 'bi-table',
+        title: 'Readable table columns',
+        text: 'PDF export now protects short table columns from being crushed when another column contains long descriptive text.'
       },
       {
-        icon: 'bi-chat-square-text',
-        title: 'Hints on code actions',
-        text: 'Wrap, unwrap, and copy show quick labels on hover (and keyboard focus) so the header stays clean but still self-explanatory.'
+        icon: 'bi-link-45deg',
+        title: 'Long values wrap cleanly',
+        text: 'URLs, file paths, hashes, and long tokens now gain safe wrap points so tables can stay readable without manual line breaks.'
       },
       {
-        icon: 'bi-filetype-html',
-        title: 'Export parity',
-        text: 'Exported HTML bundles the wrap control, styling, and scripts so standalone pages feel like the in-app preview.'
+        icon: 'bi-file-earmark-pdf',
+        title: 'Smoother PDF pagination',
+        text: 'Large tables can now continue across PDF pages without creating unnecessary blank sheets.'
       },
       {
-        icon: 'bi-text-center',
-        title: 'Alignment toggle fix',
-        text: 'When the editor falls back to a plain textarea, alignment buttons again remove the wrapper on a second click instead of nesting extra divs.'
+        icon: 'bi-arrows-angle-contract',
+        title: 'Tighter page margins',
+        text: 'PDF exports use slightly smaller page margins to give documents more usable space while keeping a clean printable layout.'
       }
     ]
   };
