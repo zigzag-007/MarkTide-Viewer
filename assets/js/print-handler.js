@@ -410,7 +410,8 @@ class PrintHandler {
       border-collapse: collapse !important;
       width: 100% !important;
       overflow: visible !important;
-      page-break-inside: avoid !important;
+      break-inside: auto !important;
+      page-break-inside: auto !important;
     }
     
     .markdown-body table tr {
