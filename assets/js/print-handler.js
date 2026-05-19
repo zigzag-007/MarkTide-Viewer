@@ -182,7 +182,7 @@ class PrintHandler {
   <style>
     @media print {
       @page {
-        margin: 0.75in 0.5in;
+        margin: 0.55in 0.38in;
         size: A4;
       }
       
@@ -570,7 +570,7 @@ class PrintHandler {
           /* Print-specific adjustments */
       @media print {
           .markdown-body {
-        padding: 10px !important;
+        padding: 6px !important;
         margin: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
