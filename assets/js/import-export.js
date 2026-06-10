@@ -1,5 +1,22 @@
 // Import and export functionality for markdown files
 
+/** Same markup as preview (markdown-renderer.js) for exported HTML code blocks */
+function marktideExportWrapButtonHtml() {
+  const wrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  const unwrapSvg =
+    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  return (
+    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines" data-marktide-tip="Wrap long lines">' +
+    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
+    wrapSvg +
+    "</span>" +
+    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
+    unwrapSvg +
+    "</span></button>"
+  );
+}
+
 class ImportExportManager {
   constructor() {
     this.fileInput = null;
@@ -39,6 +56,44 @@ class ImportExportManager {
       .replace(/(if|else|for|while|function|var|let|const|return)([({])/g, '$1 $2')
       // Remove leading/trailing whitespace
       .trim();
+  }
+
+  getDecimalOutlineListStyles(textColor) {
+    return `
+        .markdown-body ol,
+        .markdown-body ol ol {
+            list-style: none !important;
+            padding-left: 2.2em !important;
+            margin-left: 0 !important;
+            counter-reset: item !important;
+        }
+
+        .markdown-body ol li {
+            list-style: none !important;
+            color: ${textColor} !important;
+        }
+
+        .markdown-body ol li::marker {
+            content: "" !important;
+        }
+
+        .markdown-body ol > li {
+            counter-increment: item !important;
+            position: relative !important;
+        }
+
+        .markdown-body ol > li::before {
+            content: counters(item, ".") ". " !important;
+            position: absolute !important;
+            left: -2.2em !important;
+            width: 2.2em !important;
+            padding-right: 0.2em !important;
+            box-sizing: border-box !important;
+            text-align: right !important;
+            font-weight: 600 !important;
+            color: ${textColor} !important;
+        }
+    `;
   }
 
   // SINGLE SOURCE OF TRUTH: plain text conversion used by both copy-as-text and export-as-txt
@@ -109,13 +164,13 @@ class ImportExportManager {
 
   // helper to close mobile menu
   closeMobileMenu() {
-    const mobileMenuPanel = document.getElementById("mobile-menu-panel");
-    const mobileMenuOverlay = document.getElementById("mobile-menu-overlay");
-    if (mobileMenuPanel) {
-      mobileMenuPanel.classList.remove("active");
-    }
-    if (mobileMenuOverlay) {
-      mobileMenuOverlay.classList.remove("active");
+    document.body.dispatchEvent(new CustomEvent("marktide-mobile-menu-close", { bubbles: true }));
+
+    // Ensure any open mobile export dropdown is closed too.
+    const mobileExportButton = document.getElementById("mobile-print-button");
+    if (mobileExportButton && window.bootstrap && window.bootstrap.Dropdown) {
+      const dropdownInstance = window.bootstrap.Dropdown.getOrCreateInstance(mobileExportButton);
+      dropdownInstance.hide();
     }
   }
 
@@ -192,6 +247,8 @@ class ImportExportManager {
       this.closeDropzoneBtn.addEventListener("click", (e) => {
         e.stopPropagation(); 
         this.dropzone.style.display = "none";
+        this.unhighlightEditor();
+        this.refreshLayoutAfterDropzoneChange();
       });
     }
 
@@ -383,7 +440,30 @@ class ImportExportManager {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.markdownEditor.value = e.target.result;
+      const importedContent = typeof e.target.result === 'string' ? e.target.result : String(e.target.result ?? '');
+      let appliedWithMonaco = false;
+
+      if (window.MarkTideEditor &&
+          typeof window.MarkTideEditor.getMonacoEditorAndModel === 'function' &&
+          typeof window.MarkTideEditor.applyMonacoTextUpdate === 'function') {
+        const context = window.MarkTideEditor.getMonacoEditorAndModel();
+        if (context) {
+          const { editor, model } = context;
+          appliedWithMonaco = window.MarkTideEditor.applyMonacoTextUpdate({
+            editor,
+            model,
+            currentValue: model.getValue(),
+            newValue: importedContent,
+            selectionStart: 0,
+            selectionEnd: 0,
+            sourceId: 'import-markdown-file'
+          });
+        }
+      }
+
+      if (!appliedWithMonaco) {
+        this.markdownEditor.value = importedContent;
+      }
       if (window.MarkTideRenderer && window.MarkTideRenderer.renderMarkdown) {
         window.MarkTideRenderer.renderMarkdown();
       }
@@ -392,19 +472,21 @@ class ImportExportManager {
       if (this.editorPane) {
         this.editorPane.classList.remove('drop-active');
       }
+      this.refreshLayoutAfterDropzoneChange();
 
       // Normalize editor scrolling after import to avoid stale styles
       try {
         const viewMgr = window.MarkTideViewManager;
         const inSplitView = !viewMgr || viewMgr.currentView === 'split';
         const inEditorOnly = viewMgr && viewMgr.currentView === 'editor-only';
-        if (inSplitView && this.markdownEditor) {
+        const isMonacoHost = this.markdownEditor && this.markdownEditor.classList.contains('monaco-host');
+        if (inSplitView && this.markdownEditor && !isMonacoHost) {
           // Ensure textarea behaves like split view defaults
           this.markdownEditor.classList.remove('native-scrollbars');
           this.markdownEditor.style.height = '100%';
           this.markdownEditor.style.overflow = 'auto';
           this.markdownEditor.style.overflowY = 'auto';
-        } else if (inEditorOnly && this.markdownEditor) {
+        } else if (inEditorOnly && this.markdownEditor && !isMonacoHost) {
           // Ensure textarea expands in editor-only so page can scroll
           this.markdownEditor.classList.add('native-scrollbars');
           requestAnimationFrame(() => {
@@ -419,6 +501,56 @@ class ImportExportManager {
       }
     };
     reader.readAsText(file);
+  }
+
+  // Recompute editor layout when dropzone visibility changes.
+  // Monaco in editor-only mode needs an explicit relayout to avoid clipped overlays.
+  refreshLayoutAfterDropzoneChange() {
+    try {
+      const viewMgr = window.MarkTideViewManager;
+      if (!viewMgr || !this.editorPane || !this.markdownEditor) return;
+
+      const isMonacoHost = this.markdownEditor.classList.contains('monaco-host');
+      if (!isMonacoHost) {
+        if (viewMgr.currentView === 'editor-only' && viewMgr.adjustEditorPaneHeightIfNeeded) {
+          viewMgr.adjustEditorPaneHeightIfNeeded();
+        }
+        return;
+      }
+
+      if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+        // Temporarily disable layout transitions during dropzone close relayout to avoid visual flashes.
+        document.body.classList.add('layout-recalc');
+
+        // Run immediate + multi-frame relayout after height changes settle.
+        window.MarkTideMonaco.refreshLayout();
+        requestAnimationFrame(() => {
+          if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+            window.MarkTideMonaco.refreshLayout();
+          } else {
+            document.body.classList.remove('layout-recalc');
+            return;
+          }
+          requestAnimationFrame(() => {
+            if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+              window.MarkTideMonaco.refreshLayout();
+            } else {
+              document.body.classList.remove('layout-recalc');
+              return;
+            }
+            setTimeout(() => {
+              if (window.MarkTideMonaco && window.MarkTideMonaco.refreshLayout) {
+                window.MarkTideMonaco.refreshLayout();
+              }
+              document.body.classList.remove('layout-recalc');
+            }, 60);
+          });
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to refresh layout after dropzone change:', err);
+      document.body.classList.remove('layout-recalc');
+    }
   }
 
   // Generate smart filename from content
@@ -509,9 +641,12 @@ class ImportExportManager {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideExportWrapButtonHtml()}
+                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
           </div>
@@ -523,9 +658,12 @@ class ImportExportManager {
           <div class="enhanced-code-block">
             <div class="code-block-header">
               <span class="code-language">${displayLanguage}</span>
-              <button class="copy-code-btn" data-code-id="${uniqueId}">
-                <i class="bi bi-copy"></i>
-              </button>
+              <div class="code-block-header-actions">
+                ${marktideExportWrapButtonHtml()}
+                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
             </div>
             <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
           </div>
@@ -534,10 +672,55 @@ class ImportExportManager {
     };
     
     // Use the enhanced renderer for HTML export
-    const html = marked.parse(markdown, { renderer: exportRenderer });
+    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
+      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
+      : markdown;
+    const html = marked.parse(normalizedMarkdown, { renderer: exportRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath'],
-      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
+      ADD_TAGS: [
+        'mjx-container',
+        'svg',
+        'line',
+        'path',
+        'g',
+        'circle',
+        'rect',
+        'marker',
+        'defs',
+        'pattern',
+        'clipPath',
+      ],
+      ADD_ATTR: [
+        'id',
+        'class',
+        'style',
+        'viewBox',
+        'xmlns',
+        'width',
+        'height',
+        'stroke',
+        'stroke-width',
+        'stroke-linecap',
+        'fill',
+        'x1',
+        'y1',
+        'x2',
+        'y2',
+        'd',
+        'transform',
+        'marker-end',
+        'marker-start',
+        'aria-hidden',
+        'focusable',
+        'aria-pressed',
+        'aria-label',
+        'title',
+        'tabindex',
+        'role',
+        'type',
+        'data-marktide-tip',
+        'data-code-id',
+      ],
     });
     
     // Get current theme
@@ -576,51 +759,14 @@ class ImportExportManager {
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
             list-style-type: disc !important;
+            padding-left: 2.2em !important;
         }
         
         .markdown-body ul li::marker {
             color: #ffffff !important;
         }
         
-        .markdown-body ol {
-            list-style-type: decimal !important;
-            padding-left: 2em !important;
-            counter-reset: section !important;
-        }
-        
-        .markdown-body ol li::marker {
-            color: #ffffff !important;
-            font-weight: 600 !important;
-        }
-        
-        .markdown-body ol li {
-            color: #ffffff !important;
-        }
-        
-        /* Handle decimal point numbering (e.g., 2.1) */
-        .markdown-body ol > li {
-            counter-increment: section !important;
-        }
-        
-        .markdown-body ol > li > ol > li {
-            counter-increment: subsection !important;
-        }
-        
-        .markdown-body ol > li > ol > li:before {
-            content: counter(section) "." counter(subsection) " " !important;
-            float: left !important;
-            margin-left: -2.5em !important;
-        }
-        
-        /* Nested list styling */
-        .markdown-body ol ol {
-            list-style-type: none !important;
-            counter-reset: subsection !important;
-        }
-        
-        .markdown-body ol ol ol {
-            list-style-type: lower-roman !important;
-        }
+        ${this.getDecimalOutlineListStyles('#ffffff')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
@@ -782,51 +928,14 @@ class ImportExportManager {
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
             list-style-type: disc !important;
+            padding-left: 2.2em !important;
         }
         
         .markdown-body ul li::marker {
             color: #000000 !important;
         }
         
-        .markdown-body ol {
-            list-style-type: decimal !important;
-            padding-left: 2em !important;
-            counter-reset: section !important;
-        }
-        
-        .markdown-body ol li::marker {
-            color: #000000 !important;
-            font-weight: 600 !important;
-        }
-        
-        .markdown-body ol li {
-            color: #000000 !important;
-        }
-        
-        /* Handle decimal point numbering (e.g., 2.1) */
-        .markdown-body ol > li {
-            counter-increment: section !important;
-        }
-        
-        .markdown-body ol > li > ol > li {
-            counter-increment: subsection !important;
-        }
-        
-        .markdown-body ol > li > ol > li:before {
-            content: counter(section) "." counter(subsection) " " !important;
-            float: left !important;
-            margin-left: -2.5em !important;
-        }
-        
-        /* Nested list styling */
-        .markdown-body ol ol {
-            list-style-type: none !important;
-            counter-reset: subsection !important;
-        }
-        
-        .markdown-body ol ol ol {
-            list-style-type: lower-roman !important;
-        }
+        ${this.getDecimalOutlineListStyles('#000000')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
@@ -991,6 +1100,116 @@ class ImportExportManager {
             letter-spacing: 0.5px;
         }
 
+        .code-block-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip] {
+            position: relative;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
+            content: attr(data-marktide-tip);
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            z-index: 60;
+            padding: 0.32rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            color: #f3f4f8;
+            background: rgba(22, 24, 30, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-3px);
+            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .markdown-body .wrap-code-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #ffffff !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+
+        .markdown-body .wrap-code-btn.wrap-code-btn--show {
+            display: flex;
+        }
+
+        .markdown-body .wrap-code-btn:hover {
+            opacity: 1;
+        }
+
+        .markdown-body .wrap-code-btn:active {
+            transform: scale(0.92);
+        }
+
+        .markdown-body .wrap-code-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .markdown-body .wrap-code-svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre {
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
         .enhanced-code-block .copy-code-btn {
             background: transparent;
             border: none;
@@ -1092,6 +1311,116 @@ class ImportExportManager {
             letter-spacing: 0.5px;
         }
 
+        .code-block-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip] {
+            position: relative;
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
+            content: attr(data-marktide-tip);
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            z-index: 60;
+            padding: 0.32rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            color: #f3f4f8;
+            background: rgba(22, 24, 30, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-3px);
+            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .markdown-body .wrap-code-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #24292e !important;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+
+        .markdown-body .wrap-code-btn.wrap-code-btn--show {
+            display: flex;
+        }
+
+        .markdown-body .wrap-code-btn:hover {
+            opacity: 1;
+        }
+
+        .markdown-body .wrap-code-btn:active {
+            transform: scale(0.92);
+        }
+
+        .markdown-body .wrap-code-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .markdown-body .wrap-code-svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
+            display: none !important;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre {
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
         .enhanced-code-block .copy-code-btn {
             background: transparent;
             border: none;
@@ -1158,6 +1487,59 @@ class ImportExportManager {
         }
     `;
 
+    const codeBlockPreScrollbarStyles = `
+        /* hljs: pre>code uses overflow-x:auto — scroll on <pre> so scrollbar styling works */
+        .markdown-body pre code.hljs,
+        .enhanced-code-block pre code.hljs {
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+        }
+        .markdown-body pre,
+        .enhanced-code-block > pre {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+            scrollbar-gutter: stable;
+            transition: scrollbar-color 0.2s ease;
+        }
+        .markdown-body pre:hover {
+            scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
+        }
+        .markdown-body pre::-webkit-scrollbar,
+        .enhanced-code-block > pre::-webkit-scrollbar {
+            width: 4px !important;
+            height: 4px !important;
+            background: transparent !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-button,
+        .enhanced-code-block > pre::-webkit-scrollbar-button {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-track,
+        .enhanced-code-block > pre::-webkit-scrollbar-track {
+            background: transparent !important;
+            border: 0 !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-thumb,
+        .enhanced-code-block > pre::-webkit-scrollbar-thumb {
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 999px !important;
+            transition: background-color 0.2s ease;
+        }
+        .markdown-body pre:hover::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.55) !important;
+        }
+        .markdown-body pre:hover::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 195, 247, 0.8) !important;
+        }
+        .markdown-body pre::-webkit-scrollbar-corner,
+        .enhanced-code-block > pre::-webkit-scrollbar-corner {
+            background: transparent !important;
+        }
+    `;
+
     const mermaidStyles = `
         /* Mermaid diagram styles */
         .mermaid-container, .mermaid {
@@ -1171,7 +1553,7 @@ class ImportExportManager {
         }
     `;
     
-    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + mermaidStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles);
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -1361,6 +1743,102 @@ class ImportExportManager {
             const copyHandler = new CodeCopyHandler();
             copyHandler.init();
         }
+    `)}</script>
+    <script>${this.minifyJS(`
+(function () {
+  var ROOT_SELECTOR = ".markdown-body";
+  var DEBOUNCE_MS = 64;
+  var debounceId = null;
+  function preHasHorizontalOverflow(pre) {
+    return Math.ceil(pre.scrollWidth) > Math.floor(pre.clientWidth) + 1;
+  }
+  function updateBlock(block) {
+    var pre = block.querySelector(":scope > pre");
+    var btn = block.querySelector(".wrap-code-btn");
+    if (!pre || !btn) return;
+    var wrapped = block.classList.contains("is-wrapped");
+    var show = wrapped || preHasHorizontalOverflow(pre);
+    if (show) {
+      btn.classList.add("wrap-code-btn--show");
+      btn.setAttribute("aria-hidden", "false");
+      btn.removeAttribute("tabindex");
+    } else {
+      btn.classList.remove("wrap-code-btn--show");
+      btn.setAttribute("aria-hidden", "true");
+      btn.setAttribute("tabindex", "-1");
+    }
+    btn.setAttribute("aria-pressed", wrapped ? "true" : "false");
+    var unwrapLabel = "Unwrap lines";
+    var wrapLabel = "Wrap long lines";
+    var tip = wrapped ? unwrapLabel : wrapLabel;
+    btn.setAttribute("title", tip);
+    btn.setAttribute("aria-label", tip);
+    btn.setAttribute("data-marktide-tip", tip);
+  }
+  function refresh(root) {
+    if (!root || !root.nodeType) root = document.querySelector(ROOT_SELECTOR);
+    if (!root) return;
+    root.querySelectorAll(".enhanced-code-block").forEach(updateBlock);
+  }
+  function scheduleRefresh(root) {
+    if (debounceId) clearTimeout(debounceId);
+    debounceId = setTimeout(function () {
+      debounceId = null;
+      requestAnimationFrame(function () {
+        refresh(root);
+      });
+    }, DEBOUNCE_MS);
+  }
+  function onWrapClick(event) {
+    var btn = event.target.closest(".wrap-code-btn");
+    if (!btn) return;
+    var root = document.querySelector(ROOT_SELECTOR);
+    if (!root || !root.contains(btn)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    var block = btn.closest(".enhanced-code-block");
+    if (!block) return;
+    block.classList.toggle("is-wrapped");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        refresh(root);
+      });
+    });
+  }
+  function boot() {
+    document.addEventListener("click", onWrapClick);
+    var root = document.querySelector(ROOT_SELECTOR);
+    if (root && typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(function () {
+        scheduleRefresh(root);
+      }).observe(root);
+    }
+    window.addEventListener("resize", function () {
+      scheduleRefresh(document.querySelector(ROOT_SELECTOR));
+    });
+    var r = document.querySelector(ROOT_SELECTOR);
+    if (r) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          refresh(r);
+        });
+      });
+    }
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      var p = window.MathJax.typesetPromise([document.body]);
+      if (p && typeof p.then === "function") {
+        p.then(function () {
+          scheduleRefresh(document.querySelector(ROOT_SELECTOR));
+        }).catch(function () {});
+      }
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
     `)}</script>
 </body>
 </html>`;

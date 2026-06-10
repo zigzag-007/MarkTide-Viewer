@@ -9,8 +9,236 @@ class EditorManager {
     this.markdownEditor = markdownEditor;
   }
 
+  getMonacoEditorAndModel() {
+    if (!window.monaco || !window.MarkTideMonaco || typeof window.MarkTideMonaco.getEditor !== 'function') {
+      return null;
+    }
+    const editor = window.MarkTideMonaco.getEditor();
+    if (!editor || typeof editor.getModel !== 'function') return null;
+    const model = editor.getModel();
+    if (!model) return null;
+    return { editor, model };
+  }
+
+  triggerRender() {
+    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+      window.MarkTideRenderer.debouncedRender();
+    }
+  }
+
+  applyMonacoTextUpdate({ editor, model, currentValue, newValue, selectionStart, selectionEnd, sourceId = 'editor-update' }) {
+    if (!editor || !model || typeof currentValue !== 'string' || typeof newValue !== 'string') return false;
+
+    const didChangeContent = newValue !== currentValue;
+
+    if (didChangeContent) {
+      let commonPrefix = 0;
+      const oldLen = currentValue.length;
+      const newLen = newValue.length;
+      while (commonPrefix < oldLen && commonPrefix < newLen && currentValue[commonPrefix] === newValue[commonPrefix]) {
+        commonPrefix += 1;
+      }
+
+      let commonSuffix = 0;
+      while (
+        commonSuffix < (oldLen - commonPrefix) &&
+        commonSuffix < (newLen - commonPrefix) &&
+        currentValue[oldLen - 1 - commonSuffix] === newValue[newLen - 1 - commonSuffix]
+      ) {
+        commonSuffix += 1;
+      }
+
+      const oldDiffEnd = oldLen - commonSuffix;
+      const newDiffEnd = newLen - commonSuffix;
+      const replaceText = newValue.substring(commonPrefix, newDiffEnd);
+
+      const rangeStart = model.getPositionAt(commonPrefix);
+      const rangeEnd = model.getPositionAt(oldDiffEnd);
+      const replaceRange = new window.monaco.Range(
+        rangeStart.lineNumber,
+        rangeStart.column,
+        rangeEnd.lineNumber,
+        rangeEnd.column
+      );
+
+      editor.pushUndoStop();
+      editor.executeEdits(sourceId, [{
+        range: replaceRange,
+        text: replaceText,
+        forceMoveMarkers: true
+      }]);
+      editor.pushUndoStop();
+    }
+
+    const maxLen = model.getValueLength();
+    const safeSelectionStart = Math.max(0, Math.min(Number(selectionStart) || 0, maxLen));
+    const safeSelectionEnd = Math.max(0, Math.min(Number(selectionEnd) || safeSelectionStart, maxLen));
+    const selStartPos = model.getPositionAt(safeSelectionStart);
+    const selEndPos = model.getPositionAt(safeSelectionEnd);
+    editor.setSelection(new window.monaco.Selection(
+      selStartPos.lineNumber,
+      selStartPos.column,
+      selEndPos.lineNumber,
+      selEndPos.column
+    ));
+    editor.focus();
+
+    if (didChangeContent) {
+      this.triggerRender();
+    }
+
+    return true;
+  }
+
+  applyMonacoSelectionTransform(transformFn, sourceId) {
+    const context = this.getMonacoEditorAndModel();
+    if (!context || typeof transformFn !== 'function') return false;
+
+    const { editor, model } = context;
+    const selection = editor.getSelection();
+    if (!selection) return false;
+
+    const startOffset = model.getOffsetAt(selection.getStartPosition());
+    const endOffset = model.getOffsetAt(selection.getEndPosition());
+    const currentValue = model.getValue();
+
+    const result = transformFn({
+      currentValue,
+      startOffset,
+      endOffset,
+      selection,
+      editor,
+      model
+    });
+
+    if (!result || typeof result.newValue !== 'string') return false;
+
+    return this.applyMonacoTextUpdate({
+      editor,
+      model,
+      currentValue,
+      newValue: result.newValue,
+      selectionStart: result.selectionStart,
+      selectionEnd: result.selectionEnd,
+      sourceId
+    });
+  }
+
+  // Monaco-safe wrap operation: preserves native undo/redo and cursor state.
+  tryWrapTextMonaco(prefix, suffix = '') {
+    return this.applyMonacoSelectionTransform(({ currentValue, startOffset, endOffset }) => {
+      const selectedText = currentValue.substring(startOffset, endOffset);
+      const hasPrefix = startOffset >= prefix.length && currentValue.substring(startOffset - prefix.length, startOffset) === prefix;
+      const hasSuffix = endOffset + suffix.length <= currentValue.length && currentValue.substring(endOffset, endOffset + suffix.length) === suffix;
+
+      if (hasPrefix && hasSuffix) {
+        return {
+          newValue: currentValue.substring(0, startOffset - prefix.length) +
+            selectedText +
+            currentValue.substring(endOffset + suffix.length),
+          selectionStart: startOffset - prefix.length,
+          selectionEnd: endOffset - prefix.length
+        };
+      }
+
+      if (selectedText) {
+        const wrappedText = prefix + selectedText + suffix;
+        return {
+          newValue: currentValue.substring(0, startOffset) + wrappedText + currentValue.substring(endOffset),
+          selectionStart: startOffset + prefix.length,
+          selectionEnd: startOffset + prefix.length + selectedText.length
+        };
+      }
+
+      const wrappedText = prefix + suffix;
+      return {
+        newValue: currentValue.substring(0, startOffset) + wrappedText + currentValue.substring(endOffset),
+        selectionStart: startOffset + prefix.length,
+        selectionEnd: startOffset + prefix.length
+      };
+    }, 'editor-wrap-text');
+  }
+
+  tryInsertTextMonaco(text) {
+    const insertText = typeof text === 'string' ? text : String(text ?? '');
+    return this.applyMonacoSelectionTransform(({ currentValue, startOffset, endOffset }) => {
+      return {
+        newValue: currentValue.substring(0, startOffset) + insertText + currentValue.substring(endOffset),
+        selectionStart: startOffset + insertText.length,
+        selectionEnd: startOffset + insertText.length
+      };
+    }, 'editor-insert-text');
+  }
+
+  tryInsertAtLineStartMonaco(prefix) {
+    return this.applyMonacoSelectionTransform(({ currentValue, startOffset }) => {
+      const lineStart = currentValue.lastIndexOf('\n', startOffset - 1) + 1;
+      const lineEnd = currentValue.indexOf('\n', startOffset);
+      const safeLineEnd = lineEnd === -1 ? currentValue.length : lineEnd;
+      const lineText = currentValue.substring(lineStart, safeLineEnd);
+
+      let newLine;
+      let newCursor;
+      if (lineText.startsWith(prefix)) {
+        newLine = lineText.substring(prefix.length);
+        newCursor = Math.max(lineStart, startOffset - prefix.length);
+      } else {
+        newLine = prefix + lineText;
+        newCursor = startOffset + prefix.length;
+      }
+
+      const maxCursor = lineStart + newLine.length;
+      const clampedCursor = Math.max(lineStart, Math.min(newCursor, maxCursor));
+
+      return {
+        newValue: currentValue.substring(0, lineStart) + newLine + currentValue.substring(safeLineEnd),
+        selectionStart: clampedCursor,
+        selectionEnd: clampedCursor
+      };
+    }, 'editor-insert-line-prefix');
+  }
+
+  trySetHeadingMonaco(level) {
+    if (level < 1 || level > 6) return false;
+
+    return this.applyMonacoSelectionTransform(({ currentValue, startOffset }) => {
+      const prefix = '#'.repeat(level) + ' ';
+      const lineStart = currentValue.lastIndexOf('\n', startOffset - 1) + 1;
+      const lineEndIdx = currentValue.indexOf('\n', startOffset);
+      const lineEnd = lineEndIdx === -1 ? currentValue.length : lineEndIdx;
+      const lineText = currentValue.substring(lineStart, lineEnd);
+
+      const headingRegex = /^#{1,6}\s+/;
+      const currentHeadingMatch = lineText.match(headingRegex);
+      const currentHeadingPrefix = currentHeadingMatch ? currentHeadingMatch[0] : '';
+      const hasDesired = lineText.startsWith(prefix);
+      const strippedLine = lineText.replace(headingRegex, '');
+
+      const newLine = hasDesired ? strippedLine : prefix + strippedLine;
+      const newValue = currentValue.substring(0, lineStart) + newLine + currentValue.substring(lineEnd);
+
+      const cursorOffset = Math.max(0, startOffset - lineStart);
+      const cursorInStripped = currentHeadingPrefix
+        ? Math.max(0, cursorOffset - currentHeadingPrefix.length)
+        : cursorOffset;
+      const baseOffset = hasDesired ? lineStart : lineStart + prefix.length;
+      const maxCursor = lineStart + newLine.length;
+      const newPos = Math.max(lineStart, Math.min(baseOffset + cursorInStripped, maxCursor));
+
+      return {
+        newValue,
+        selectionStart: newPos,
+        selectionEnd: newPos
+      };
+    }, 'editor-set-heading');
+  }
+
   // Text manipulation functions
   insertText(text) {
+    if (this.tryInsertTextMonaco(text)) {
+      return;
+    }
+
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
@@ -22,13 +250,15 @@ class EditorManager {
     this.markdownEditor.value = currentValue.substring(0, start) + text + currentValue.substring(end);
     this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + text.length;
     this.markdownEditor.focus();
-    
-    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-      window.MarkTideRenderer.debouncedRender();
-    }
+
+    this.triggerRender();
   }
 
   wrapText(prefix, suffix = '') {
+    if (this.tryWrapTextMonaco(prefix, suffix)) {
+      return;
+    }
+
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
@@ -65,13 +295,15 @@ class EditorManager {
     }
 
     this.markdownEditor.focus();
-    
-    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-      window.MarkTideRenderer.debouncedRender();
-    }
+
+    this.triggerRender();
   }
 
   insertAtLineStart(prefix) {
+    if (this.tryInsertAtLineStartMonaco(prefix)) {
+      return;
+    }
+
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
@@ -94,108 +326,16 @@ class EditorManager {
       this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + prefix.length;
     }
     this.markdownEditor.focus();
-    
-    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-      window.MarkTideRenderer.debouncedRender();
-    }
+
+    this.triggerRender();
   }
 
-  handleMouseUp(e) {
-    // Fix double-click word selection to not include trailing spaces
-    if (e.detail === 2) { // Double-click
-      const start = this.markdownEditor.selectionStart;
-      const end = this.markdownEditor.selectionEnd;
-      const selectedText = this.markdownEditor.value.substring(start, end);
-      
-      // Trim trailing whitespace but keep leading whitespace intact
-      const trimmedText = selectedText.replace(/\s+$/, '');
-      if (trimmedText.length !== selectedText.length) {
-        this.markdownEditor.setSelectionRange(start, start + trimmedText.length);
-      }
-    }
-
-    // Triple-click usually selects the whole line/paragraph – trim trailing spaces/newlines
-    if (e.detail === 3) {
-      const start = this.markdownEditor.selectionStart;
-      const end = this.markdownEditor.selectionEnd;
-      const selectedText = this.markdownEditor.value.substring(start, end);
-      
-      // Remove trailing whitespace *and* line breaks but keep leading spaces intact
-      const trimmedText = selectedText.replace(/[\s\n]+$/, '');
-      if (trimmedText.length !== selectedText.length) {
-        this.markdownEditor.setSelectionRange(start, start + trimmedText.length);
-      }
-    }
-  }
-
-  handleKeydown(e) {
-    if (!this.markdownEditor) return;
-    // Only handle plain Enter (no modifiers)
-    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
-
-    const editor = this.markdownEditor;
-    const pos = editor.selectionStart;
-    if (pos !== editor.selectionEnd) return; // ignore selections
-
-    const value = editor.value;
-    const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
-    const lineEndIdx = value.indexOf('\n', pos);
-    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
-
-    const leftOfCursor = value.substring(lineStart, pos);
-    const rightOfCursor = value.substring(pos, lineEnd);
-
-    // Only trigger when nothing after cursor on the line
-    if (rightOfCursor.trim().length > 0) return;
-
-    // Match ``` or ```lang (letters, numbers, dash, underscore) with optional trailing spaces
-    const fenceOpenRegex = /^```[A-Za-z0-9_-]*\s*$/;
-
-    const trimmedLeft = leftOfCursor.trim();
-    if (!fenceOpenRegex.test(trimmedLeft)) return;
-
-    // Determine if we're currently inside a fence before this line.
-    // If so, this line is a CLOSING fence and we must not auto-insert another.
-    // Simple, robust heuristic: toggle state on every line that starts with ``` up to current lineStart.
-    const before = value.substring(0, lineStart);
-    const linesBefore = before.split('\n');
-    let inFence = false;
-    for (let i = 0; i < linesBefore.length; i += 1) {
-      const t = linesBefore[i].trim();
-      if (fenceOpenRegex.test(t)) {
-        inFence = !inFence;
-      }
-    }
-    // If we're inside a fence before this line, current fence is a closer → do nothing
-    if (inFence) return;
-
-    // Avoid duplicate if a closer already follows immediately
-    const after = value.substring(pos);
-    if (/^\n?```/.test(after)) return;
-
-    // Perform insertion: newline, blank line, then closing fence. Caret on the blank line
-    e.preventDefault();
-
-    if (window.MarkTideUndoRedo) {
-      window.MarkTideUndoRedo.saveToUndoStack();
-    }
-
-    const insertText = '\n\n```';
-    editor.value = value.substring(0, pos) + insertText + value.substring(pos);
-    // Place caret on the blank line between fences
-    editor.selectionStart = editor.selectionEnd = pos + 1;
-    editor.focus();
-
-    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-      window.MarkTideRenderer.debouncedRender();
-    }
-    if (window.MarkTideUtils) {
-      window.MarkTideUtils.updateDocumentStats();
-    }
-  }
   // New: Set heading level (1-6) similar to MS Word
   setHeading(level) {
     if (level < 1 || level > 6) return;
+    if (this.trySetHeadingMonaco(level)) {
+      return;
+    }
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
@@ -232,9 +372,7 @@ class EditorManager {
 
     this.markdownEditor.focus();
 
-    if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-      window.MarkTideRenderer.debouncedRender();
-    }
+    this.triggerRender();
   }
 }
 

@@ -1,189 +1,184 @@
-# 🚀 MarkTide Viewer - Free Online Markdown Editor & Converter
+# MarkTide
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-brightgreen)](https://marktide.netlify.app/)
-[![GitHub Stars](https://img.shields.io/github/stars/zigzag-007/MarkTide-Viewer?style=social)](https://github.com/zigzag-007/MarkTide-Viewer/stargazers)
-[![GitHub License](https://img.shields.io/github/license/zigzag-007/MarkTide-Viewer)](https://github.com/zigzag-007/MarkTide-Viewer/blob/main/LICENSE)
+## The Ultimate Free Online Markdown Editor & Converter
 
-> **The Ultimate Free Online Markdown Editor** - Convert Markdown to PDF, HTML, and Text with Real-time Preview
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-Visit%20Site-4CAF50?style=for-the-badge)](https://marktide.netlify.app/)
+[![GitHub Stars](https://img.shields.io/github/stars/zigzag-007/MarkTide-Viewer?style=for-the-badge&logo=github&color=yellow)](https://github.com/zigzag-007/MarkTide-Viewer/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](https://github.com/zigzag-007/MarkTide-Viewer/blob/main/LICENSE)
+[![No Registration](https://img.shields.io/badge/No%20Registration-Required-orange?style=for-the-badge)](https://marktide.netlify.app/)
+[![Free Forever](https://img.shields.io/badge/Free-Forever-brightgreen?style=for-the-badge)](https://marktide.netlify.app/)
 
-## 🌟 What is MarkTide Viewer?
+**Write. Preview. Export. All in your browser. No login. No cost. No limits.**
 
-MarkTide Viewer is a powerful, **free online markdown editor and converter** that runs entirely in your browser. No downloads, no registration required! Perfect for developers, writers, students, and anyone who works with Markdown files.
+[🚀 Launch MarkTide](https://marktide.netlify.app/) | [🐛 Report Bug](https://github.com/zigzag-007/MarkTide-Viewer/issues) | [💡 Request Feature](https://github.com/zigzag-007/MarkTide-Viewer/issues)
 
-### 🎯 Perfect For:
+---
 
-- **Developers** writing documentation
-- **Students** creating notes and assignments  
-- **Writers** drafting articles and blogs
-- **Technical writers** creating manuals
-- **GitHub users** previewing README files
-- **Anyone** who needs to convert Markdown to PDF or HTML
+## 📸 Preview
 
-## ✨ Key Features
+| Desktop                                         | Mobile                                        |
+| ----------------------------------------------- | --------------------------------------------- |
+| ![Desktop View](assets/img/desktop-preview.png) | ![Mobile View](assets/img/mobile-preview.png) |
 
-### 📝 **Markdown Editor**
+---
 
-- Real-time live preview
-- Syntax highlighting with 190+ programming languages
-- Formatting toolbar (bold/italic/code, lists, etc.)
-- Drag & drop file support
-- Drag & drop file support (with replace warning)
+## ✨ What is MarkTide?
 
-### 🔄 **Format Conversion**
+MarkTide is a **powerful, privacy-first Markdown editor** that runs entirely in your browser. No downloads, no accounts, no tracking. Whether you're a developer writing docs, a student drafting notes, or a writer crafting content, MarkTide gives you a clean, fast, and beautiful editing experience with one-click export to PDF, HTML, or plain text.
 
-- **Markdown to PDF** - Professional document export
-- **Markdown to HTML** - Web-ready conversion
-- **Markdown to Text** - Plain text extraction
-- **GitHub-flavored Markdown** support
+---
 
-### 🎨 **User Experience**
+## 🎯 Who Is It For?
 
-- Beautiful dark & light themes
-- Responsive design (works on mobile, tablet, desktop)
-- Split-screen editor and preview
-- Scroll synchronization
+|      👨‍💻 Developers       |          🎓 Students          |      ✍️ Writers      | 🛠️ Technical Writers |
+| :----------------------: | :---------------------------: | :------------------: | :------------------: |
+| API docs, READMEs, specs | Notes, reports, thesis drafts | Blog posts, articles |   Manuals, guides    |
+
+---
+
+## 💡 Key Features
+
+### 📝 Editor
+
+- **Monaco-powered** editor (same engine as VS Code)
+- Real-time live preview with scroll sync
+- Syntax highlighting for **190+ languages**
+- Drag & drop `.md` file support
+- Formatting toolbar: bold, italic, code, lists, and more
+
+### 🔄 Export & Conversion
+
+- **Markdown to PDF** - clean, print-ready output
+- **Markdown to HTML** - web-ready with styles
+- **Markdown to Plain Text** - stripped for any use
+- Full **GitHub Flavored Markdown (GFM)** support
+
+### 🎨 Experience & Design
+
+- Beautiful **dark & light themes** with smooth radial transitions
+- **Split-screen** editor and preview layout
+- Fully **responsive** - works on mobile, tablet, and desktop
 - Keyboard shortcuts for power users
 
-### 🚀 **Advanced Features**
+### 🚀 Advanced Capabilities
 
-- Mermaid diagram support
-- Mathematical expressions (LaTeX)
-- Tables, task lists, and code blocks
-- Emoji support
-- Print-friendly layouts
+- 📊 **Mermaid diagrams** - flowcharts, sequence diagrams, and more
+- 🧮 **LaTeX math expressions** - powered by MathJax
+- ✅ Task lists, tables, and fenced code blocks
+- 😊 Emoji support
+- 🖨️ Print-friendly layouts
 
-## 🚀 Quick Start
+---
 
-1. **Visit**: [https://marktide.netlify.app/](https://marktide.netlify.app/)
-2. **Start typing** or **drag & drop** your `.md` file
-3. **See live preview** in real-time
-4. **Export** to PDF, HTML, or Text when ready
+## ⚡ Quick Start
 
-No installation needed - works instantly in any modern web browser!
+No installation needed. Open your browser and go:
 
-## 🎯 Use Cases
-
-### For Developers
-
-```markdown
-# Project Documentation
-- API documentation
-- README files
-- Code documentation
-- Technical specifications
+```text
+https://marktide.netlify.app/
 ```
 
-### For Students & Academics
+1. **Type** your Markdown, or **drag & drop** an `.md` file
+2. **Preview** updates live in real-time
+3. **Export** to PDF, HTML, or Text in one click
 
-```markdown
-# Academic Work
-- Research papers
-- Study notes  
-- Assignment reports
-- Thesis drafts
-```
+---
 
-### For Content Creators
+## 🏆 How MarkTide Compares
 
-```markdown
-# Content Creation
-- Blog posts
-- Articles
-- Documentation
-- User manuals
-```
+| Feature                       | MarkTide |      Other Tools       |
+| :---------------------------- | :------: | :--------------------: |
+| Free Forever                  |    ✅    |     ❌ Most charge     |
+| No Registration               |    ✅    | ❌ Most require signup |
+| Privacy Focused (no tracking) |    ✅    |  ❌ Most track users   |
+| Open Source                   |    ✅    |   ❌ Most are closed   |
+| PDF Export                    |    ✅    |        ✅ Some         |
+| Real-time Preview             |    ✅    |        ✅ Some         |
+| Mobile Friendly               |    ✅    | ❌ Mostly desktop only |
+| Mermaid Diagrams              |    ✅    |       ❌ Rarely        |
+| LaTeX Math Support            |    ✅    |       ❌ Rarely        |
+
+---
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **Markdown Processing**: Marked.js
-- **Syntax Highlighting**: Highlight.js
-- **PDF Generation**: html2pdf.js
-- **Math Rendering**: MathJax
-- **Diagrams**: Mermaid.js
+| Layer               | Technology                                                  |
+| :------------------ | :---------------------------------------------------------- |
+| Frontend            | Vanilla JavaScript, HTML5, CSS3                             |
+| Editor Engine       | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
+| Markdown Processing | [Marked.js](https://marked.js.org/)                         |
+| Syntax Highlighting | [Highlight.js](https://highlightjs.org/)                    |
+| PDF Generation      | [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/)     |
+| Math Rendering      | [MathJax](https://www.mathjax.org/)                         |
+| Diagrams            | [Mermaid.js](https://mermaid.js.org/)                       |
+| Theme Transitions   | View Transitions API + ripple fallback                      |
+
+---
 
 ## 🔧 Local Development
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/zigzag-007/MarkTide-Viewer.git
 
-# Navigate to project directory
+# 2. Navigate to the project folder
 cd MarkTide-Viewer
 
-# Open in browser (or use live server)
+# 3. Open in browser (or use a live server extension)
 open index.html
 ```
 
-## 📱 Browser Support
-
-- ✅ Chrome (recommended)
-- ✅ Firefox
-- ✅ Safari
-- ✅ Edge
-- ✅ Mobile browsers
-
-## 🌟 Why Choose MarkTide Viewer?
-
-| Feature | MarkTide Viewer | Other Tools |
-|---------|----------------|-------------|
-| **Free Forever** | ✅ | ❌ (Most charge) |
-| **No Registration** | ✅ | ❌ (Most require signup) |
-| **Works Offline** | ✅ | ❌ (Most need internet) |
-| **Privacy Focused** | ✅ | ❌ (Most track users) |
-| **Open Source** | ✅ | ❌ (Most are closed) |
-| **PDF Export** | ✅ | ✅ (Some do) |
-| **Real-time Preview** | ✅ | ✅ (Some do) |
-| **Mobile Friendly** | ✅ | ❌ (Most desktop only) |
-
-## 🎨 Screenshots
-
-### Desktop Experience
-
-![Desktop View](assets/img/desktop-preview.png)
-
-### Mobile Experience
-
-![Mobile View](assets/img/mobile-preview.png)
-
-## 🔍 Keywords
-
-`markdown editor` `markdown converter` `markdown to pdf` `markdown to html` `online markdown` `free markdown editor` `markdown viewer` `md converter` `github markdown` `markdown preview` `web markdown editor` `browser markdown` `markdown online tool`
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👨‍💻 Author
-
-**Zig Zag** - [GitHub Profile](https://github.com/zigzag-007)
-
-- 🌐 Website: [https://marktide.netlify.app/](https://marktide.netlify.app/)
-- 📧 Contact: Dark Net Studio
-
-## ⭐ Support
-
-If you find MarkTide Viewer helpful, please consider:
-
-- ⭐ **Starring** this repository
-- 🐛 **Reporting** any bugs you find
-- 💡 **Suggesting** new features
-- 🔄 **Sharing** with your network
+> 💡 **Tip:** For the best development experience, use the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code.
 
 ---
 
-### 🚀 Try MarkTide Viewer Now!
+## 📱 Browser Support
 
-**[Launch MarkTide Viewer →](https://marktide.netlify.app/)**
+|     Chrome     | Firefox | Safari | Edge | Mobile |
+| :------------: | :-----: | :----: | :--: | :----: |
+| ✅ Recommended |   ✅    |   ✅   |  ✅  |   ✅   |
 
-_Free • No Registration • Works in Browser_ 
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, and feature requests are all welcome!
+
+1. **Fork** the repository
+2. **Create** a feature branch → `git checkout -b feature/YourFeature`
+3. **Commit** your changes → `git commit -m 'Add YourFeature'`
+4. **Push** to the branch → `git push origin feature/YourFeature`
+5. **Open** a Pull Request
+
+Please check the [open issues](https://github.com/zigzag-007/MarkTide-Viewer/issues) before submitting new ones.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**. See the [LICENSE](https://github.com/zigzag-007/MarkTide-Viewer/blob/main/LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+**Zig Zag** | [GitHub](https://github.com/zigzag-007) | [MarkTide](https://marktide.netlify.app/)
+
+Built with ❤️ by Dark Net Studio
+
+---
+
+## ⭐ Support the Project
+
+If MarkTide has been useful to you, consider giving it a star. It helps others discover it!
+
+[![Star on GitHub](https://img.shields.io/github/stars/zigzag-007/MarkTide-Viewer?style=social)](https://github.com/zigzag-007/MarkTide-Viewer/stargazers)
+
+> 🐛 Found a bug? [Report it here](https://github.com/zigzag-007/MarkTide-Viewer/issues)
+> 💡 Got an idea? [Suggest a feature](https://github.com/zigzag-007/MarkTide-Viewer/issues)
+
+---
+
+Free | Open Source | No Registration | Works in Your Browser
+
+[🚀 Launch MarkTide Now](https://marktide.netlify.app/)

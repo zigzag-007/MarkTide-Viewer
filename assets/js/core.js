@@ -4,6 +4,11 @@ class MarkTideCore {
     this.initialized = false;
     this.markdownEditor = null;
     this.markdownPreview = null;
+    this.loadingStartedAt = 0;
+    this.loadingHidden = false;
+    this.loadingMaxTimer = null;
+    this.LOADING_MIN_DURATION = 1400;
+    this.LOADING_MAX_DURATION = 12000;
   }
 
   init() {
@@ -24,12 +29,16 @@ class MarkTideCore {
   showLoadingScreen() {
     // Apply theme immediately for loading screen
     this.applyInitialTheme();
+    this.loadingStartedAt = performance.now();
+    this.loadingHidden = false;
+    this.setLoadingScrollLock(true);
     
     // Ensure loading screen is visible and hide main content initially
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.querySelector('.app-container');
     
     if (loadingScreen) {
+      loadingScreen.classList.remove('fade-out');
       loadingScreen.style.display = 'flex';
     }
     
@@ -37,13 +46,23 @@ class MarkTideCore {
       appContainer.style.visibility = 'hidden';
     }
     
-    // Hide loading screen after 2 seconds
-    setTimeout(() => {
+    // Safety fallback: never keep wrapper forever if any async dependency fails.
+    if (this.loadingMaxTimer) {
+      clearTimeout(this.loadingMaxTimer);
+    }
+    this.loadingMaxTimer = setTimeout(() => {
       this.hideLoadingScreen();
-    }, 2000);
+    }, this.LOADING_MAX_DURATION);
   }
 
   hideLoadingScreen() {
+    if (this.loadingHidden) return;
+    this.loadingHidden = true;
+    if (this.loadingMaxTimer) {
+      clearTimeout(this.loadingMaxTimer);
+      this.loadingMaxTimer = null;
+    }
+
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.querySelector('.app-container');
     
@@ -59,6 +78,79 @@ class MarkTideCore {
     if (appContainer) {
       appContainer.style.visibility = 'visible';
     }
+
+    this.setLoadingScrollLock(false);
+  }
+
+  setLoadingScrollLock(isLoading) {
+    const root = document.documentElement;
+    if (root) {
+      root.classList.toggle('loading-active', isLoading);
+    }
+    if (document.body) {
+      document.body.classList.toggle('loading-active', isLoading);
+    }
+  }
+
+  waitForMinimumLoadingDuration() {
+    const elapsed = performance.now() - this.loadingStartedAt;
+    const remaining = Math.max(0, this.LOADING_MIN_DURATION - elapsed);
+    return new Promise((resolve) => setTimeout(resolve, remaining));
+  }
+
+  waitForMonacoReady(timeoutMs = 9000) {
+    const editorHost = document.getElementById('markdown-editor');
+    if (!editorHost) return Promise.resolve(false);
+    if (editorHost.dataset.monacoReady === 'true') return Promise.resolve(true);
+
+    return new Promise((resolve) => {
+      let done = false;
+      let pollId = null;
+      let timeoutId = null;
+
+      const finish = (isReady) => {
+        if (done) return;
+        done = true;
+        if (pollId) clearInterval(pollId);
+        if (timeoutId) clearTimeout(timeoutId);
+        window.removeEventListener('marktide:monaco-ready', handleReady);
+        resolve(isReady);
+      };
+
+      const handleReady = () => finish(true);
+      window.addEventListener('marktide:monaco-ready', handleReady, { once: true });
+
+      pollId = setInterval(() => {
+        if (editorHost.dataset.monacoReady === 'true') {
+          finish(true);
+        }
+      }, 50);
+
+      timeoutId = setTimeout(() => finish(false), timeoutMs);
+    });
+  }
+
+  waitForNextPaint(frames = 2) {
+    return new Promise((resolve) => {
+      const step = () => {
+        if (frames <= 0) {
+          resolve();
+          return;
+        }
+        frames -= 1;
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  async completeLoadingWhenReady() {
+    await Promise.all([
+      this.waitForMinimumLoadingDuration(),
+      this.waitForMonacoReady(),
+      this.waitForNextPaint(2)
+    ]);
+    this.hideLoadingScreen();
   }
 
   initializeApp() {
@@ -89,9 +181,11 @@ class MarkTideCore {
       this.setupEventListeners();
       
       this.initialized = true;
+      this.completeLoadingWhenReady();
       // Initialization completed successfully (for debugging, can be re-enabled if needed)
     } catch (error) {
-      console.error('Failed to initialize MarkTide Viewer:', error);
+      console.error('Failed to initialize MarkTide Code Editor & Viewer:', error);
+      this.hideLoadingScreen();
     }
   }
 
@@ -129,8 +223,8 @@ class MarkTideCore {
       { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
       { id: 'format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
       { id: 'mobile-format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
-      { id: 'format-undo', action: () => window.MarkTideUndoRedo.undoAction() },
-      { id: 'format-redo', action: () => window.MarkTideUndoRedo.redoAction() }
+      { id: 'format-undo', action: () => this.undoTextAction() },
+      { id: 'format-redo', action: () => this.redoTextAction() }
     ];
 
     formatButtons.forEach(({ id, action }) => {
@@ -144,45 +238,81 @@ class MarkTideCore {
     });
   }
 
+  runMonacoCommand(commandId) {
+    if (!window.MarkTideKeyboardShortcuts || typeof window.MarkTideKeyboardShortcuts.runMonacoCommand !== 'function') {
+      return false;
+    }
+    return window.MarkTideKeyboardShortcuts.runMonacoCommand(commandId);
+  }
+
+  undoTextAction() {
+    if (this.runMonacoCommand('undo')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.undoAction();
+    }
+  }
+
+  redoTextAction() {
+    if (this.runMonacoCommand('redo')) {
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
+    if (window.MarkTideUndoRedo) {
+      window.MarkTideUndoRedo.redoAction();
+    }
+  }
+
   alignText(alignment) {
+    const prefix = `<div style="text-align: ${alignment};">`;
+    const suffix = `</div>`;
+
+    // Reuse editor wrap path so Monaco keeps native undo/redo history intact.
+    if (window.MarkTideEditor && typeof window.MarkTideEditor.wrapText === 'function') {
+      window.MarkTideEditor.wrapText(prefix, suffix);
+      return;
+    }
+
+    if (!this.markdownEditor) return;
     if (window.MarkTideUndoRedo) {
       window.MarkTideUndoRedo.saveToUndoStack();
     }
-    
-    const prefix = `<div style="text-align: ${alignment};">`;
-    const suffix = `</div>`;
-    
+
     const start = this.markdownEditor.selectionStart;
     const end = this.markdownEditor.selectionEnd;
     const currentValue = this.markdownEditor.value;
     const selectedText = currentValue.substring(start, end);
-    
+
+    // Match editor.js wrapText(): toggle off when the same wrapper directly surrounds the selection.
     const hasPrefix = start >= prefix.length && currentValue.substring(start - prefix.length, start) === prefix;
     const hasSuffix = end + suffix.length <= currentValue.length && currentValue.substring(end, end + suffix.length) === suffix;
 
     if (hasPrefix && hasSuffix) {
-      // Remove alignment wrapper
-      this.markdownEditor.value = currentValue.substring(0, start - prefix.length) +
-                                  selectedText +
-                                  currentValue.substring(end + suffix.length);
+      const newValue =
+        currentValue.substring(0, start - prefix.length) + selectedText + currentValue.substring(end + suffix.length);
+      this.markdownEditor.value = newValue;
       this.markdownEditor.selectionStart = start - prefix.length;
       this.markdownEditor.selectionEnd = end - prefix.length;
     } else if (selectedText) {
-      // Wrap selected text with alignment div
-      const alignedText = prefix + selectedText + suffix;
-      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
+      const wrappedText = prefix + selectedText + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + wrappedText + currentValue.substring(end);
       this.markdownEditor.selectionStart = start + prefix.length;
       this.markdownEditor.selectionEnd = start + prefix.length + selectedText.length;
     } else {
-      // No selection: insert empty alignment div and place cursor inside
-      const alignedText = prefix + suffix;
-      this.markdownEditor.value = currentValue.substring(0, start) + alignedText + currentValue.substring(end);
+      const wrappedText = prefix + suffix;
+      this.markdownEditor.value = currentValue.substring(0, start) + wrappedText + currentValue.substring(end);
       this.markdownEditor.selectionStart = this.markdownEditor.selectionEnd = start + prefix.length;
     }
-    
+
     this.markdownEditor.focus();
-    
-    // Trigger re-render
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
     }
@@ -192,6 +322,8 @@ class MarkTideCore {
     // Apply saved theme or default
     const savedTheme = localStorage.getItem('marktide-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle('light', savedTheme === 'light');
   }
   
   applyInitialTheme() {
@@ -203,6 +335,8 @@ class MarkTideCore {
       savedTheme = prefersDark ? 'dark' : 'light';
     }
     document.documentElement.setAttribute("data-theme", savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle('light', savedTheme === 'light');
   }
 
   loadSampleContent() {
@@ -210,7 +344,7 @@ class MarkTideCore {
 
     const sampleMarkdown = (window.MarkTideSample && window.MarkTideSample.getDefaultMarkdown)
       ? window.MarkTideSample.getDefaultMarkdown()
-      : '# Welcome to MarkTide Viewer\n\nStart typing...';
+      : '# Welcome to MarkTide Code Editor & Viewer\n\nStart typing...';
 
     this.markdownEditor.value = sampleMarkdown;
     
@@ -247,28 +381,12 @@ class MarkTideCore {
       }
     });
 
-    this.markdownEditor.addEventListener('keydown', (e) => {
-      if (window.MarkTideUndoRedo) {
-        window.MarkTideUndoRedo.saveToUndoStack();
-      }
-      if (window.MarkTideEditor && window.MarkTideEditor.handleKeydown) {
-        window.MarkTideEditor.handleKeydown(e);
-      }
-    });
-
     // Handle page refresh/close warning
     window.addEventListener('beforeunload', (e) => {
       if (hasUnsavedChanges && this.markdownEditor.value !== originalContent) {
         e.preventDefault();
         e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
         return e.returnValue;
-      }
-    });
-
-    // Fix double-click word selection behavior
-    this.markdownEditor.addEventListener('mouseup', (e) => {
-      if (window.MarkTideEditor) {
-        window.MarkTideEditor.handleMouseUp(e);
       }
     });
 

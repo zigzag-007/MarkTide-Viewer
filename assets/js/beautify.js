@@ -9,6 +9,26 @@ class BeautifyManager {
     this.toastEl = null; // deprecated in favor of soft-breaks notifications
   }
 
+  applyMonacoFormattedChange(formatted, selectionStart, selectionEnd) {
+    if (!window.MarkTideEditor) return false;
+    if (typeof window.MarkTideEditor.getMonacoEditorAndModel !== 'function') return false;
+    if (typeof window.MarkTideEditor.applyMonacoTextUpdate !== 'function') return false;
+
+    const context = window.MarkTideEditor.getMonacoEditorAndModel();
+    if (!context) return false;
+
+    const { editor, model } = context;
+    return window.MarkTideEditor.applyMonacoTextUpdate({
+      editor,
+      model,
+      currentValue: model.getValue(),
+      newValue: formatted,
+      selectionStart,
+      selectionEnd,
+      sourceId: 'beautify-markdown'
+    });
+  }
+
   async ensureLoaded() {
     if (this.loaded || this.loading) {
       while (this.loading && !this.loaded) {
@@ -74,18 +94,23 @@ class BeautifyManager {
 
       // Avoid useless updates
       if (formatted && formatted !== source) {
-        editor.value = formatted;
         // Best-effort caret restore: keep at same character index if possible
         const newLength = formatted.length;
         const deltaStart = Math.min(selectionStart, newLength);
         const deltaEnd = Math.min(selectionEnd, newLength);
-        editor.selectionStart = deltaStart;
-        editor.selectionEnd = deltaEnd;
+        const appliedWithMonaco = this.applyMonacoFormattedChange(formatted, deltaStart, deltaEnd);
 
-        // Trigger UI updates
-        if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
-          window.MarkTideRenderer.debouncedRender();
+        if (!appliedWithMonaco) {
+          editor.value = formatted;
+          editor.selectionStart = deltaStart;
+          editor.selectionEnd = deltaEnd;
+
+          // Trigger UI updates
+          if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+            window.MarkTideRenderer.debouncedRender();
+          }
         }
+
         if (window.MarkTideUtils) {
           window.MarkTideUtils.updateDocumentStats();
         }

@@ -62,7 +62,29 @@ class UndoRedoManager {
     }
   }
 
+  getMonacoEditor() {
+    if (window.MarkTideMonaco && typeof window.MarkTideMonaco.getEditor === "function") {
+      return window.MarkTideMonaco.getEditor();
+    }
+    return null;
+  }
+
   undoAction() {
+    const monacoEditor = this.getMonacoEditor();
+    if (monacoEditor) {
+      monacoEditor.focus();
+      const undoAction = monacoEditor.getAction && monacoEditor.getAction('undo');
+      if (undoAction && typeof undoAction.run === 'function') {
+        undoAction.run();
+      } else {
+        monacoEditor.trigger('keyboard', 'undo', null);
+      }
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
     if (this.undoStack.length > 0) {
       // Save current state to redo stack
       this.redoStack.push(this.lastSavedState);
@@ -75,6 +97,21 @@ class UndoRedoManager {
   }
 
   redoAction() {
+    const monacoEditor = this.getMonacoEditor();
+    if (monacoEditor) {
+      monacoEditor.focus();
+      const redoAction = monacoEditor.getAction && monacoEditor.getAction('redo');
+      if (redoAction && typeof redoAction.run === 'function') {
+        redoAction.run();
+      } else {
+        monacoEditor.trigger('keyboard', 'redo', null);
+      }
+      if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
+        window.MarkTideRenderer.debouncedRender();
+      }
+      return;
+    }
+
     if (this.redoStack.length > 0) {
       // Save current state to undo stack
       this.undoStack.push(this.lastSavedState);

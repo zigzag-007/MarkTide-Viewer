@@ -9,7 +9,8 @@
    ================================================================= */
 
 /* ===== GROK DARK THEME VARIABLES ===== */
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root.dark {
   /* Base colors - Grok's pure black aesthetic */
   --bg-color: #000000;
   --text-color: #ffffff;
@@ -34,7 +35,6 @@
   --editor-bg: #1a1a1a; /* Dark gray for editor */
   --editor-bg-rgb: 26, 26, 26; /* RGB values for frosted glass */
   --preview-bg: #000000; /* Pure black for preview */
-  --preview-bg-rgb: 0, 0, 0; /* RGB values for frosted glass */
   --preview-text-color: #ffffff;
   
   /* Table colors */
@@ -45,8 +45,6 @@
 
   
   /* Dropzone colors */
-  --dropzone-bg: rgba(26, 26, 26, 0.8);
-  
   /* Code highlighting */
   --code-bg: #1a1a1a;
   --code-pre-bg: #242628;
@@ -66,7 +64,6 @@
   
   /* Hover effects */
   --hover-accent: rgba(79, 195, 247, 0.1);
-  --hover-primary: rgba(79, 195, 247, 0.15);
   --hover-shadow: rgba(79, 195, 247, 0.2);
   --hover-shadow-primary: rgba(79, 195, 247, 0.3);
   
@@ -135,8 +132,6 @@
 }
 /* Grok's signature frosted glass hover effect for buttons and interactive elements */
 [data-theme="dark"] button,
-[data-theme="dark"] .btn,
-[data-theme="dark"] .nav-item,
 [data-theme="dark"] .dropdown-item {
   transition: all 0.2s ease;
   -webkit-backdrop-filter: blur(0px);
@@ -144,22 +139,12 @@
 }
 
 [data-theme="dark"] button:hover,
-[data-theme="dark"] .btn:hover,
-[data-theme="dark"] .nav-item:hover,
 [data-theme="dark"] .dropdown-item:hover {
   background-color: var(--hover-accent) !important; /* Light blue with transparency */
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-radius: 4px;
   box-shadow: 0 0 10px var(--hover-shadow);
-}
-
-/* Enhanced frosted glass for primary buttons */
-[data-theme="dark"] .btn-primary:hover {
-  background-color: var(--hover-primary) !important;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 0 15px var(--hover-shadow-primary);
 }
 
 /* ===== DARK MODE LINE NUMBERS ===== */
@@ -340,30 +325,10 @@
   font-weight: 700 !important;
   color: var(--blockquote-bold-color) !important;
 }
-/* App header title color in dark mode */
-[data-theme="dark"] .app-header .h4 {
-  color: var(--text-color); /* Use dark theme text color for MarkTide Viewer title */
-}
-
-/* GitHub link color in dark mode */
-[data-theme="dark"] .app-header .github-link {
-  color: var(--text-color); /* Use dark theme text color for GitHub icon */
-}
-
-/* GitHub link hover state in dark mode */
-[data-theme="dark"] .app-header .github-link:hover {
-  color: var(--accent-color); /* Use dark theme accent color for GitHub icon on hover */
-}
-
-/* =================================================================
-   DEPRECATED LOADING SCREEN STYLES - REMOVE IN PRODUCTION
-   ================================================================= */
-/* TODO: Remove these loading screen styles as they're not used in production */
-
-/* Dark theme numbered list styling - Grok-style improvements */
-[data-theme="dark"] .markdown-body ol li::marker {
-  color: var(--list-marker-color); /* White numbers for list items */
-  font-weight: 600; /* Bold font weight for better visibility */
+/* Dark theme numbered list styling */
+[data-theme="dark"] .markdown-body ol > li::before {
+  color: var(--list-marker-color);
+  font-weight: 600;
 }
 
 [data-theme="dark"] .markdown-body ol li {
