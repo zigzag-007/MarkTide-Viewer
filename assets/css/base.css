@@ -1518,6 +1518,20 @@
   .markdown-body img {
     background-color: transparent !important;
   }
+
+  .markdown-body img[src*="img.shields.io"] {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    image-rendering: auto;
+  }
+
+  .markdown-body p:has(img[src*="img.shields.io"]) {
+    margin: 12px 0;
+    line-height: 0.75;
+  }
   
   /* --- Lists --- */
   .markdown-body ul {
