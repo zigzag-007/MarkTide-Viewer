@@ -36,7 +36,7 @@
   --editor-bg: #f8f9fa; /* Light gray for editor */
   --editor-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
   --preview-bg: #ffffff; /* Pure white for preview */
-  --preview-text-color: #000000;
+  --preview-text-color: #24292e;
   
   /* Table colors */
   --table-bg: #ffffff;

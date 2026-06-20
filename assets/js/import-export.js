@@ -923,12 +923,12 @@ class ImportExportManager {
             margin: 0 auto;
             padding: 45px;
             background-color: #ffffff !important;
-            color: #000000 !important;
+            color: #24292e !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         }
         .markdown-body {
             background-color: #ffffff !important;
-            color: #000000 !important;
+            color: #24292e !important;
             color-scheme: light;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
             max-width: 920px !important;
@@ -952,10 +952,10 @@ class ImportExportManager {
         }
         
         .markdown-body ul li::marker {
-            color: #000000 !important;
+            color: #24292e !important;
         }
         
-        ${this.getDecimalOutlineListStyles('#000000')}
+        ${this.getDecimalOutlineListStyles('#24292e')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
@@ -969,7 +969,7 @@ class ImportExportManager {
         /* Grok light mode code highlighting */
         .hljs {
             background: #f8f9fa !important;
-            color: #000000 !important;
+            color: #24292e !important;
         }
         
         /* Grok light mode table styles */
@@ -1004,7 +1004,7 @@ class ImportExportManager {
         .markdown-body pre code,
         .markdown-body pre code.hljs {
             background-color: #f8f9fa !important;
-            color: #000000 !important;
+            color: #24292e !important;
             padding: 0 !important;
             font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
