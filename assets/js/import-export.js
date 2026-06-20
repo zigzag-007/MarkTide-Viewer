@@ -1583,7 +1583,7 @@ class ImportExportManager {
     </article>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
     <script>${this.minifyJS(`
         // Apply syntax highlighting to code blocks
         document.querySelectorAll('pre code').forEach((block) => {

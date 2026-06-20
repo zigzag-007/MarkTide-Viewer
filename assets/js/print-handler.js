@@ -100,11 +100,116 @@ class PrintHandler {
     return wrapper.innerHTML;
   }
 
+  stabilizeMermaidDiagrams(printDocument) {
+    printDocument.querySelectorAll('.mermaid svg').forEach((svg) => {
+      const svgNamespace = 'http://www.w3.org/2000/svg';
+
+      svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
+        const labelText = (edgeLabel.textContent || '').trim();
+        if (!labelText) return;
+
+        edgeLabel.querySelectorAll('foreignObject div, foreignObject span, foreignObject p').forEach((labelPart) => {
+          labelPart.style.backgroundColor = '#e8f5e8';
+          labelPart.style.boxDecorationBreak = 'clone';
+          labelPart.style.webkitBoxDecorationBreak = 'clone';
+        });
+
+        edgeLabel.querySelectorAll('foreignObject').forEach((foreignObject) => {
+          const width = Number(foreignObject.getAttribute('width')) || 0;
+          const height = Number(foreignObject.getAttribute('height')) || 0;
+          if (width > 0) {
+            foreignObject.setAttribute('x', '-4');
+            foreignObject.setAttribute('width', String(width + 8));
+          }
+          if (height > 0) {
+            foreignObject.setAttribute('y', '-2');
+            foreignObject.setAttribute('height', String(height + 4));
+          }
+          foreignObject.style.overflow = 'visible';
+        });
+
+        edgeLabel.querySelectorAll('foreignObject span, foreignObject p').forEach((labelPart) => {
+          labelPart.style.display = 'inline-block';
+          labelPart.style.padding = '0 2px';
+          labelPart.style.lineHeight = '1.25';
+        });
+
+        edgeLabel.querySelectorAll('.marktide-edge-label-bg').forEach((rect) => rect.remove());
+
+        const label = edgeLabel.querySelector('.label') || edgeLabel;
+        const text = label.querySelector('text');
+        if (text && typeof text.getBBox === 'function') {
+          try {
+            const box = text.getBBox();
+            if (box.width > 0 && box.height > 0) {
+              const existingHalo = label.querySelector('.marktide-edge-label-halo');
+              if (existingHalo) {
+                existingHalo.remove();
+              }
+
+              const background = printDocument.createElementNS(svgNamespace, 'rect');
+              background.classList.add('marktide-edge-label-bg');
+              background.setAttribute('x', String(box.x - 3));
+              background.setAttribute('y', String(box.y - 2));
+              background.setAttribute('width', String(box.width + 6));
+              background.setAttribute('height', String(box.height + 4));
+              background.setAttribute('fill', '#e8f5e8');
+              background.setAttribute('opacity', '0.95');
+              background.setAttribute('stroke', 'none');
+              label.insertBefore(background, text);
+
+              const halo = text.cloneNode(true);
+              halo.classList.add('marktide-edge-label-halo');
+              halo.setAttribute('fill', 'none');
+              halo.setAttribute('stroke', '#e8f5e8');
+              halo.setAttribute('stroke-width', '8');
+              halo.setAttribute('stroke-linejoin', 'round');
+              halo.setAttribute('paint-order', 'stroke');
+              halo.style.fill = 'none';
+              halo.style.stroke = '#e8f5e8';
+              halo.style.strokeWidth = '8px';
+              halo.style.strokeLinejoin = 'round';
+              label.insertBefore(halo, text);
+
+              text.setAttribute('fill', '#24292e');
+              text.style.fill = '#24292e';
+            }
+          } catch (e) {
+            console.warn("Mermaid edge label background failed:", e);
+          }
+        }
+
+        edgeLabel.querySelectorAll('rect.background, .marktide-edge-label-bg').forEach((rect) => {
+          rect.setAttribute('fill', '#e8f5e8');
+          rect.setAttribute('opacity', '0.95');
+          rect.setAttribute('stroke', 'none');
+          rect.style.fill = '#e8f5e8';
+          rect.style.opacity = '0.95';
+          rect.style.stroke = 'none';
+        });
+      });
+
+      const viewBox = svg.getAttribute('viewBox');
+      if (!viewBox) return;
+
+      const dimensions = viewBox.trim().split(/\s+/).map(Number);
+      const width = dimensions[2];
+      const height = dimensions[3];
+      if (!Number.isFinite(width) || !Number.isFinite(height)) return;
+
+      svg.setAttribute('width', Math.ceil(width).toString());
+      svg.setAttribute('height', Math.ceil(height).toString());
+      svg.style.display = 'block';
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      svg.style.margin = '0 auto';
+    });
+  }
+
   printPreview(titleOverride) {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
     
-    // Get smart filename from markdown content
     const markdownEditor = document.getElementById('markdown-editor');
     let smartTitle = 'MarkTide Document';
     if (titleOverride) {
@@ -168,6 +273,7 @@ class PrintHandler {
     document.body.appendChild(printFrame);
     
     const printDocument = printFrame.contentDocument || printFrame.contentWindow.document;
+    const printHandler = this;
     
     printDocument.write(`
 <!DOCTYPE html>
@@ -510,6 +616,14 @@ class PrintHandler {
       page-break-inside: avoid !important;
       text-align: center !important;
     }
+
+    .mermaid svg {
+      display: block !important;
+      max-width: 100% !important;
+      height: auto !important;
+      margin: 0 auto !important;
+      overflow: visible !important;
+    }
     
     /* Mermaid flowchart specific styling for print */
     .mermaid .nodeLabel, .mermaid .edgeLabel {
@@ -540,8 +654,15 @@ class PrintHandler {
     }
     
     .mermaid .edgeLabel {
-      background-color: #ffffff !important;
+      background-color: #e8f5e8 !important;
       color: #24292e !important;
+    }
+
+    .mermaid .edgeLabel rect.background,
+    .mermaid .edgeLabel .label rect.background {
+      fill: #e8f5e8 !important;
+      opacity: 0.95 !important;
+      stroke: none !important;
     }
     
     /* Force backgrounds for flowchart elements */
@@ -697,25 +818,8 @@ class PrintHandler {
   </article>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
   <script>
-    // Initialize mermaid
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'default',
-      flowchart: { useMaxWidth: true },
-      securityLevel: 'loose'
-    });
-    
-    // Re-render mermaid diagrams
-    setTimeout(() => {
-      try {
-        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-      } catch (e) {
-        console.warn('Mermaid rendering error:', e);
-      }
-    }, 1000);
-
     window.MathJax = {
       tex: {
         inlineMath: [['\\\\(', '\\\\)']],
@@ -750,18 +854,11 @@ class PrintHandler {
         document.body.removeChild(printFrame);
       }
       document.title = originalTitle;
-      window.removeEventListener('focus', scheduleCleanup);
     };
-    const scheduleCleanup = () => {
-      if (cleanupDone || cleanupTimer) return;
-      cleanupTimer = setTimeout(cleanupPrintFrame, 1200);
-    };
-    printFrame.contentWindow.addEventListener('afterprint', scheduleCleanup);
-    window.addEventListener('focus', scheduleCleanup);
     
     // Wait for content to load, then trigger print
     printFrame.onload = function() {
-      setTimeout(function() {
+      setTimeout(async function() {
         // Apply syntax highlighting
         printFrame.contentDocument.querySelectorAll('pre code').forEach((block) => {
           if (!block.classList.contains('mermaid')) {
@@ -773,6 +870,14 @@ class PrintHandler {
           }
         });
         
+        if (printFrame.contentDocument.fonts && printFrame.contentDocument.fonts.ready) {
+          try {
+            await printFrame.contentDocument.fonts.ready;
+          } catch (e) {
+            console.warn("Font loading check failed:", e);
+          }
+        }
+
         // Initialize and render Mermaid
         try {
           // Print always uses light mode styling, so use light mode mermaid theme
@@ -790,7 +895,7 @@ class PrintHandler {
             secondBkg: '#f6f8fa',
             nodeBorder: '#24292e',
             clusterBkg: '#f6f8fa',
-            edgeLabelBackground: '#ffffff'
+            edgeLabelBackground: '#e8f5e8'
           };
           
           printFrame.contentWindow.mermaid.initialize({
@@ -798,10 +903,13 @@ class PrintHandler {
             theme: mermaidTheme,
             themeVariables: themeVariables,
             securityLevel: 'loose',
+            htmlLabels: false,
             flowchart: { 
               useMaxWidth: true, 
-              htmlLabels: true,
-              curve: 'basis'
+              htmlLabels: false,
+              curve: 'basis',
+              nodeSpacing: 60,
+              rankSpacing: 70
             },
             fontSize: 16
           });
@@ -809,7 +917,15 @@ class PrintHandler {
           // Render mermaid diagrams one by one
           const mermaidElements = printFrame.contentDocument.querySelectorAll('.mermaid');
           if (mermaidElements.length > 0) {
-            printFrame.contentWindow.mermaid.init(undefined, mermaidElements);
+            const mermaidRender = printFrame.contentWindow.mermaid.run
+              ? printFrame.contentWindow.mermaid.run({ nodes: mermaidElements })
+              : printFrame.contentWindow.mermaid.init(undefined, mermaidElements);
+
+            if (mermaidRender && typeof mermaidRender.then === 'function') {
+              await mermaidRender;
+            }
+
+            printHandler.stabilizeMermaidDiagrams(printFrame.contentDocument);
           }
         } catch (e) {
           console.warn("Mermaid rendering failed:", e);
@@ -823,7 +939,7 @@ class PrintHandler {
               setTimeout(function() {
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
-                setTimeout(cleanupPrintFrame, 60000);
+                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
               }, 300);
             }).catch((err) => {
               console.warn('MathJax typesetting failed:', err);
@@ -831,7 +947,7 @@ class PrintHandler {
               setTimeout(function() {
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
-                setTimeout(cleanupPrintFrame, 60000);
+                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
               }, 300);
             });
           } catch (e) {
@@ -840,7 +956,7 @@ class PrintHandler {
             setTimeout(function() {
               printFrame.contentWindow.focus();
               printFrame.contentWindow.print();
-              setTimeout(cleanupPrintFrame, 60000);
+              cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
             }, 300);
           }
         } else {
@@ -848,7 +964,7 @@ class PrintHandler {
           setTimeout(function() {
             printFrame.contentWindow.focus();
             printFrame.contentWindow.print();
-            setTimeout(cleanupPrintFrame, 60000);
+            cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
           }, 300);
         }
       }, 100);
