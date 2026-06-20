@@ -1581,6 +1581,19 @@
     height: 1px;
     margin: 2em 0;
   }
+
+  .markdown-body mark {
+    background-color: #fff3a3;
+    color: #24292e;
+    padding: 0.08em 0.18em;
+    border-radius: 3px;
+  }
+
+  .markdown-body abbr[title] {
+    text-decoration: underline dotted currentColor;
+    text-underline-offset: 0.18em;
+    cursor: help;
+  }
   
   .markdown-body h1,
   .markdown-body h2,

@@ -188,14 +188,160 @@ class MarkdownRenderer {
     return normalized.join('\n');
   }
 
+  escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  prepareMarkdownExtensions(markdownText) {
+    const abbreviations = [];
+    const markPlaceholders = [];
+    const mathPlaceholders = [];
+    const lines = String(markdownText || '').split('\n');
+    const output = [];
+    let inFence = false;
+    const looksLikeInlineMath = (content) => {
+      return /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
+    };
+
+    lines.forEach((line) => {
+      if (/^\s*(```|~~~)/.test(line)) {
+        inFence = !inFence;
+        output.push(line);
+        return;
+      }
+
+      if (!inFence) {
+        const abbreviationMatch = line.match(/^\s*\*\[([^\]]+)\]:\s+(.+?)\s*$/);
+        if (abbreviationMatch) {
+          abbreviations.push({
+            key: abbreviationMatch[1].trim(),
+            title: abbreviationMatch[2].trim()
+          });
+          return;
+        }
+
+        line = line.replace(/(^|[^=])==([^=\n](?:[^\n]*?[^=\n])?)==(?!=)/g, (match, prefix, content) => {
+          const token = `@@MARKTIDE_MARK_${markPlaceholders.length}@@`;
+          markPlaceholders.push(`<mark>${this.escapeHtml(content)}</mark>`);
+          return `${prefix}${token}`;
+        });
+
+        line = line.replace(/(^|[^\w\\])\$([^\s$][^$\n]*?[^\s$])\$(?![\w])/g, (match, prefix, content) => {
+          if (!looksLikeInlineMath(content)) return match;
+
+          const token = `@@MARKTIDE_MATH_${mathPlaceholders.length}@@`;
+          mathPlaceholders.push(`\\(${content}\\)`);
+          return `${prefix}${token}`;
+        });
+      }
+
+      output.push(line);
+    });
+
+    return {
+      markdown: output.join('\n'),
+      abbreviations,
+      markPlaceholders,
+      mathPlaceholders
+    };
+  }
+
+  applyMarkdownExtensions(html, context) {
+    let output = context.markPlaceholders.reduce((result, markup, index) => {
+      return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), markup);
+    }, html);
+
+    output = context.mathPlaceholders.reduce((result, math, index) => {
+      return result.replace(new RegExp(`@@MARKTIDE_MATH_${index}@@`, 'g'), math);
+    }, output);
+
+    const abbreviations = context.abbreviations
+      .filter((item) => item.key && item.title)
+      .sort((a, b) => b.key.length - a.key.length);
+
+    if (!abbreviations.length || typeof document === 'undefined') {
+      return output;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = output;
+
+    const pattern = new RegExp(`\\b(${abbreviations.map((item) => this.escapeRegExp(item.key)).join('|')})\\b`, 'g');
+    const titles = abbreviations.reduce((map, item) => {
+      map[item.key] = item.title;
+      return map;
+    }, {});
+
+    const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || parent.closest('a, abbr, code, pre, script, style, textarea, mjx-container')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
+        pattern.lastIndex = 0;
+        return pattern.test(node.nodeValue || '') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const textNodes = [];
+
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach((node) => {
+      const fragment = document.createDocumentFragment();
+      const text = node.nodeValue || '';
+      let lastIndex = 0;
+      pattern.lastIndex = 0;
+
+      text.replace(pattern, (match, key, offset) => {
+        if (offset > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+        }
+
+        const abbr = document.createElement('abbr');
+        abbr.title = titles[key] || '';
+        abbr.textContent = match;
+        fragment.appendChild(abbr);
+        lastIndex = offset + match.length;
+        return match;
+      });
+
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+
+      node.parentNode.replaceChild(fragment, node);
+    });
+
+    return wrapper.innerHTML;
+  }
+
+  parseMarkdown(markdownText, options = {}) {
+    const normalizedMarkdown = this.normalizeListSyntax(markdownText || '');
+    const extensionContext = this.prepareMarkdownExtensions(normalizedMarkdown);
+    const html = marked.parse(extensionContext.markdown, options);
+    return this.applyMarkdownExtensions(html, extensionContext);
+  }
+
   renderMarkdown() {
     if (!this.initialized) {
       this.init();
     }
 
     try {
-      const markdown = this.normalizeListSyntax(this.markdownEditor.value);
-      const html = marked.parse(markdown);
+      const markdown = this.markdownEditor.value;
+      const html = this.parseMarkdown(markdown);
       const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: [
           "mjx-container",
@@ -205,6 +351,8 @@ class MarkdownRenderer {
           "g",
           "circle",
           "rect",
+          "mark",
+          "abbr",
         ],
         ADD_ATTR: [
           "id",
