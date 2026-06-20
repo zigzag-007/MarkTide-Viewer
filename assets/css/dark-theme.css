@@ -352,10 +352,11 @@
 
 /* Dark theme horizontal rules - Grok-style separators */
 [data-theme="dark"] .markdown-body hr {
-  background-color: var(--hr-color); /* Dark gray horizontal line */
+  background-color: #30363d; /* Clear document separator */
   border: none; /* Remove default border */
-  height: 1px; /* Thin line */
-  margin: 2em 0; /* Generous spacing above and below */
+  height: 2px; /* Clear, readable separator */
+  margin: 30px 0; /* Match document-style separator spacing */
+  opacity: 1;
 }
 
 /* Dark theme bullet points styling for unordered lists */

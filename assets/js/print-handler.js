@@ -693,6 +693,28 @@ class PrintHandler {
       page-break-inside: avoid !important;
       background-color: transparent !important;
     }
+
+    .markdown-body img[src*="img.shields.io"] {
+      display: block !important;
+      width: fit-content !important;
+      max-width: 100% !important;
+      height: auto !important;
+      border-radius: 6px !important;
+      image-rendering: auto !important;
+    }
+
+    .markdown-body p:has(img[src*="img.shields.io"]) {
+      margin: 12px 0 !important;
+      line-height: 0.75 !important;
+    }
+
+    .markdown-body hr {
+      background-color: #c9d1d9 !important;
+      border: none !important;
+      height: 2px !important;
+      margin: 30px 0 !important;
+      opacity: 1 !important;
+    }
     
     /* Page break controls */
     .markdown-body h1 {
@@ -703,6 +725,12 @@ class PrintHandler {
     .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
       page-break-after: avoid !important;
       page-break-inside: avoid !important;
+    }
+
+    .markdown-body h1,
+    .markdown-body h2 {
+      padding-bottom: 0.3em !important;
+      border-bottom: 1px solid #c9d1d9 !important;
     }
     
           /* Print-specific adjustments */

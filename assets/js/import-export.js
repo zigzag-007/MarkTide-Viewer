@@ -823,10 +823,11 @@ class ImportExportManager {
         
         /* Grok dark mode horizontal rules */
         .markdown-body hr {
-            background-color: #333333 !important;
+            background-color: #30363d !important;
             border: none !important;
-            height: 1px !important;
-            margin: 2em 0 !important;
+            height: 2px !important;
+            margin: 30px 0 !important;
+            opacity: 1 !important;
         }
         
         /* Grok dark mode blockquotes */
@@ -899,6 +900,20 @@ class ImportExportManager {
         /* Fix for transparent images - override github-markdown-css background */
         .markdown-body img {
             background-color: transparent !important;
+        }
+
+        .markdown-body img[src*="img.shields.io"] {
+            display: block !important;
+            width: fit-content !important;
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 6px !important;
+            image-rendering: auto !important;
+        }
+
+        .markdown-body p:has(img[src*="img.shields.io"]) {
+            margin: 12px 0 !important;
+            line-height: 0.75 !important;
         }
     ` : `
         body { 
@@ -997,10 +1012,11 @@ class ImportExportManager {
         
         /* Grok light mode horizontal rules */
         .markdown-body hr {
-            background-color: #e0e0e0 !important;
+            background-color: #c9d1d9 !important;
             border: none !important;
-            height: 1px !important;
-            margin: 2em 0 !important;
+            height: 2px !important;
+            margin: 30px 0 !important;
+            opacity: 1 !important;
         }
         
         /* Grok light mode blockquotes */
@@ -1056,6 +1072,20 @@ class ImportExportManager {
         /* Fix for transparent images - override github-markdown-css background */
         .markdown-body img {
             background-color: transparent !important;
+        }
+
+        .markdown-body img[src*="img.shields.io"] {
+            display: block !important;
+            width: fit-content !important;
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 6px !important;
+            image-rendering: auto !important;
+        }
+
+        .markdown-body p:has(img[src*="img.shields.io"]) {
+            margin: 12px 0 !important;
+            line-height: 0.75 !important;
         }
     `;
     

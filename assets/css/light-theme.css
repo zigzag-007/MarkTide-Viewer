@@ -366,10 +366,11 @@ button:hover,
 
 /* Light theme horizontal rules - clean separator lines */
 [data-theme="light"] .markdown-body hr {
-  background-color: var(--hr-color); /* Light gray horizontal line */
+  background-color: #c9d1d9; /* Clear document separator */
   border: none; /* Remove default styling */
-  height: 1px; /* Thin, clean line */
-  margin: 2em 0; /* Generous vertical spacing */
+  height: 2px; /* Clear, readable separator */
+  margin: 30px 0; /* Match document-style separator spacing */
+  opacity: 1;
 }
 
 /* Light theme scrollbar styling for various panes */
