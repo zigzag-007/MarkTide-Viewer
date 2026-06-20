@@ -672,10 +672,9 @@ class ImportExportManager {
     };
     
     // Use the enhanced renderer for HTML export
-    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
-      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
-      : markdown;
-    const html = marked.parse(normalizedMarkdown, { renderer: exportRenderer });
+    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
+      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer })
+      : marked.parse(markdown, { renderer: exportRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
       ADD_TAGS: [
         'mjx-container',
@@ -689,6 +688,8 @@ class ImportExportManager {
         'defs',
         'pattern',
         'clipPath',
+        'mark',
+        'abbr',
       ],
       ADD_ATTR: [
         'id',
@@ -755,6 +756,8 @@ class ImportExportManager {
         .markdown-body h1 { font-size: 2.1em !important; }
         .markdown-body h2 { font-size: 1.7em !important; }
         .markdown-body h3 { font-size: 1.4em !important; }
+        .markdown-body mark { background-color: #fff3a3 !important; color: #24292e !important; padding: 0.08em 0.18em !important; border-radius: 3px !important; }
+        .markdown-body abbr[title] { text-decoration: underline dotted currentColor !important; text-underline-offset: 0.18em !important; cursor: help !important; }
         
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
@@ -924,6 +927,8 @@ class ImportExportManager {
         .markdown-body h1 { font-size: 2.1em !important; }
         .markdown-body h2 { font-size: 1.7em !important; }
         .markdown-body h3 { font-size: 1.4em !important; }
+        .markdown-body mark { background-color: #fff3a3 !important; color: #24292e !important; padding: 0.08em 0.18em !important; border-radius: 3px !important; }
+        .markdown-body abbr[title] { text-decoration: underline dotted currentColor !important; text-underline-offset: 0.18em !important; cursor: help !important; }
         
         /* List styling - Grok-style solid bullets */
         .markdown-body ul {
@@ -1635,7 +1640,7 @@ class ImportExportManager {
     <script>${this.minifyJS(`
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                inlineMath: [['\\\\(', '\\\\)']],
                 displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
                 processEscapes: true,
                 processEnvironments: true
@@ -1874,7 +1879,9 @@ class ImportExportManager {
   exportAsPDF() {
     // Use the existing print functionality but save as PDF
     if (window.MarkTidePrintHandler && window.MarkTidePrintHandler.printPreview) {
-      window.MarkTidePrintHandler.printPreview();
+      const content = this.markdownEditor ? this.markdownEditor.value : '';
+      const filename = this.generateSmartFilename(content, '');
+      window.MarkTidePrintHandler.printPreview(filename);
     }
   }
 }

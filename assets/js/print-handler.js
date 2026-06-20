@@ -100,14 +100,16 @@ class PrintHandler {
     return wrapper.innerHTML;
   }
 
-  printPreview() {
+  printPreview(titleOverride) {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
     
     // Get smart filename from markdown content
     const markdownEditor = document.getElementById('markdown-editor');
     let smartTitle = 'MarkTide Document';
-    if (markdownEditor && window.MarkTideImportExport) {
+    if (titleOverride) {
+      smartTitle = titleOverride;
+    } else if (markdownEditor && window.MarkTideImportExport) {
       smartTitle = window.MarkTideImportExport.generateSmartFilename(markdownEditor.value, '') || 'MarkTide Document';
     }
     document.title = smartTitle;
@@ -145,10 +147,12 @@ class PrintHandler {
     };
     
     // Use the clean renderer for print/PDF
-    const html = marked.parse(normalizedMarkdown, { renderer: printRenderer });
+    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
+      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer })
+      : marked.parse(normalizedMarkdown, { renderer: printRenderer });
     const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath', 'wbr'],
-      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
+      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath', 'wbr', 'mark', 'abbr'],
+      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start', 'title']
     });
     const printableHtml = this.preparePrintTables(sanitizedHtml);
 
@@ -372,6 +376,19 @@ class PrintHandler {
       overflow-wrap: anywhere !important;
       word-break: normal !important;
       white-space: normal !important;
+    }
+
+    .markdown-body mark {
+      background-color: #fff3a3 !important;
+      color: #24292e !important;
+      padding: 0.08em 0.18em !important;
+      border-radius: 3px !important;
+    }
+
+    .markdown-body abbr[title] {
+      text-decoration: underline dotted currentColor !important;
+      text-underline-offset: 0.18em !important;
+      cursor: help !important;
     }
     
     .markdown-body code {
@@ -701,7 +718,7 @@ class PrintHandler {
 
     window.MathJax = {
       tex: {
-        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+        inlineMath: [['\\\\(', '\\\\)']],
         displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
         processEscapes: true,
         processEnvironments: true
@@ -719,6 +736,28 @@ class PrintHandler {
     `);
     
     printDocument.close();
+
+    let cleanupDone = false;
+    let cleanupTimer = null;
+    const cleanupPrintFrame = () => {
+      if (cleanupDone) return;
+      cleanupDone = true;
+      if (cleanupTimer) {
+        clearTimeout(cleanupTimer);
+        cleanupTimer = null;
+      }
+      if (printFrame.parentNode) {
+        document.body.removeChild(printFrame);
+      }
+      document.title = originalTitle;
+      window.removeEventListener('focus', scheduleCleanup);
+    };
+    const scheduleCleanup = () => {
+      if (cleanupDone || cleanupTimer) return;
+      cleanupTimer = setTimeout(cleanupPrintFrame, 1200);
+    };
+    printFrame.contentWindow.addEventListener('afterprint', scheduleCleanup);
+    window.addEventListener('focus', scheduleCleanup);
     
     // Wait for content to load, then trigger print
     printFrame.onload = function() {
@@ -784,12 +823,7 @@ class PrintHandler {
               setTimeout(function() {
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
-                
-                // Clean up the iframe after printing and restore title
-                setTimeout(function() {
-                  document.body.removeChild(printFrame);
-                  document.title = originalTitle; // Restore original title
-                }, 500);
+                setTimeout(cleanupPrintFrame, 60000);
               }, 300);
             }).catch((err) => {
               console.warn('MathJax typesetting failed:', err);
@@ -797,11 +831,7 @@ class PrintHandler {
               setTimeout(function() {
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
-                
-                setTimeout(function() {
-                  document.body.removeChild(printFrame);
-                  document.title = originalTitle; // Restore original title
-                }, 500);
+                setTimeout(cleanupPrintFrame, 60000);
               }, 300);
             });
           } catch (e) {
@@ -810,11 +840,7 @@ class PrintHandler {
             setTimeout(function() {
               printFrame.contentWindow.focus();
               printFrame.contentWindow.print();
-              
-              setTimeout(function() {
-                document.body.removeChild(printFrame);
-                document.title = originalTitle; // Restore original title
-              }, 500);
+              setTimeout(cleanupPrintFrame, 60000);
             }, 300);
           }
         } else {
@@ -822,11 +848,7 @@ class PrintHandler {
           setTimeout(function() {
             printFrame.contentWindow.focus();
             printFrame.contentWindow.print();
-            
-            setTimeout(function() {
-              document.body.removeChild(printFrame);
-              document.title = originalTitle; // Restore original title
-            }, 500);
+            setTimeout(cleanupPrintFrame, 60000);
           }, 300);
         }
       }, 100);
