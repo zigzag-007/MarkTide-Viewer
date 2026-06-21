@@ -1954,6 +1954,17 @@
     overflow-y: visible;
     max-width: 100%;
   }
+
+  #markdown-preview .mermaid-container {
+    background: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 16px;
+  }
+
+  [data-theme="dark"] #markdown-preview .mermaid-container {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
   
   .mermaid svg {
     display: block;

@@ -12,6 +12,42 @@ class MermaidHandler {
     return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
   }
 
+  getThemeName(theme, mode = 'preview') {
+    if (mode === 'pdf') {
+      return 'neutral';
+    }
+
+    return 'default';
+  }
+
+  getThemeVariables() {
+    return {
+      fontFamily: this.getDiagramFontFamily()
+    };
+  }
+
+  getMermaidConfig(options = {}) {
+    const mode = options.mode || 'preview';
+    const theme = options.theme || document.documentElement.getAttribute("data-theme") || 'light';
+    const htmlLabels = mode !== 'pdf';
+
+    return {
+      startOnLoad: false,
+      theme: this.getThemeName(theme, mode),
+      themeVariables: this.getThemeVariables(theme, mode),
+      securityLevel: 'loose',
+      htmlLabels: htmlLabels,
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: htmlLabels,
+        curve: 'basis',
+        nodeSpacing: 60,
+        rankSpacing: 70
+      },
+      fontSize: 16
+    };
+  }
+
   getReadableTextColor(fill) {
     if (!fill || fill === 'none' || fill.startsWith('url(')) {
       return null;
@@ -127,52 +163,10 @@ class MermaidHandler {
       return;
     }
 
-    const mermaidTheme = currentTheme === "dark" ? "dark" : "base";
-    const fontFamily = this.getDiagramFontFamily();
-    
-    let themeVariables = {};
-    if (currentTheme === "dark") {
-      themeVariables = {
-        primaryColor: '#30363d',
-        primaryTextColor: '#e4e1f0',
-        primaryBorderColor: '#8b7cf8',
-        lineColor: '#8b7cf8',
-        secondaryColor: '#21262d',
-        tertiaryColor: '#161b22',
-        background: '#1a1625',
-        mainBkg: '#21262d',
-        secondBkg: '#30363d',
-        tertiaryBkg: '#161b22',
-        fontFamily: fontFamily
-      };
-    } else {
-      themeVariables = {
-        primaryColor: '#f9f9f9',
-        primaryTextColor: '#24292e',
-        primaryBorderColor: '#d1d5da',
-        lineColor: '#24292e',
-        secondaryColor: '#e8f5e8',
-        tertiaryColor: '#fff3e0',
-        edgeLabelBackground: '#e8f5e8',
-        fontFamily: fontFamily
-      };
-    }
-    
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: mermaidTheme,
-      themeVariables: themeVariables,
-      securityLevel: 'loose',
-      htmlLabels: true,
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: true,
-        curve: 'basis',
-        nodeSpacing: 60,
-        rankSpacing: 70
-      },
-      fontSize: 16
-    });
+    mermaid.initialize(this.getMermaidConfig({
+      mode: 'preview',
+      theme: currentTheme
+    }));
 
     this.currentTheme = currentTheme;
     this.initialized = true;
@@ -235,41 +229,14 @@ class MermaidHandler {
 
   // Get theme variables for print mode (always light)
   getPrintThemeVariables() {
-    return {
-      primaryColor: '#f6f8fa',
-      primaryTextColor: '#24292e',
-      primaryBorderColor: '#24292e',
-      lineColor: '#24292e',
-      secondaryColor: '#f6f8fa',
-      tertiaryColor: '#ffffff',
-      background: '#ffffff',
-      mainBkg: '#f6f8fa',
-      secondBkg: '#f6f8fa',
-      nodeBorder: '#24292e',
-      clusterBkg: '#f6f8fa',
-      edgeLabelBackground: '#e8f5e8',
-      fontFamily: this.getDiagramFontFamily()
-    };
+    return this.getThemeVariables('light', 'pdf');
   }
 
   initForPrint(printWindow) {
-    const themeVariables = this.getPrintThemeVariables();
-    
-    printWindow.mermaid.initialize({
-      startOnLoad: false,
-      theme: "base",
-      themeVariables: themeVariables,
-      securityLevel: 'loose',
-      htmlLabels: false,
-      flowchart: { 
-        useMaxWidth: true, 
-        htmlLabels: false,
-        curve: 'basis',
-        nodeSpacing: 60,
-        rankSpacing: 70
-      },
-      fontSize: 16
-    });
+    printWindow.mermaid.initialize(this.getMermaidConfig({
+      mode: 'pdf',
+      theme: 'light'
+    }));
   }
 }
 

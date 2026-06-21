@@ -712,12 +712,6 @@ class PrintHandler {
       color: #24292e !important;
     }
     
-    .mermaid .node rect, .mermaid .node circle, .mermaid .node ellipse, .mermaid .node polygon {
-      fill: #f9f9f9 !important;
-      stroke: #24292e !important;
-      stroke-width: 1px !important;
-    }
-    
     .mermaid .node .label {
       color: #24292e !important;
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
@@ -756,16 +750,6 @@ class PrintHandler {
       fill: #e8f5e8 !important;
       opacity: 0.95 !important;
       stroke: none !important;
-    }
-    
-    /* Force backgrounds for flowchart elements */
-    .mermaid g.nodes g.node rect,
-    .mermaid g.nodes g.node polygon,
-    .mermaid g.nodes g.node circle,
-    .mermaid g.nodes g.node ellipse {
-      fill: #f6f8fa !important;
-      stroke: #24292e !important;
-      stroke-width: 1px !important;
     }
     
     .mermaid g.nodes g.node text {
@@ -1004,40 +988,27 @@ class PrintHandler {
 
         // Initialize and render Mermaid
         try {
-          // Print always uses light mode styling, so use light mode mermaid theme
-          const mermaidTheme = "base";
-          
-          let themeVariables = {
-            primaryColor: '#f6f8fa',
-            primaryTextColor: '#24292e',
-            primaryBorderColor: '#24292e',
-            lineColor: '#24292e',
-            secondaryColor: '#f6f8fa',
-            tertiaryColor: '#ffffff',
-            background: '#ffffff',
-            mainBkg: '#f6f8fa',
-            secondBkg: '#f6f8fa',
-            nodeBorder: '#24292e',
-            clusterBkg: '#f6f8fa',
-            edgeLabelBackground: '#e8f5e8',
-            fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-          };
-          
-          printFrame.contentWindow.mermaid.initialize({
-            startOnLoad: false,
-            theme: mermaidTheme,
-            themeVariables: themeVariables,
-            securityLevel: 'loose',
-            htmlLabels: false,
-            flowchart: { 
-              useMaxWidth: true, 
-              htmlLabels: false,
-              curve: 'basis',
-              nodeSpacing: 60,
-              rankSpacing: 70
-            },
-            fontSize: 16
-          });
+          const mermaidConfig = window.MarkTideMermaid
+            ? window.MarkTideMermaid.getMermaidConfig({ mode: 'pdf', theme: 'light' })
+            : {
+                startOnLoad: false,
+                theme: 'neutral',
+                themeVariables: {
+                  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
+                },
+                securityLevel: 'loose',
+                htmlLabels: false,
+                flowchart: {
+                  useMaxWidth: true,
+                  htmlLabels: false,
+                  curve: 'basis',
+                  nodeSpacing: 60,
+                  rankSpacing: 70
+                },
+                fontSize: 16
+              };
+
+          printFrame.contentWindow.mermaid.initialize(mermaidConfig);
           
           // Render mermaid diagrams one by one
           const mermaidElements = printFrame.contentDocument.querySelectorAll('.mermaid');

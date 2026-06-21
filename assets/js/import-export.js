@@ -1583,6 +1583,13 @@ class ImportExportManager {
             overflow-y: visible;
             max-width: 100%;
         }
+
+        .mermaid-container {
+            background: #ffffff;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 16px;
+        }
         
         .mermaid svg {
             display: block;
@@ -1646,47 +1653,14 @@ class ImportExportManager {
         });
         
         // Initialize and render Mermaid diagrams
-        const isDarkMode = ${isDarkMode};
-        const mermaidTheme = isDarkMode ? 'dark' : 'base';
-        
-        let themeVariables = {};
         const mermaidFontFamily = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-        if (isDarkMode) {
-            themeVariables = {
-                primaryColor: '#30363d',
-                primaryTextColor: '#f0f3f6',
-                primaryBorderColor: '#30363d',
-                lineColor: '#30363d',
-                secondaryColor: '#21262d',
-                tertiaryColor: '#161b22',
-                background: '#1a1625',
-                mainBkg: '#21262d',
-                secondBkg: '#30363d',
-                tertiaryBkg: '#161b22',
-                fontFamily: mermaidFontFamily
-            };
-        } else {
-            themeVariables = {
-                primaryColor: '#f6f8fa',
-                primaryTextColor: '#24292e',
-                primaryBorderColor: '#24292e',
-                lineColor: '#24292e',
-                secondaryColor: '#f6f8fa',
-                tertiaryColor: '#ffffff',
-                background: '#ffffff',
-                mainBkg: '#f6f8fa',
-                secondBkg: '#f6f8fa',
-                nodeBorder: '#24292e',
-                clusterBkg: '#f6f8fa',
-                edgeLabelBackground: '#e8f5e8',
-                fontFamily: mermaidFontFamily
-            };
-        }
         
         mermaid.initialize({
             startOnLoad: false,
-            theme: mermaidTheme,
-            themeVariables: themeVariables,
+            theme: 'default',
+            themeVariables: {
+                fontFamily: mermaidFontFamily
+            },
             securityLevel: 'loose',
             htmlLabels: false,
             flowchart: {
