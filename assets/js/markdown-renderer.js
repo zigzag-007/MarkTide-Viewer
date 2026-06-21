@@ -59,21 +59,15 @@ class MarkdownRenderer {
       }
       
       const displayLanguage = language || "text"; // Keep user's original language label
-      let highlightLanguage = language;
-      
-      // Handle batch/bat files
-      if (highlightLanguage === 'batch' || highlightLanguage === 'bat' || highlightLanguage === 'cmd') {
-        highlightLanguage = 'dos'; // Use DOS highlighting for batch files
-      }
-      
-      const validLanguage = hljs.getLanguage(highlightLanguage) ? highlightLanguage : "plaintext";
       const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
       
       try {
-        const highlightedCode = hljs.highlight(code, {
-          language: validLanguage,
-          ignoreIllegals: true  // Prevent HTML injection
-        }).value;
+        const highlighted = window.MarktideCodeHighlight
+          ? window.MarktideCodeHighlight.highlight(code, language)
+          : {
+              language: hljs.getLanguage(language) ? language : "plaintext",
+              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
+            };
         
         return `
           <div class="enhanced-code-block">
@@ -86,7 +80,7 @@ class MarkdownRenderer {
                 </button>
               </div>
             </div>
-            <pre><code class="hljs ${validLanguage}" id="${uniqueId}">${highlightedCode}</code></pre>
+            <pre><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
           </div>
         `;
       } catch (e) {
@@ -114,18 +108,14 @@ class MarkdownRenderer {
       renderer: this.renderer,
       highlight: function (code, language) {
         if (language === 'mermaid') return code;
-        
-        // Handle batch/bat files
-        if (language === 'batch' || language === 'bat' || language === 'cmd') {
-          language = 'dos';
-        }
-        
-        const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
+
         try {
-          return hljs.highlight(code, { 
-            language: validLanguage,
-            ignoreIllegals: true  // Prevent HTML injection
-          }).value;
+          return window.MarktideCodeHighlight
+            ? window.MarktideCodeHighlight.highlight(code, language).value
+            : hljs.highlight(code, {
+                language: hljs.getLanguage(language) ? language : "plaintext",
+                ignoreIllegals: true  // Prevent HTML injection
+              }).value;
         } catch (e) {
           // Fallback to escaped plain text
           return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

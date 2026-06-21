@@ -306,19 +306,15 @@ class PrintHandler {
         return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
       }
       
-      // Handle batch/bat files
-      if (language === 'batch' || language === 'bat' || language === 'cmd') {
-        language = 'dos'; // Use DOS highlighting for batch files
-      }
-      
-      const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
       try {
-        const highlightedCode = hljs.highlight(code, {
-          language: validLanguage,
-          ignoreIllegals: true  // Prevent HTML injection
-        }).value;
+        const highlighted = window.MarktideCodeHighlight
+          ? window.MarktideCodeHighlight.highlight(code, language)
+          : {
+              language: hljs.getLanguage(language) ? language : "plaintext",
+              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
+            };
         
-        return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+        return `<pre><code class="hljs ${highlighted.language}">${highlighted.value}</code></pre>`;
       } catch (e) {
         // Fallback to plain text if highlighting fails
         const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -931,6 +927,9 @@ class PrintHandler {
   </article>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
   <script>
     window.MathJax = {
@@ -974,7 +973,7 @@ class PrintHandler {
       setTimeout(async function() {
         // Apply syntax highlighting
         printFrame.contentDocument.querySelectorAll('pre code').forEach((block) => {
-          if (!block.classList.contains('mermaid')) {
+          if (!block.classList.contains('mermaid') && !block.classList.contains('pseudocode')) {
             try {
               printFrame.contentWindow.hljs.highlightElement(block);
     } catch (e) {

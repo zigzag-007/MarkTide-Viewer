@@ -207,6 +207,119 @@ const MarktideHighlightTheme = {
   }
 };
 
+const MarktideCodeHighlight = {
+  aliases: {
+    batch: 'dos',
+    bat: 'dos',
+    cmd: 'dos',
+    dos: 'dos',
+    containerfile: 'dockerfile',
+    docker: 'dockerfile',
+    dockerfile: 'dockerfile',
+    powershell: 'powershell',
+    ps1: 'powershell',
+    pwsh: 'powershell',
+    ps: 'powershell',
+    pseudocode: 'pseudocode',
+    pseudo: 'pseudocode',
+    algorithm: 'pseudocode',
+    algo: 'pseudocode'
+  },
+
+  normalizeLanguage(language) {
+    const cleanLanguage = String(language || '')
+      .trim()
+      .split(/\s+/)[0]
+      .toLowerCase();
+
+    if (!cleanLanguage) {
+      return 'plaintext';
+    }
+
+    return this.aliases[cleanLanguage] || cleanLanguage;
+  },
+
+  escapeCode(code) {
+    return String(code || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  },
+
+  highlight(code, language) {
+    const normalizedLanguage = this.normalizeLanguage(language);
+
+    if (normalizedLanguage === 'pseudocode') {
+      return {
+        language: 'pseudocode',
+        value: this.highlightPseudocode(code)
+      };
+    }
+
+    const validLanguage = window.hljs && hljs.getLanguage(normalizedLanguage)
+      ? normalizedLanguage
+      : 'plaintext';
+
+    try {
+      return {
+        language: validLanguage,
+        value: hljs.highlight(String(code || ''), {
+          language: validLanguage,
+          ignoreIllegals: true
+        }).value
+      };
+    } catch (e) {
+      return {
+        language: 'plaintext',
+        value: this.escapeCode(code)
+      };
+    }
+  },
+
+  highlightPseudocode(code) {
+    const keywords = new Set([
+      'algorithm', 'begin', 'break', 'case', 'continue', 'do', 'else', 'elseif',
+      'end', 'endif', 'endfor', 'endfunction', 'endprocedure', 'endwhile', 'for',
+      'function', 'if', 'input', 'output', 'print', 'procedure', 'read', 'repeat',
+      'return', 'switch', 'then', 'until', 'while', 'write'
+    ]);
+    const literals = new Set(['and', 'false', 'not', 'null', 'or', 'true']);
+    const tokenPattern = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/.*|#.*|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][\w-]*\b)/g;
+
+    return String(code || '').split('\n').map((line) => {
+      let result = '';
+      let lastIndex = 0;
+      let match;
+
+      while ((match = tokenPattern.exec(line)) !== null) {
+        const token = match[0];
+        const lowerToken = token.toLowerCase();
+        result += this.escapeCode(line.slice(lastIndex, match.index));
+
+        if (token.startsWith('//') || token.startsWith('#')) {
+          result += `<span class="hljs-comment">${this.escapeCode(token)}</span>`;
+        } else if (token.startsWith('"') || token.startsWith("'")) {
+          result += `<span class="hljs-string">${this.escapeCode(token)}</span>`;
+        } else if (/^\d/.test(token)) {
+          result += `<span class="hljs-number">${this.escapeCode(token)}</span>`;
+        } else if (keywords.has(lowerToken)) {
+          result += `<span class="hljs-keyword">${this.escapeCode(token)}</span>`;
+        } else if (literals.has(lowerToken)) {
+          result += `<span class="hljs-literal">${this.escapeCode(token)}</span>`;
+        } else {
+          result += this.escapeCode(token);
+        }
+
+        lastIndex = tokenPattern.lastIndex;
+      }
+
+      result += this.escapeCode(line.slice(lastIndex));
+      tokenPattern.lastIndex = 0;
+      return result;
+    }).join('\n');
+  }
+};
+
 // Export utilities to global scope
 window.MarkTideUtils = {
   updateDocumentStats,
@@ -216,3 +329,4 @@ window.MarkTideUtils = {
 };
 
 window.MarktideHighlightTheme = MarktideHighlightTheme;
+window.MarktideCodeHighlight = MarktideCodeHighlight;
