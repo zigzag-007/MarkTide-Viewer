@@ -501,8 +501,8 @@ class PrintHandler {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
     }
     
-    .markdown-body p, .markdown-body li, .markdown-body span:not(pre code.hljs span),
-    .markdown-body div, .markdown-body section, .markdown-body article {
+    .markdown-body p:not(.mermaid *), .markdown-body li:not(.mermaid *), .markdown-body span:not(.mermaid *):not(pre code.hljs span),
+    .markdown-body div:not(.mermaid *):not(.mermaid-container), .markdown-body section, .markdown-body article {
       background: transparent !important;
       color: #24292e !important;
       overflow: visible !important;
@@ -740,6 +740,17 @@ class PrintHandler {
       color: #24292e !important;
     }
 
+    .mermaid .edgeLabel foreignObject,
+    .mermaid .edgeLabel foreignObject div,
+    .mermaid .edgeLabel foreignObject span,
+    .mermaid .edgeLabel foreignObject p {
+      background-color: #e8f5e8 !important;
+      color: #24292e !important;
+      overflow: visible !important;
+      box-decoration-break: clone !important;
+      -webkit-box-decoration-break: clone !important;
+    }
+
     .mermaid .edgeLabel rect.background,
     .mermaid .edgeLabel .label rect.background {
       fill: #e8f5e8 !important;
@@ -835,8 +846,8 @@ class PrintHandler {
       }
       
       /* Specific handling for paragraphs and text elements */
-      .markdown-body p, .markdown-body li, .markdown-body span:not(pre code.hljs span),
-      .markdown-body div, .markdown-body td, .markdown-body th {
+      .markdown-body p:not(.mermaid *), .markdown-body li:not(.mermaid *), .markdown-body span:not(.mermaid *):not(pre code.hljs span),
+      .markdown-body div:not(.mermaid *):not(.mermaid-container), .markdown-body td, .markdown-body th {
         white-space: normal !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
