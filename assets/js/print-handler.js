@@ -595,7 +595,8 @@ class PrintHandler {
       overflow: visible !important;
       font-size: 85% !important;
       line-height: 1.45 !important;
-      page-break-inside: avoid !important;
+      break-inside: auto !important;
+      page-break-inside: auto !important;
     }
     
     .markdown-body pre code {
