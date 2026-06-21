@@ -101,8 +101,83 @@ class PrintHandler {
   }
 
   stabilizeMermaidDiagrams(printDocument) {
+    const printWindow = printDocument.defaultView || window;
+
+    const getReadableTextColor = (fill) => {
+      if (!fill || fill === 'none' || fill.startsWith('url(')) {
+        return null;
+      }
+
+      const namedColors = {
+        black: '#000000',
+        white: '#ffffff',
+        red: '#ff0000',
+        orange: '#ffa500',
+        yellow: '#ffff00',
+        green: '#008000',
+        blue: '#0000ff',
+        purple: '#800080',
+        gray: '#808080',
+        grey: '#808080'
+      };
+
+      let color = fill.trim().toLowerCase();
+      color = namedColors[color] || color;
+
+      let red;
+      let green;
+      let blue;
+
+      const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3) {
+          hex = hex.split('').map((part) => part + part).join('');
+        }
+        red = parseInt(hex.slice(0, 2), 16);
+        green = parseInt(hex.slice(2, 4), 16);
+        blue = parseInt(hex.slice(4, 6), 16);
+      } else {
+        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (!rgbMatch) {
+          return null;
+        }
+        red = Number(rgbMatch[1]);
+        green = Number(rgbMatch[2]);
+        blue = Number(rgbMatch[3]);
+      }
+
+      const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+      return luminance < 0.48 ? '#ffffff' : '#24292e';
+    };
+
+    const getNodeFill = (shape) => {
+      const computedFill = printWindow.getComputedStyle(shape).fill;
+      return computedFill || shape.getAttribute('fill') || shape.style.fill;
+    };
+
     printDocument.querySelectorAll('.mermaid svg').forEach((svg) => {
       const svgNamespace = 'http://www.w3.org/2000/svg';
+
+      svg.querySelectorAll('g.node').forEach((node) => {
+        const shape = node.querySelector('rect, polygon, circle, ellipse');
+        if (!shape) return;
+
+        const fill = getNodeFill(shape);
+        const readableColor = getReadableTextColor(fill);
+        if (!readableColor) return;
+
+        shape.setAttribute('stroke', '#24292e');
+        shape.setAttribute('stroke-width', '1');
+        shape.style.setProperty('stroke', '#24292e', 'important');
+        shape.style.setProperty('stroke-width', '1px', 'important');
+
+        node.querySelectorAll('text, tspan, .nodeLabel, .label, foreignObject div, foreignObject span, foreignObject p').forEach((label) => {
+          label.setAttribute('fill', readableColor);
+          label.style.setProperty('color', readableColor, 'important');
+          label.style.setProperty('fill', readableColor, 'important');
+        });
+      });
 
       svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
         const labelText = (edgeLabel.textContent || '').trim();
@@ -512,6 +587,7 @@ class PrintHandler {
       background-color: #f6f8fa !important;
       border-radius: 6px !important;
       padding: 16px !important;
+      margin: 1.5em 0 !important;
       overflow: visible !important;
       font-size: 85% !important;
       line-height: 1.45 !important;
@@ -615,6 +691,7 @@ class PrintHandler {
       max-width: 100% !important;
       page-break-inside: avoid !important;
       text-align: center !important;
+      margin: 1.5em 0 2.2em !important;
     }
 
     .mermaid svg {
@@ -923,7 +1000,8 @@ class PrintHandler {
             secondBkg: '#f6f8fa',
             nodeBorder: '#24292e',
             clusterBkg: '#f6f8fa',
-            edgeLabelBackground: '#e8f5e8'
+            edgeLabelBackground: '#e8f5e8',
+            fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
           };
           
           printFrame.contentWindow.mermaid.initialize({

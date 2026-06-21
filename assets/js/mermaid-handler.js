@@ -5,32 +5,122 @@ class MermaidHandler {
     this.initialized = false;
   }
 
+  getDiagramFontFamily() {
+    return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  }
+
+  getReadableTextColor(fill) {
+    if (!fill || fill === 'none' || fill.startsWith('url(')) {
+      return null;
+    }
+
+    const namedColors = {
+      black: '#000000',
+      white: '#ffffff',
+      red: '#ff0000',
+      orange: '#ffa500',
+      yellow: '#ffff00',
+      green: '#008000',
+      blue: '#0000ff',
+      purple: '#800080',
+      gray: '#808080',
+      grey: '#808080'
+    };
+
+    let color = fill.trim().toLowerCase();
+    color = namedColors[color] || color;
+
+    let red;
+    let green;
+    let blue;
+
+    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex.split('').map((part) => part + part).join('');
+      }
+      red = parseInt(hex.slice(0, 2), 16);
+      green = parseInt(hex.slice(2, 4), 16);
+      blue = parseInt(hex.slice(4, 6), 16);
+    } else {
+      const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (!rgbMatch) {
+        return null;
+      }
+      red = Number(rgbMatch[1]);
+      green = Number(rgbMatch[2]);
+      blue = Number(rgbMatch[3]);
+    }
+
+    const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+    return luminance < 0.48 ? '#ffffff' : '#24292e';
+  }
+
+  getNodeFill(shape) {
+    const computedFill = window.getComputedStyle(shape).fill;
+    return computedFill || shape.getAttribute('fill') || shape.style.fill;
+  }
+
+  improveNodeLabelContrast(container) {
+    container.querySelectorAll('.mermaid svg').forEach((svg) => {
+      svg.querySelectorAll('g.node').forEach((node) => {
+        const shape = node.querySelector('rect, polygon, circle, ellipse');
+        if (!shape) return;
+
+        const fill = this.getNodeFill(shape);
+        const readableColor = this.getReadableTextColor(fill);
+        if (!readableColor) return;
+
+        shape.setAttribute('stroke', '#24292e');
+        shape.setAttribute('stroke-width', '1');
+        shape.style.setProperty('stroke', '#24292e', 'important');
+        shape.style.setProperty('stroke-width', '1px', 'important');
+
+        node.querySelectorAll('text, tspan, .nodeLabel, .label, foreignObject div, foreignObject span, foreignObject p').forEach((label) => {
+          label.setAttribute('fill', readableColor);
+          label.style.setProperty('color', readableColor, 'important');
+          label.style.setProperty('fill', readableColor, 'important');
+        });
+      });
+    });
+  }
+
   initMermaid() {
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const mermaidTheme = currentTheme === "dark" ? "dark" : "base";
+    const fontFamily = this.getDiagramFontFamily();
     
     let themeVariables = {};
     if (currentTheme === "dark") {
       themeVariables = {
         primaryColor: '#30363d',
-        primaryTextColor: '#e4e1f0',
-        primaryBorderColor: '#8b7cf8',
-        lineColor: '#8b7cf8',
+        primaryTextColor: '#f0f3f6',
+        primaryBorderColor: '#30363d',
+        lineColor: '#30363d',
         secondaryColor: '#21262d',
         tertiaryColor: '#161b22',
         background: '#1a1625',
         mainBkg: '#21262d',
         secondBkg: '#30363d',
-        tertiaryBkg: '#161b22'
+        tertiaryBkg: '#161b22',
+        fontFamily: fontFamily
       };
     } else {
       themeVariables = {
-        primaryColor: '#f9f9f9',
+        primaryColor: '#f6f8fa',
         primaryTextColor: '#24292e',
-        primaryBorderColor: '#d1d5da',
+        primaryBorderColor: '#24292e',
         lineColor: '#24292e',
-        secondaryColor: '#e8f5e8',
-        tertiaryColor: '#fff3e0'
+        secondaryColor: '#f6f8fa',
+        tertiaryColor: '#ffffff',
+        background: '#ffffff',
+        mainBkg: '#f6f8fa',
+        secondBkg: '#f6f8fa',
+        nodeBorder: '#24292e',
+        clusterBkg: '#f6f8fa',
+        edgeLabelBackground: '#e8f5e8',
+        fontFamily: fontFamily
       };
     }
     
@@ -39,7 +129,14 @@ class MermaidHandler {
       theme: mermaidTheme,
       themeVariables: themeVariables,
       securityLevel: 'loose',
-      flowchart: { useMaxWidth: true, htmlLabels: true },
+      htmlLabels: false,
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: false,
+        curve: 'basis',
+        nodeSpacing: 60,
+        rankSpacing: 70
+      },
       fontSize: 16
     });
 
@@ -52,7 +149,18 @@ class MermaidHandler {
     }
 
     try {
-      mermaid.init(undefined, container.querySelectorAll('.mermaid'));
+      const renderResult = mermaid.run
+        ? mermaid.run({ nodes: container.querySelectorAll('.mermaid') })
+        : mermaid.init(undefined, container.querySelectorAll('.mermaid'));
+
+      if (renderResult && typeof renderResult.then === 'function') {
+        renderResult
+          .then(() => this.improveNodeLabelContrast(container))
+          .catch((e) => console.warn("Mermaid rendering failed:", e));
+        return;
+      }
+
+      this.improveNodeLabelContrast(container);
     } catch (e) {
       console.warn("Mermaid rendering failed:", e);
     }
@@ -72,7 +180,8 @@ class MermaidHandler {
       secondBkg: '#f6f8fa',
       nodeBorder: '#24292e',
       clusterBkg: '#f6f8fa',
-      edgeLabelBackground: '#ffffff'
+      edgeLabelBackground: '#e8f5e8',
+      fontFamily: this.getDiagramFontFamily()
     };
   }
 
@@ -84,10 +193,13 @@ class MermaidHandler {
       theme: "base",
       themeVariables: themeVariables,
       securityLevel: 'loose',
+      htmlLabels: false,
       flowchart: { 
         useMaxWidth: true, 
-        htmlLabels: true,
-        curve: 'basis'
+        htmlLabels: false,
+        curve: 'basis',
+        nodeSpacing: 60,
+        rankSpacing: 70
       },
       fontSize: 16
     });

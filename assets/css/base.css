@@ -1876,51 +1876,69 @@
     overflow-y: visible !important;
   }
 
-  /* Code fences: slim horizontal/vertical scrollbar on <pre>, hidden until hover */
-  #markdown-preview pre {
+  /* Code fences and Mermaid diagrams: slim scrollbars hidden until hover */
+  #markdown-preview pre,
+  #markdown-preview .mermaid-container,
+  #markdown-preview .mermaid {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
     scrollbar-gutter: stable;
     transition: scrollbar-color 0.2s ease;
   }
 
-  #markdown-preview pre:hover {
+  #markdown-preview pre:hover,
+  #markdown-preview .mermaid-container:hover,
+  #markdown-preview .mermaid:hover {
     scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
   }
 
-  #markdown-preview pre::-webkit-scrollbar {
+  #markdown-preview pre::-webkit-scrollbar,
+  #markdown-preview .mermaid-container::-webkit-scrollbar,
+  #markdown-preview .mermaid::-webkit-scrollbar {
     width: 4px;
     height: 4px;
     background: transparent;
   }
 
-  #markdown-preview pre::-webkit-scrollbar-button {
+  #markdown-preview pre::-webkit-scrollbar-button,
+  #markdown-preview .mermaid-container::-webkit-scrollbar-button,
+  #markdown-preview .mermaid::-webkit-scrollbar-button {
     display: none;
     width: 0;
     height: 0;
   }
 
-  #markdown-preview pre::-webkit-scrollbar-track {
+  #markdown-preview pre::-webkit-scrollbar-track,
+  #markdown-preview .mermaid-container::-webkit-scrollbar-track,
+  #markdown-preview .mermaid::-webkit-scrollbar-track {
     background: transparent;
     border: 0;
   }
 
-  #markdown-preview pre::-webkit-scrollbar-thumb {
+  #markdown-preview pre::-webkit-scrollbar-thumb,
+  #markdown-preview .mermaid-container::-webkit-scrollbar-thumb,
+  #markdown-preview .mermaid::-webkit-scrollbar-thumb {
     background: transparent;
     border: 0;
     border-radius: 999px;
     transition: background-color 0.2s ease;
   }
 
-  #markdown-preview pre:hover::-webkit-scrollbar-thumb {
+  #markdown-preview pre:hover::-webkit-scrollbar-thumb,
+  #markdown-preview .mermaid-container:hover::-webkit-scrollbar-thumb,
+  #markdown-preview .mermaid:hover::-webkit-scrollbar-thumb {
     background: rgba(79, 195, 247, 0.55);
   }
 
-  #markdown-preview pre:hover::-webkit-scrollbar-thumb:hover {
+  #markdown-preview pre:hover::-webkit-scrollbar-thumb:hover,
+  #markdown-preview .mermaid-container:hover::-webkit-scrollbar-thumb:hover,
+  #markdown-preview .mermaid:hover::-webkit-scrollbar-thumb:hover {
     background: rgba(79, 195, 247, 0.8);
   }
 
-  #markdown-preview pre::-webkit-scrollbar-corner {
+  #markdown-preview pre::-webkit-scrollbar-corner,
+  #markdown-preview .mermaid-container::-webkit-scrollbar-corner,
+  #markdown-preview .mermaid::-webkit-scrollbar-corner {
     background: transparent;
   }
 
@@ -1932,11 +1950,33 @@
   .mermaid-container, .mermaid {
     text-align: center;
     margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: 100%;
   }
   
   .mermaid svg {
-    max-width: 100%;
+    display: block;
+    max-width: none;
     height: auto;
+    margin: 0 auto;
+    overflow: visible;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    zoom: 0.42;
+  }
+
+  .mermaid .node rect,
+  .mermaid .node circle,
+  .mermaid .node ellipse,
+  .mermaid .node polygon {
+    stroke-width: 1px;
+  }
+
+  .mermaid .nodeLabel,
+  .mermaid .edgeLabel,
+  .mermaid .label,
+  .mermaid text {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
   }
   
   /* =================================================================
