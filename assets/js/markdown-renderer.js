@@ -394,9 +394,8 @@ class MarkdownRenderer {
         window.MarkTideUtils.processEmojis(this.markdownPreview);
       }
       
-      // Reinitialize mermaid with current theme before rendering diagrams
+      // Render mermaid diagrams with the current theme.
       if (window.MarkTideMermaid) {
-        window.MarkTideMermaid.initMermaid();
         window.MarkTideMermaid.renderDiagrams(this.markdownPreview);
       }
       
