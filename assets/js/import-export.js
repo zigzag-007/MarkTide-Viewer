@@ -737,12 +737,12 @@ class ImportExportManager {
             margin: 0 auto;
             padding: 45px;
             background-color: #000000 !important;
-            color: #ffffff !important;
+            color: #e6edf3 !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         }
         .markdown-body {
             background-color: #000000 !important;
-            color: #ffffff !important;
+            color: #e6edf3 !important;
             color-scheme: dark;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
             max-width: 920px !important;
@@ -766,10 +766,10 @@ class ImportExportManager {
         }
         
         .markdown-body ul li::marker {
-            color: #ffffff !important;
+            color: #e6edf3 !important;
         }
         
-        ${this.getDecimalOutlineListStyles('#ffffff')}
+        ${this.getDecimalOutlineListStyles('#e6edf3')}
         
         .markdown-body li {
             margin-bottom: 0.25em !important;
@@ -783,7 +783,7 @@ class ImportExportManager {
         /* Grok dark mode code highlighting */
         .hljs {
             background: #1a1a1a !important;
-            color: #ffffff !important;
+            color: #e6edf3 !important;
         }
         
         /* Grok dark mode table styles */
@@ -815,7 +815,7 @@ class ImportExportManager {
         .markdown-body pre code,
         .markdown-body pre code.hljs {
             background-color: #242628 !important;
-            color: #ffffff !important;
+            color: #e6edf3 !important;
             padding: 0 !important;
             font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
             font-feature-settings: "liga" 1, "calt" 1 !important;
@@ -854,7 +854,7 @@ class ImportExportManager {
         /* Grok dark mode headings */
         .markdown-body h1, .markdown-body h2, .markdown-body h3, 
         .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-            color: #ffffff !important;
+            color: #f0f3f6 !important;
             border-bottom-color: #333333 !important;
             font-weight: 900 !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
@@ -868,7 +868,7 @@ class ImportExportManager {
         .markdown-body strong,
         .markdown-body b {
             font-weight: 700 !important;
-            color: #ffffff !important;
+            color: #f0f3f6 !important;
             font-style: normal !important;
         }
         
@@ -878,7 +878,7 @@ class ImportExportManager {
         .markdown-body b em,
         .markdown-body b i {
             font-weight: 900 !important;
-            color: #ffffff !important;
+            color: #f0f3f6 !important;
         }
         
         /* Blockquote bold text should be less aggressive */
@@ -890,11 +890,11 @@ class ImportExportManager {
         
         /* Math expressions in Grok dark mode */
         mjx-container {
-            color: #ffffff !important;
+            color: #e6edf3 !important;
         }
         
         mjx-math {
-            color: #ffffff !important;
+            color: #e6edf3 !important;
         }
         
         /* Fix for transparent images - override github-markdown-css background */

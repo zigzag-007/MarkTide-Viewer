@@ -13,7 +13,7 @@
 :root.dark {
   /* Base colors - Grok's pure black aesthetic */
   --bg-color: #000000;
-  --text-color: #ffffff;
+  --text-color: #e6edf3;
   --border-color: #1a1a1a;
   --accent-color: #4fc3f7; /* Subtle light blue accent */
   --accent-color-rgb: 79, 195, 247;
@@ -35,7 +35,7 @@
   --editor-bg: #1a1a1a; /* Dark gray for editor */
   --editor-bg-rgb: 26, 26, 26; /* RGB values for frosted glass */
   --preview-bg: #000000; /* Pure black for preview */
-  --preview-text-color: #ffffff;
+  --preview-text-color: #e6edf3;
   
   /* Table colors */
   --table-bg: #0f1318; /* base cell background */
@@ -68,7 +68,7 @@
   --hover-shadow-primary: rgba(79, 195, 247, 0.3);
   
   /* List and content colors */
-  --list-marker-color: #ffffff;
+  --list-marker-color: #e6edf3;
   --blockquote-color: #cccccc;
   --blockquote-bold-color: #E2E8F0;
   --hr-color: #333333;
@@ -171,7 +171,7 @@
   --color-prettylights-syntax-markup-list: #f2cc60;
   --color-prettylights-syntax-markup-heading: #1f6feb;
   --color-prettylights-syntax-markup-italic: #c9d1d9;
-  --color-prettylights-syntax-markup-bold: #ffffff;
+  --color-prettylights-syntax-markup-bold: #f0f3f6;
   --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
   --color-prettylights-syntax-markup-deleted-bg: #67060c;
   --color-prettylights-syntax-markup-inserted-text: #aff5b4;
@@ -302,11 +302,20 @@
   font-weight: bold;
 }
 
+[data-theme="dark"] .markdown-body h1,
+[data-theme="dark"] .markdown-body h2,
+[data-theme="dark"] .markdown-body h3,
+[data-theme="dark"] .markdown-body h4,
+[data-theme="dark"] .markdown-body h5,
+[data-theme="dark"] .markdown-body h6 {
+  color: #f0f3f6;
+}
+
 /* Bold text styling for dark mode */
 [data-theme="dark"] .markdown-body strong,
 [data-theme="dark"] .markdown-body b {
   font-weight: 900 !important;
-  color: var(--text-color) !important;
+  color: #f0f3f6 !important;
   font-style: normal !important;
 }
 
@@ -316,7 +325,7 @@
 [data-theme="dark"] .markdown-body b em,
 [data-theme="dark"] .markdown-body b i {
   font-weight: 900 !important;
-  color: var(--text-color) !important;
+  color: #f0f3f6 !important;
 }
 
 /* Blockquote bold text should be less aggressive */
