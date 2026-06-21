@@ -343,8 +343,8 @@ class PrintHandler {
     printFrame.style.position = 'absolute';
     printFrame.style.top = '-1000px';
     printFrame.style.left = '-1000px';
-    printFrame.style.width = '0';
-    printFrame.style.height = '0';
+    printFrame.style.width = '794px';
+    printFrame.style.height = '1123px';
     printFrame.style.border = 'none';
     
     document.body.appendChild(printFrame);
