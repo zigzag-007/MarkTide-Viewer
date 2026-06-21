@@ -335,6 +335,12 @@ class PrintHandler {
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start', 'title']
     });
     const printableHtml = this.preparePrintTables(sanitizedHtml);
+    const highlightTheme = window.MarktideHighlightTheme
+      ? window.MarktideHighlightTheme.getThemeUrl(false)
+      : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
+    const printHighlightTokenStyles = window.MarktideHighlightTheme
+      ? window.MarktideHighlightTheme.getPrintTokenCss()
+      : '';
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -363,8 +369,10 @@ class PrintHandler {
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <link rel="stylesheet" href="${highlightTheme}">
   <style>
+    ${printHighlightTokenStyles}
+
     @media print {
       @page {
         margin: 0.55in 0.38in;
@@ -497,7 +505,7 @@ class PrintHandler {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
     }
     
-    .markdown-body p, .markdown-body li, .markdown-body span,
+    .markdown-body p, .markdown-body li, .markdown-body span:not(pre code.hljs span),
     .markdown-body div, .markdown-body section, .markdown-body article {
       background: transparent !important;
       color: #24292e !important;
@@ -830,7 +838,7 @@ class PrintHandler {
       }
       
       /* Specific handling for paragraphs and text elements */
-      .markdown-body p, .markdown-body li, .markdown-body span, 
+      .markdown-body p, .markdown-body li, .markdown-body span:not(pre code.hljs span),
       .markdown-body div, .markdown-body td, .markdown-body th {
         white-space: normal !important;
         word-wrap: break-word !important;

@@ -1090,9 +1090,14 @@ class ImportExportManager {
     `;
     
     // Choose appropriate highlight.js theme
-    const highlightTheme = isDarkMode 
-        ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css"
-        : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
+    const highlightTheme = window.MarktideHighlightTheme
+        ? window.MarktideHighlightTheme.getThemeUrl(isDarkMode)
+        : (isDarkMode
+            ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css"
+            : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css");
+    const exportHighlightTokenStyles = window.MarktideHighlightTheme
+        ? window.MarktideHighlightTheme.getPrintTokenCss()
+        : '';
     
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
@@ -1609,7 +1614,7 @@ class ImportExportManager {
         }
     `;
     
-    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles + exportHighlightTokenStyles);
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en">
