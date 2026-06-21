@@ -134,9 +134,9 @@ class MermaidHandler {
     if (currentTheme === "dark") {
       themeVariables = {
         primaryColor: '#30363d',
-        primaryTextColor: '#f0f3f6',
-        primaryBorderColor: '#30363d',
-        lineColor: '#30363d',
+        primaryTextColor: '#e4e1f0',
+        primaryBorderColor: '#8b7cf8',
+        lineColor: '#8b7cf8',
         secondaryColor: '#21262d',
         tertiaryColor: '#161b22',
         background: '#1a1625',
@@ -147,17 +147,12 @@ class MermaidHandler {
       };
     } else {
       themeVariables = {
-        primaryColor: '#f6f8fa',
+        primaryColor: '#f9f9f9',
         primaryTextColor: '#24292e',
-        primaryBorderColor: '#24292e',
+        primaryBorderColor: '#d1d5da',
         lineColor: '#24292e',
-        secondaryColor: '#f6f8fa',
-        tertiaryColor: '#ffffff',
-        background: '#ffffff',
-        mainBkg: '#f6f8fa',
-        secondBkg: '#f6f8fa',
-        nodeBorder: '#24292e',
-        clusterBkg: '#f6f8fa',
+        secondaryColor: '#e8f5e8',
+        tertiaryColor: '#fff3e0',
         edgeLabelBackground: '#e8f5e8',
         fontFamily: fontFamily
       };
@@ -168,10 +163,10 @@ class MermaidHandler {
       theme: mermaidTheme,
       themeVariables: themeVariables,
       securityLevel: 'loose',
-      htmlLabels: false,
+      htmlLabels: true,
       flowchart: {
-        useMaxWidth: false,
-        htmlLabels: false,
+        useMaxWidth: true,
+        htmlLabels: true,
         curve: 'basis',
         nodeSpacing: 60,
         rankSpacing: 70
