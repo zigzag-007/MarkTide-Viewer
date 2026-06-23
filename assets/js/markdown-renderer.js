@@ -17,6 +17,10 @@ function marktideWrapButtonHtml() {
   );
 }
 
+function marktideEncodeMermaidSource(source) {
+  return encodeURIComponent(source || '');
+}
+
 class MarkdownRenderer {
   constructor() {
     this.markdownRenderTimeout = null;
@@ -55,7 +59,7 @@ class MarkdownRenderer {
     this.renderer.code = function (code, language) {
       if (language === 'mermaid') {
         const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
+        return `<div class="mermaid-container" data-mermaid-source="${marktideEncodeMermaidSource(code)}"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
       }
       
       const displayLanguage = language || "text"; // Keep user's original language label
@@ -370,6 +374,7 @@ class MarkdownRenderer {
           "role",
           "type",
           "data-marktide-tip",
+          "data-mermaid-source",
         ],
       });
       this.markdownPreview.innerHTML = sanitizedHtml;
@@ -396,7 +401,11 @@ class MarkdownRenderer {
       
       // Render mermaid diagrams with the current theme.
       if (window.MarkTideMermaid) {
-        window.MarkTideMermaid.renderDiagrams(this.markdownPreview);
+        window.MarkTideMermaid.renderDiagrams(this.markdownPreview).then(() => {
+          if (window.MarkTideMermaidToolbar) {
+            window.MarkTideMermaidToolbar.enhance(this.markdownPreview);
+          }
+        });
       }
       
       if (window.MathJax) {

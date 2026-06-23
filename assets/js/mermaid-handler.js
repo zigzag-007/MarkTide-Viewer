@@ -128,6 +128,61 @@ class MermaidHandler {
     });
   }
 
+  setSolidEdgeLabelBackground(rect) {
+    rect.setAttribute('fill', '#e8f5e8');
+    rect.setAttribute('fill-opacity', '1');
+    rect.setAttribute('opacity', '1');
+    rect.setAttribute('stroke', 'none');
+    rect.style.setProperty('fill', '#e8f5e8', 'important');
+    rect.style.setProperty('fill-opacity', '1', 'important');
+    rect.style.setProperty('opacity', '1', 'important');
+    rect.style.setProperty('stroke', 'none', 'important');
+  }
+
+  stabilizeEdgeLabels(container) {
+    container.querySelectorAll('.mermaid svg').forEach((svg) => {
+      svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
+        const labelText = (edgeLabel.textContent || '').trim();
+        if (!labelText) return;
+
+        edgeLabel.style.setProperty('background-color', '#e8f5e8', 'important');
+        edgeLabel.style.setProperty('color', '#24292e', 'important');
+
+        edgeLabel.querySelectorAll('foreignObject').forEach((foreignObject) => {
+          const width = Number(foreignObject.getAttribute('width')) || 0;
+          const height = Number(foreignObject.getAttribute('height')) || 0;
+          if (width > 0) {
+            foreignObject.setAttribute('x', '-4');
+            foreignObject.setAttribute('width', String(width + 8));
+          }
+          if (height > 0) {
+            foreignObject.setAttribute('y', '-2');
+            foreignObject.setAttribute('height', String(height + 4));
+          }
+          foreignObject.style.setProperty('overflow', 'visible', 'important');
+        });
+
+        edgeLabel.querySelectorAll('foreignObject div, foreignObject span, foreignObject p').forEach((labelPart) => {
+          labelPart.style.setProperty('display', 'inline-block', 'important');
+          labelPart.style.setProperty('padding', '0 2px', 'important');
+          labelPart.style.setProperty('line-height', '1.25', 'important');
+          labelPart.style.setProperty('background-color', '#e8f5e8', 'important');
+          labelPart.style.setProperty('color', '#24292e', 'important');
+          labelPart.style.setProperty('box-decoration-break', 'clone', 'important');
+          labelPart.style.setProperty('-webkit-box-decoration-break', 'clone', 'important');
+        });
+
+        edgeLabel.querySelectorAll('rect, .label rect').forEach((rect) => {
+          this.setSolidEdgeLabelBackground(rect);
+        });
+
+        if (edgeLabel.parentNode) {
+          edgeLabel.parentNode.appendChild(edgeLabel);
+        }
+      });
+    });
+  }
+
   markDiagramTypes(container) {
     container.querySelectorAll('.mermaid').forEach((diagram) => {
       if (diagram.dataset.mermaidType) return;
@@ -225,6 +280,7 @@ class MermaidHandler {
 
   afterRender(container) {
     this.improveNodeLabelContrast(container);
+    this.stabilizeEdgeLabels(container);
   }
 
   // Get theme variables for print mode (always light)

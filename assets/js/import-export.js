@@ -17,6 +17,21 @@ function marktideExportWrapButtonHtml() {
   );
 }
 
+function marktideExportEncodeMermaidSource(source) {
+  return encodeURIComponent(source || '');
+}
+
+function marktideExportMermaidToolbarScript() {
+  if (typeof MermaidToolbar !== 'function') return '';
+
+  return `
+    ${MermaidToolbar.toString()}
+    window.MarkTideMermaidToolbar = new MermaidToolbar();
+    window.MarkTideMermaidToolbar.init();
+    window.MarkTideMermaidToolbar.enhance(document);
+  `;
+}
+
 class ImportExportManager {
   constructor() {
     this.fileInput = null;
@@ -617,7 +632,7 @@ class ImportExportManager {
     exportRenderer.code = function (code, language) {
       if (language === 'mermaid') {
         const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
+        return `<div class="mermaid-container" data-mermaid-source="${marktideExportEncodeMermaidSource(code)}"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
       }
       
       const displayLanguage = language || "text"; // Keep user's original language label
@@ -715,6 +730,7 @@ class ImportExportManager {
         'type',
         'data-marktide-tip',
         'data-code-id',
+        'data-mermaid-source',
       ],
     });
     
@@ -1613,6 +1629,181 @@ class ImportExportManager {
         .mermaid text {
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
         }
+
+        .mermaid-toolbar {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 5;
+            display: flex;
+            gap: 0.35rem;
+            padding: 0.35rem;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 10px;
+            background: rgba(248, 249, 250, 0.84);
+            -webkit-backdrop-filter: blur(12px) saturate(145%);
+            backdrop-filter: blur(12px) saturate(145%);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+            transform: translateY(-2px);
+        }
+
+        .mermaid-container:hover .mermaid-toolbar,
+        .mermaid-container:focus-within .mermaid-toolbar {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .mermaid-toolbar-btn,
+        .mermaid-modal-btn,
+        .mermaid-modal-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            border-radius: 8px;
+            background: rgba(248, 249, 250, 0.72);
+            color: #24292e;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .mermaid-toolbar-btn:hover,
+        .mermaid-modal-btn:hover,
+        .mermaid-modal-close:hover {
+            border-color: #4fc3f7;
+            background: #e8f5fd;
+            color: #0288d1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .mermaid-container[data-mermaid-status]::after {
+            content: attr(data-mermaid-status);
+            position: absolute;
+            top: 11px;
+            right: 136px;
+            z-index: 6;
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            background: rgba(248, 249, 250, 0.9);
+            color: #24292e;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 30px;
+            white-space: nowrap;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .mermaid-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px 88px;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .mermaid-modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mermaid-modal-stage {
+            width: min(92vw, 1300px);
+            max-height: 78vh;
+            overflow: auto;
+            background: #ffffff;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .mermaid-modal-content {
+            min-width: 100%;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .mermaid-modal-content svg {
+            display: block;
+            max-width: none;
+            height: auto;
+            transform-origin: center center;
+            transition: transform 0.15s ease;
+        }
+
+        .mermaid-modal-toolbar {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 10px;
+            background: rgba(248, 249, 250, 0.9);
+            -webkit-backdrop-filter: blur(12px) saturate(145%);
+            backdrop-filter: blur(12px) saturate(145%);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+        }
+
+        .mermaid-modal-zoom {
+            min-width: 48px;
+            color: #24292e;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .mermaid-modal-divider {
+            width: 1px;
+            height: 22px;
+            margin: 0 4px;
+            background: #d0d7de;
+        }
+
+        .mermaid-modal-close {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            background: rgba(248, 249, 250, 0.9);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        @media print {
+            .mermaid-toolbar,
+            .mermaid-modal-overlay {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .mermaid-container[data-mermaid-status]::after {
+                top: 50px;
+                right: 8px;
+            }
+        }
     `;
     
     const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles + exportHighlightTokenStyles);
@@ -1749,6 +1940,64 @@ class ImportExportManager {
                 });
             });
         }
+
+        function setSolidEdgeLabelBackground(rect) {
+            rect.setAttribute('fill', '#e8f5e8');
+            rect.setAttribute('fill-opacity', '1');
+            rect.setAttribute('opacity', '1');
+            rect.setAttribute('stroke', 'none');
+            rect.style.setProperty('fill', '#e8f5e8', 'important');
+            rect.style.setProperty('fill-opacity', '1', 'important');
+            rect.style.setProperty('opacity', '1', 'important');
+            rect.style.setProperty('stroke', 'none', 'important');
+        }
+
+        function stabilizeEdgeLabels() {
+            document.querySelectorAll('.mermaid svg').forEach((svg) => {
+                svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
+                    const labelText = (edgeLabel.textContent || '').trim();
+                    if (!labelText) return;
+
+                    edgeLabel.style.setProperty('background-color', '#e8f5e8', 'important');
+                    edgeLabel.style.setProperty('color', '#24292e', 'important');
+
+                    edgeLabel.querySelectorAll('foreignObject').forEach((foreignObject) => {
+                        const width = Number(foreignObject.getAttribute('width')) || 0;
+                        const height = Number(foreignObject.getAttribute('height')) || 0;
+                        if (width > 0) {
+                            foreignObject.setAttribute('x', '-4');
+                            foreignObject.setAttribute('width', String(width + 8));
+                        }
+                        if (height > 0) {
+                            foreignObject.setAttribute('y', '-2');
+                            foreignObject.setAttribute('height', String(height + 4));
+                        }
+                        foreignObject.style.setProperty('overflow', 'visible', 'important');
+                    });
+
+                    edgeLabel.querySelectorAll('foreignObject div, foreignObject span, foreignObject p').forEach((labelPart) => {
+                        labelPart.style.setProperty('display', 'inline-block', 'important');
+                        labelPart.style.setProperty('padding', '0 2px', 'important');
+                        labelPart.style.setProperty('line-height', '1.25', 'important');
+                        labelPart.style.setProperty('background-color', '#e8f5e8', 'important');
+                        labelPart.style.setProperty('color', '#24292e', 'important');
+                        labelPart.style.setProperty('box-decoration-break', 'clone', 'important');
+                        labelPart.style.setProperty('-webkit-box-decoration-break', 'clone', 'important');
+                    });
+
+                    edgeLabel.querySelectorAll('rect, .label rect').forEach(setSolidEdgeLabelBackground);
+
+                    if (edgeLabel.parentNode) {
+                        edgeLabel.parentNode.appendChild(edgeLabel);
+                    }
+                });
+            });
+        }
+
+        function stabilizeMermaidDiagrams() {
+            improveNodeLabelContrast();
+            stabilizeEdgeLabels();
+        }
         
         // Render all mermaid diagrams
         try {
@@ -1757,14 +2006,23 @@ class ImportExportManager {
                 : mermaid.init(undefined, document.querySelectorAll('.mermaid'));
 
             if (mermaidResult && typeof mermaidResult.then === 'function') {
-                mermaidResult.then(improveNodeLabelContrast).catch((e) => console.warn("Mermaid rendering failed:", e));
+                mermaidResult.then(() => {
+                    stabilizeMermaidDiagrams();
+                    if (window.MarkTideMermaidToolbar) {
+                        window.MarkTideMermaidToolbar.enhance(document);
+                    }
+                }).catch((e) => console.warn("Mermaid rendering failed:", e));
             } else {
-                improveNodeLabelContrast();
+                stabilizeMermaidDiagrams();
+                if (window.MarkTideMermaidToolbar) {
+                    window.MarkTideMermaidToolbar.enhance(document);
+                }
             }
         } catch (e) {
             console.warn("Mermaid rendering failed:", e);
         }
     `)}</script>
+    <script>${this.minifyJS(marktideExportMermaidToolbarScript())}</script>
     <script>${this.minifyJS(`
         window.MathJax = {
             tex: {
