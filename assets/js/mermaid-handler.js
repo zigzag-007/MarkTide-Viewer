@@ -40,7 +40,7 @@ class MermaidHandler {
       startOnLoad: false,
       theme: this.getThemeName(options.theme, mode),
       themeVariables: this.getThemeVariables(),
-      securityLevel: 'loose',
+      securityLevel: 'strict',
       htmlLabels: htmlLabels,
       flowchart: {
         useMaxWidth: true,

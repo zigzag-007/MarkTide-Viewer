@@ -823,7 +823,7 @@ class PrintHandler {
                 themeVariables: {
                   fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
                 },
-                securityLevel: 'loose',
+                securityLevel: 'strict',
                 htmlLabels: false,
                 flowchart: {
                   useMaxWidth: true,

@@ -51,7 +51,7 @@
         startOnLoad: false,
         theme: mode === 'pdf' ? 'neutral' : 'default',
         themeVariables: getThemeVariables(),
-        securityLevel: 'loose',
+        securityLevel: 'strict',
         htmlLabels: htmlLabels,
         flowchart: {
           useMaxWidth: mode !== 'export',
@@ -425,6 +425,29 @@
       }
     }
 
+    function sanitizeSvgInteractions(svg) {
+      const unsafeUrlPattern = /^\s*(?:javascript|data|vbscript):/i;
+      const urlAttributes = ['href', 'xlink:href'];
+
+      svg.querySelectorAll('script').forEach((script) => script.remove());
+      svg.querySelectorAll('*').forEach((element) => {
+        Array.from(element.attributes || []).forEach((attribute) => {
+          const name = attribute.name;
+          const value = attribute.value || '';
+          const lowerName = name.toLowerCase();
+
+          if (lowerName.startsWith('on')) {
+            element.removeAttribute(name);
+            return;
+          }
+
+          if (urlAttributes.includes(lowerName) && unsafeUrlPattern.test(value)) {
+            element.removeAttribute(name);
+          }
+        });
+      });
+    }
+
     function prepareEdgeLabelsForExport(svg) {
       svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
         const labelText = (edgeLabel.textContent || '').trim();
@@ -510,6 +533,7 @@
 
       inlineComputedStyles(svg, clone);
       replaceForeignObjectLabels(clone);
+      sanitizeSvgInteractions(clone);
       measureExportClone(clone, () => prepareEdgeLabelsForExport(clone));
       padSvgForExport(clone, width, height);
 
@@ -538,6 +562,7 @@
       stabilizeMermaidDiagrams,
       prepareSvgClone,
       replaceForeignObjectLabels,
+      sanitizeSvgInteractions,
       inlineComputedStyles,
       parseSvgNumber
     };

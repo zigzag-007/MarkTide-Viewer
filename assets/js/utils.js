@@ -55,7 +55,7 @@ function processEmojis(element) {
     if (hasEmoji) {
       result += text.substring(lastIndex);
       const span = document.createElement('span');
-      span.innerHTML = result;
+      span.textContent = result;
       textNode.parentNode.replaceChild(span, textNode);
     }
   });

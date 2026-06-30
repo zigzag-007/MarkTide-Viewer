@@ -603,7 +603,11 @@ class MermaidToolbar {
     this.activeContainer = container;
     this.zoom = 1;
     this.modalContent.innerHTML = '';
-    this.modalContent.appendChild(svg.cloneNode(true));
+    const modalSvg = svg.cloneNode(true);
+    if (window.MarkTideMermaidShared && window.MarkTideMermaidShared.sanitizeSvgInteractions) {
+      window.MarkTideMermaidShared.sanitizeSvgInteractions(modalSvg);
+    }
+    this.modalContent.appendChild(modalSvg);
     this.setZoom(this.zoom);
     this.modal.classList.add('open');
     this.modal.setAttribute('aria-hidden', 'false');
