@@ -102,183 +102,11 @@ class PrintHandler {
 
   stabilizeMermaidDiagrams(printDocument) {
     const printWindow = printDocument.defaultView || window;
+    const helper = printWindow.MarkTideMermaidShared || window.MarkTideMermaidShared;
 
-    const getReadableTextColor = (fill) => {
-      if (!fill || fill === 'none' || fill.startsWith('url(')) {
-        return null;
-      }
-
-      const namedColors = {
-        black: '#000000',
-        white: '#ffffff',
-        red: '#ff0000',
-        orange: '#ffa500',
-        yellow: '#ffff00',
-        green: '#008000',
-        blue: '#0000ff',
-        purple: '#800080',
-        gray: '#808080',
-        grey: '#808080'
-      };
-
-      let color = fill.trim().toLowerCase();
-      color = namedColors[color] || color;
-
-      let red;
-      let green;
-      let blue;
-
-      const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-      if (hexMatch) {
-        let hex = hexMatch[1];
-        if (hex.length === 3) {
-          hex = hex.split('').map((part) => part + part).join('');
-        }
-        red = parseInt(hex.slice(0, 2), 16);
-        green = parseInt(hex.slice(2, 4), 16);
-        blue = parseInt(hex.slice(4, 6), 16);
-      } else {
-        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-        if (!rgbMatch) {
-          return null;
-        }
-        red = Number(rgbMatch[1]);
-        green = Number(rgbMatch[2]);
-        blue = Number(rgbMatch[3]);
-      }
-
-      const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
-      return luminance < 0.48 ? '#ffffff' : '#24292e';
-    };
-
-    const getNodeFill = (shape) => {
-      const computedFill = printWindow.getComputedStyle(shape).fill;
-      return computedFill || shape.getAttribute('fill') || shape.style.fill;
-    };
-
-    printDocument.querySelectorAll('.mermaid svg').forEach((svg) => {
-      const svgNamespace = 'http://www.w3.org/2000/svg';
-
-      svg.querySelectorAll('g.node').forEach((node) => {
-        const shape = node.querySelector('rect, polygon, circle, ellipse');
-        if (!shape) return;
-
-        const fill = getNodeFill(shape);
-        const readableColor = getReadableTextColor(fill);
-        if (!readableColor) return;
-
-        shape.setAttribute('stroke', '#24292e');
-        shape.setAttribute('stroke-width', '1');
-        shape.style.setProperty('stroke', '#24292e', 'important');
-        shape.style.setProperty('stroke-width', '1px', 'important');
-
-        node.querySelectorAll('text, tspan, .nodeLabel, .label, foreignObject div, foreignObject span, foreignObject p').forEach((label) => {
-          label.setAttribute('fill', readableColor);
-          label.style.setProperty('color', readableColor, 'important');
-          label.style.setProperty('fill', readableColor, 'important');
-        });
-      });
-
-      svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
-        const labelText = (edgeLabel.textContent || '').trim();
-        if (!labelText) return;
-
-        edgeLabel.querySelectorAll('foreignObject div, foreignObject span, foreignObject p').forEach((labelPart) => {
-          labelPart.style.backgroundColor = '#e8f5e8';
-          labelPart.style.boxDecorationBreak = 'clone';
-          labelPart.style.webkitBoxDecorationBreak = 'clone';
-        });
-
-        edgeLabel.querySelectorAll('foreignObject').forEach((foreignObject) => {
-          const width = Number(foreignObject.getAttribute('width')) || 0;
-          const height = Number(foreignObject.getAttribute('height')) || 0;
-          if (width > 0) {
-            foreignObject.setAttribute('x', '-4');
-            foreignObject.setAttribute('width', String(width + 8));
-          }
-          if (height > 0) {
-            foreignObject.setAttribute('y', '-2');
-            foreignObject.setAttribute('height', String(height + 4));
-          }
-          foreignObject.style.overflow = 'visible';
-        });
-
-        edgeLabel.querySelectorAll('foreignObject span, foreignObject p').forEach((labelPart) => {
-          labelPart.style.display = 'inline-block';
-          labelPart.style.padding = '0 2px';
-          labelPart.style.lineHeight = '1.25';
-        });
-
-        edgeLabel.querySelectorAll('.marktide-edge-label-bg').forEach((rect) => rect.remove());
-
-        const label = edgeLabel.querySelector('.label') || edgeLabel;
-        const text = label.querySelector('text');
-        if (text && typeof text.getBBox === 'function') {
-          try {
-            const box = text.getBBox();
-            if (box.width > 0 && box.height > 0) {
-              const existingHalo = label.querySelector('.marktide-edge-label-halo');
-              if (existingHalo) {
-                existingHalo.remove();
-              }
-
-              const background = printDocument.createElementNS(svgNamespace, 'rect');
-              background.classList.add('marktide-edge-label-bg');
-              background.setAttribute('x', String(box.x - 3));
-              background.setAttribute('y', String(box.y - 2));
-              background.setAttribute('width', String(box.width + 6));
-              background.setAttribute('height', String(box.height + 4));
-              background.setAttribute('fill', '#e8f5e8');
-              background.setAttribute('opacity', '0.95');
-              background.setAttribute('stroke', 'none');
-              label.insertBefore(background, text);
-
-              const halo = text.cloneNode(true);
-              halo.classList.add('marktide-edge-label-halo');
-              halo.setAttribute('fill', 'none');
-              halo.setAttribute('stroke', '#e8f5e8');
-              halo.setAttribute('stroke-width', '8');
-              halo.setAttribute('stroke-linejoin', 'round');
-              halo.setAttribute('paint-order', 'stroke');
-              halo.style.fill = 'none';
-              halo.style.stroke = '#e8f5e8';
-              halo.style.strokeWidth = '8px';
-              halo.style.strokeLinejoin = 'round';
-              label.insertBefore(halo, text);
-
-              text.setAttribute('fill', '#24292e');
-              text.style.fill = '#24292e';
-            }
-          } catch (e) {
-            console.warn("Mermaid edge label background failed:", e);
-          }
-        }
-
-        edgeLabel.querySelectorAll('rect.background, .marktide-edge-label-bg').forEach((rect) => {
-          rect.setAttribute('fill', '#e8f5e8');
-          rect.setAttribute('opacity', '0.95');
-          rect.setAttribute('stroke', 'none');
-          rect.style.fill = '#e8f5e8';
-          rect.style.opacity = '0.95';
-          rect.style.stroke = 'none';
-        });
-      });
-
-      const viewBox = svg.getAttribute('viewBox');
-      if (!viewBox) return;
-
-      const dimensions = viewBox.trim().split(/\s+/).map(Number);
-      const width = dimensions[2];
-      const height = dimensions[3];
-      if (!Number.isFinite(width) || !Number.isFinite(height)) return;
-
-      svg.setAttribute('width', Math.ceil(width).toString());
-      svg.setAttribute('height', Math.ceil(height).toString());
-      svg.style.display = 'block';
-      svg.style.maxWidth = '100%';
-      svg.style.height = 'auto';
-      svg.style.margin = '0 auto';
-    });
+    if (helper && helper.stabilizeMermaidDiagrams) {
+      helper.stabilizeMermaidDiagrams(printDocument, { stabilizeDimensions: true });
+    }
   }
 
   printPreview(titleOverride) {
@@ -730,31 +558,27 @@ class PrintHandler {
     }
     
     .mermaid .edgeLabel {
-      background-color: #e8f5e8 !important;
       color: #24292e !important;
+      font-weight: 700 !important;
     }
 
-    .mermaid .edgeLabel foreignObject,
     .mermaid .edgeLabel foreignObject div,
     .mermaid .edgeLabel foreignObject span,
     .mermaid .edgeLabel foreignObject p {
       background-color: #e8f5e8 !important;
       color: #24292e !important;
-      overflow: visible !important;
       box-decoration-break: clone !important;
       -webkit-box-decoration-break: clone !important;
     }
 
-    .mermaid .edgeLabel rect.background,
-    .mermaid .edgeLabel .label rect.background {
-      fill: #e8f5e8 !important;
-      opacity: 0.95 !important;
-      stroke: none !important;
+    .mermaid .edgeLabel foreignObject {
+      background-color: transparent !important;
+      overflow: visible !important;
     }
-    
+
     .mermaid g.nodes g.node text {
       fill: #24292e !important;
-      font-weight: 400 !important;
+      font-weight: 700 !important;
     }
     
     /* Math expressions */
@@ -927,6 +751,9 @@ class PrintHandler {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
+  <script>
+    ${window.MarkTideCreateMermaidShared ? `window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()}; window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);` : ''}
+  </script>
   <script>
     window.MathJax = {
       tex: {

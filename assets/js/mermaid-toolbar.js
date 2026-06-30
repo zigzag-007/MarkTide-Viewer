@@ -11,6 +11,7 @@ class MermaidToolbar {
   }
 
   init() {
+    this.ensureStyles();
     this.ensureModal();
     document.addEventListener('pointerdown', () => {
       this.lastInteractionWasPointer = true;
@@ -24,6 +25,278 @@ class MermaidToolbar {
         this.closeModal();
       }
     });
+  }
+
+  ensureStyles() {
+    if (document.getElementById('marktide-mermaid-toolbar-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'marktide-mermaid-toolbar-styles';
+    style.textContent = this.getStyles();
+    document.head.appendChild(style);
+  }
+
+  getStyles() {
+    return `
+      .mermaid-toolbar {
+        --marktide-toolbar-text-color: var(--text-color, #24292e);
+        --marktide-toolbar-border-color: var(--border-color, #d0d7de);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 248, 249, 250);
+        --marktide-toolbar-button-hover: var(--button-hover, #e8f5fd);
+        --marktide-toolbar-button-border: rgba(255, 255, 255, 0.26);
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        z-index: 5;
+        display: flex;
+        gap: 0.35rem;
+        padding: 0.35rem;
+        border: 1px solid var(--marktide-toolbar-button-border);
+        border-radius: 10px;
+        background: rgba(var(--marktide-toolbar-button-bg-rgb), 0.76);
+        -webkit-backdrop-filter: blur(12px) saturate(145%);
+        backdrop-filter: blur(12px) saturate(145%);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+        transform: translateY(-2px);
+      }
+
+      :root[data-theme="dark"] .mermaid-toolbar,
+      :root.dark .mermaid-toolbar,
+      [data-theme="dark"] .mermaid-toolbar {
+        --marktide-toolbar-text-color: var(--text-color, #e6edf3);
+        --marktide-toolbar-border-color: var(--border-color, #1a1a1a);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 26, 26, 26);
+        --marktide-toolbar-button-hover: var(--button-hover, rgba(79, 195, 247, 0.1));
+        --marktide-toolbar-button-border: rgba(255, 255, 255, 0.18);
+      }
+
+      :root[data-theme="light"] .mermaid-toolbar,
+      :root.light .mermaid-toolbar,
+      [data-theme="light"] .mermaid-toolbar {
+        --marktide-toolbar-text-color: var(--text-color, #000000);
+        --marktide-toolbar-border-color: var(--border-color, #e0e0e0);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 248, 249, 250);
+        --marktide-toolbar-button-hover: var(--button-hover, rgba(79, 195, 247, 0.1));
+        --marktide-toolbar-button-border: rgba(0, 0, 0, 0.08);
+      }
+
+      .mermaid-container:hover .mermaid-toolbar,
+      .mermaid-container:focus-within .mermaid-toolbar {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+
+      .mermaid-toolbar-btn,
+      .mermaid-modal-btn,
+      .mermaid-modal-close {
+        appearance: none;
+        -webkit-appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        padding: 0;
+        border: 1px solid var(--marktide-toolbar-button-border);
+        border-radius: 8px;
+        background: rgba(var(--marktide-toolbar-button-bg-rgb), 0.7) !important;
+        color: var(--marktide-toolbar-text-color) !important;
+        cursor: pointer;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+      }
+
+      .mermaid-toolbar-btn i,
+      .mermaid-modal-btn i,
+      .mermaid-modal-close i {
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      .mermaid-toolbar-btn:hover,
+      .mermaid-modal-btn:hover,
+      .mermaid-modal-close:hover {
+        border-color: var(--marktide-toolbar-accent-color) !important;
+        background: var(--marktide-toolbar-button-hover) !important;
+        color: var(--marktide-toolbar-accent-color) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .mermaid-container[data-mermaid-status]::after {
+        content: attr(data-mermaid-status);
+        position: absolute;
+        top: 7px;
+        right: 136px;
+        z-index: 6;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid var(--marktide-toolbar-button-border);
+        background: rgba(var(--marktide-toolbar-button-bg-rgb), 0.84);
+        color: var(--marktide-toolbar-text-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 30px;
+        white-space: nowrap;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+      }
+
+      .mermaid-modal-overlay {
+        --marktide-toolbar-text-color: var(--text-color, #24292e);
+        --marktide-toolbar-border-color: var(--border-color, #d0d7de);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 248, 249, 250);
+        --marktide-toolbar-button-hover: var(--button-hover, #e8f5fd);
+        --marktide-toolbar-button-border: rgba(255, 255, 255, 0.26);
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 32px 88px;
+        background: rgba(0, 0, 0, 0.82);
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      :root[data-theme="dark"] .mermaid-modal-overlay,
+      :root.dark .mermaid-modal-overlay,
+      [data-theme="dark"] .mermaid-modal-overlay {
+        --marktide-toolbar-text-color: var(--text-color, #e6edf3);
+        --marktide-toolbar-border-color: var(--border-color, #1a1a1a);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 26, 26, 26);
+        --marktide-toolbar-button-hover: var(--button-hover, rgba(79, 195, 247, 0.1));
+        --marktide-toolbar-button-border: rgba(255, 255, 255, 0.18);
+      }
+
+      :root[data-theme="light"] .mermaid-modal-overlay,
+      :root.light .mermaid-modal-overlay,
+      [data-theme="light"] .mermaid-modal-overlay {
+        --marktide-toolbar-text-color: var(--text-color, #000000);
+        --marktide-toolbar-border-color: var(--border-color, #e0e0e0);
+        --marktide-toolbar-accent-color: var(--accent-color, #4fc3f7);
+        --marktide-toolbar-button-bg-rgb: var(--button-bg-rgb, 248, 249, 250);
+        --marktide-toolbar-button-hover: var(--button-hover, rgba(79, 195, 247, 0.1));
+        --marktide-toolbar-button-border: rgba(0, 0, 0, 0.08);
+      }
+
+      .mermaid-modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .mermaid-modal-stage {
+        width: min(92vw, 1300px);
+        max-height: 78vh;
+        overflow: auto;
+        scrollbar-gutter: stable both-edges;
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      .mermaid-modal-stage,
+      .mermaid-modal-stage * {
+        box-sizing: border-box;
+      }
+
+      .mermaid-modal-content {
+        width: 100%;
+        min-width: 0;
+        min-height: 260px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        overflow: visible;
+      }
+
+      .mermaid-modal-content svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        transform-origin: center center;
+        transition: transform 0.15s ease;
+      }
+
+      .mermaid-modal-content svg.is-zoomed {
+        max-width: none;
+      }
+
+      .mermaid-modal-toolbar {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px;
+        border: 1px solid var(--marktide-toolbar-button-border);
+        border-radius: 10px;
+        background: rgba(var(--marktide-toolbar-button-bg-rgb), 0.84);
+        -webkit-backdrop-filter: blur(12px) saturate(145%);
+        backdrop-filter: blur(12px) saturate(145%);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+      }
+
+      .mermaid-modal-zoom {
+        min-width: 48px;
+        color: var(--marktide-toolbar-text-color);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .mermaid-modal-divider {
+        width: 1px;
+        height: 22px;
+        margin: 0 4px;
+        background: var(--marktide-toolbar-border-color);
+      }
+
+      .mermaid-modal-close {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        background: rgba(var(--marktide-toolbar-button-bg-rgb), 0.84);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      @media print {
+        .mermaid-toolbar,
+        .mermaid-modal-overlay {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .mermaid-container[data-mermaid-status]::after {
+          top: 50px;
+          right: 8px;
+        }
+      }
+    `;
   }
 
   enhance(root = document) {
@@ -260,168 +533,25 @@ class MermaidToolbar {
   }
 
   prepareSvgClone(svg) {
-    const clone = svg.cloneNode(true);
-    const viewBox = svg.getAttribute('viewBox');
-    const box = viewBox ? viewBox.split(/\s+/).map(Number) : [];
-    const rect = svg.getBoundingClientRect();
-    const width = Math.ceil(box[2] || rect.width || svg.clientWidth || 1200);
-    const height = Math.ceil(box[3] || rect.height || svg.clientHeight || 800);
-
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    clone.setAttribute('width', String(width));
-    clone.setAttribute('height', String(height));
-    if (!clone.getAttribute('viewBox')) {
-      clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    if (!window.MarkTideMermaidShared) {
+      throw new Error('Mermaid export helper is unavailable');
     }
 
-    this.inlineComputedStyles(svg, clone);
-    this.normalizeEdgeLabelBackgrounds(clone);
-    this.replaceForeignObjectLabels(clone);
-    this.bringEdgeLabelsToFront(clone);
-
-    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    background.setAttribute('x', '0');
-    background.setAttribute('y', '0');
-    background.setAttribute('width', '100%');
-    background.setAttribute('height', '100%');
-    background.setAttribute('fill', '#ffffff');
-    clone.insertBefore(background, clone.firstChild);
-
-    return clone;
-  }
-
-  inlineComputedStyles(sourceRoot, cloneRoot) {
-    const sourceElements = [sourceRoot, ...sourceRoot.querySelectorAll('*')];
-    const cloneElements = [cloneRoot, ...cloneRoot.querySelectorAll('*')];
-    const styleProperties = [
-      'fill',
-      'stroke',
-      'stroke-width',
-      'stroke-dasharray',
-      'stroke-linecap',
-      'stroke-linejoin',
-      'font-family',
-      'font-size',
-      'font-weight',
-      'font-style',
-      'color',
-      'opacity',
-      'text-anchor',
-      'dominant-baseline',
-      'paint-order'
-    ];
-
-    sourceElements.forEach((sourceElement, index) => {
-      const cloneElement = cloneElements[index];
-      if (!cloneElement || cloneElement.tagName.toLowerCase() === 'style') return;
-
-      const computedStyle = window.getComputedStyle(sourceElement);
-      styleProperties.forEach((property) => {
-        const value = computedStyle.getPropertyValue(property);
-        if (value) {
-          cloneElement.style.setProperty(property, value);
-        }
-      });
-    });
-  }
-
-  normalizeEdgeLabelBackgrounds(svg) {
-    svg.querySelectorAll('.edgeLabel rect, .edgeLabel .label rect').forEach((rect) => {
-      this.setSolidEdgeLabelBackground(rect);
-    });
-  }
-
-  setSolidEdgeLabelBackground(rect) {
-    rect.setAttribute('fill', '#e8f5e8');
-    rect.setAttribute('fill-opacity', '1');
-    rect.setAttribute('opacity', '1');
-    rect.setAttribute('stroke', 'none');
-    rect.style.setProperty('fill', '#e8f5e8');
-    rect.style.setProperty('fill-opacity', '1');
-    rect.style.setProperty('opacity', '1');
-    rect.style.setProperty('stroke', 'none');
-  }
-
-  bringEdgeLabelsToFront(svg) {
-    svg.querySelectorAll('.edgeLabel').forEach((label) => {
-      if (label.parentNode) {
-        label.parentNode.appendChild(label);
-      }
-    });
-  }
-
-  replaceForeignObjectLabels(svg) {
-    svg.querySelectorAll('foreignObject').forEach((foreignObject) => {
-      const text = (foreignObject.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!text) {
-        foreignObject.remove();
-        return;
-      }
-
-      const width = this.parseSvgNumber(foreignObject.getAttribute('width'));
-      const height = this.parseSvgNumber(foreignObject.getAttribute('height'));
-      const x = this.parseSvgNumber(foreignObject.getAttribute('x')) + width / 2;
-      const y = this.parseSvgNumber(foreignObject.getAttribute('y')) + height / 2;
-      const labelElement = foreignObject.querySelector('p, span, div') || foreignObject;
-      const computedStyle = window.getComputedStyle(labelElement);
-      const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      const labelTextColor = '#24292e';
-
-      textElement.setAttribute('x', String(x));
-      textElement.setAttribute('y', String(y));
-      textElement.setAttribute('text-anchor', 'middle');
-      textElement.setAttribute('dominant-baseline', 'middle');
-      textElement.textContent = text;
-      textElement.style.setProperty('font-family', computedStyle.getPropertyValue('font-family') || this.getFallbackFontFamily());
-      textElement.style.setProperty('font-size', computedStyle.getPropertyValue('font-size') || '16px');
-      textElement.style.setProperty('font-weight', computedStyle.getPropertyValue('font-weight') || '400');
-      textElement.style.setProperty('fill', labelTextColor);
-
-      if (foreignObject.closest('.edgeLabel')) {
-        const backgroundPaddingX = 4;
-        const backgroundPaddingY = 2;
-        const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-
-        background.setAttribute('x', String(this.parseSvgNumber(foreignObject.getAttribute('x')) - backgroundPaddingX));
-        background.setAttribute('y', String(this.parseSvgNumber(foreignObject.getAttribute('y')) - backgroundPaddingY));
-        background.setAttribute('width', String(width + backgroundPaddingX * 2));
-        background.setAttribute('height', String(height + backgroundPaddingY * 2));
-        this.setSolidEdgeLabelBackground(background);
-
-        labelGroup.appendChild(background);
-      }
-
-      labelGroup.appendChild(textElement);
-      foreignObject.replaceWith(labelGroup);
-    });
-
-    if (svg.querySelector('foreignObject')) {
-      throw new Error('SVG export still contains HTML labels');
-    }
-  }
-
-  parseSvgNumber(value) {
-    const number = Number.parseFloat(value);
-    return Number.isFinite(number) ? number : 0;
-  }
-
-  getFallbackFontFamily() {
-    return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    return window.MarkTideMermaidShared.prepareSvgClone(svg);
   }
 
   svgToPngBlob(svg) {
     return new Promise((resolve, reject) => {
       let settled = false;
-      const source = this.svgToString(svg);
+      const exportSvg = this.prepareSvgClone(svg);
+      const source = new XMLSerializer().serializeToString(exportSvg);
       const image = new Image();
       const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(svgBlob);
-      const viewBox = svg.getAttribute('viewBox');
+      const viewBox = exportSvg.getAttribute('viewBox');
       const box = viewBox ? viewBox.split(/\s+/).map(Number) : [];
-      const rect = svg.getBoundingClientRect();
-      const width = Math.ceil(box[2] || rect.width || 1200);
-      const height = Math.ceil(box[3] || rect.height || 800);
+      const width = Math.ceil(box[2] || exportSvg.getAttribute('width') || 1200);
+      const height = Math.ceil(box[3] || exportSvg.getAttribute('height') || 800);
       const fail = (error) => {
         if (settled) return;
 
@@ -438,8 +568,9 @@ class MermaidToolbar {
         if (settled) return;
 
         const canvas = document.createElement('canvas');
-        canvas.width = width * 2;
-        canvas.height = height * 2;
+        const exportScale = 3;
+        canvas.width = width * exportScale;
+        canvas.height = height * exportScale;
         const context = canvas.getContext('2d');
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -492,6 +623,7 @@ class MermaidToolbar {
     this.zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
     const svg = this.modalContent.querySelector('svg');
     if (svg) {
+      svg.classList.toggle('is-zoomed', this.zoom > 1);
       svg.style.transform = `scale(${this.zoom})`;
     }
   }
