@@ -368,6 +368,10 @@
   opacity: 1;
 }
 
+[data-theme="dark"] #markdown-preview .mermaid-container {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 /* Dark theme bullet points styling for unordered lists */
 [data-theme="dark"] .markdown-body ul {
   list-style-type: disc; /* Standard bullet points */

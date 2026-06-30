@@ -163,3 +163,79 @@
     filter: drop-shadow(0 0 1px rgba(255, 107, 122, 0.8));
   }
 }
+
+/* ===== WHAT'S NEW MODAL ANIMATIONS ===== */
+@keyframes whatsNewDialogIn {
+  0% {
+    transform: translateY(24px) scale(0.92);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  55% {
+    transform: translateY(-3px) scale(1.012);
+    opacity: 1;
+    filter: blur(0);
+  }
+  80% {
+    transform: translateY(1px) scale(0.998);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes whatsNewHeroEntrance {
+  0% {
+    transform: scale(0.2) rotate(-55deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12) rotate(8deg);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.96) rotate(-4deg);
+  }
+  90% {
+    transform: scale(1.02) rotate(1.5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes whatsNewHeroDance {
+  0%   { transform: translateY(0) rotate(0deg); }
+  20%  { transform: translateY(-3px) rotate(-3deg); }
+  40%  { transform: translateY(0) rotate(3deg); }
+  55%  { transform: translateY(-2px) rotate(-1.5deg); }
+  70%  { transform: translateY(0) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes whatsNewHeroIconWiggle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  30%      { transform: scale(1.08) rotate(-6deg); }
+  55%      { transform: scale(0.96) rotate(5deg); }
+  75%      { transform: scale(1.04) rotate(-2deg); }
+}
+
+@keyframes whatsNewHeroBye {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  45%  { transform: scale(1.12) rotate(-12deg); opacity: 1; }
+  100% { transform: scale(0.25) rotate(55deg); opacity: 0; }
+}
+
+@keyframes whatsNewGlow {
+  0%   { opacity: 0.55; transform: scale(0.85); }
+  100% { opacity: 0.95; transform: scale(1.08); }
+}
+
+@keyframes whatsNewSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  40%      { opacity: 1; transform: scale(1.1) rotate(25deg); }
+  70%      { opacity: 0.6; transform: scale(0.9) rotate(-10deg); }
+}
