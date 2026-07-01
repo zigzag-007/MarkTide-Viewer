@@ -198,12 +198,14 @@ class MarkdownRenderer {
   prepareMarkdownExtensions(markdownText) {
     const abbreviations = [];
     const markPlaceholders = [];
+    const displayMathPlaceholders = [];
     const mathPlaceholders = [];
     const lines = String(markdownText || '').split('\n');
     const output = [];
     let inFence = false;
+    let displayMathBlock = null;
     const looksLikeInlineMath = (content) => {
-      return /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
+      return /^[A-Za-z]$/.test(content) || /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
     };
 
     lines.forEach((line) => {
@@ -214,6 +216,50 @@ class MarkdownRenderer {
       }
 
       if (!inFence) {
+        if (displayMathBlock) {
+          displayMathBlock.lines.push(line);
+
+          if (line.trim() === displayMathBlock.close) {
+            const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+            displayMathPlaceholders.push(displayMathBlock.lines.join('\n'));
+            output.push(token);
+            displayMathBlock = null;
+          }
+
+          return;
+        }
+
+        const displayMathOpen = line.trim();
+        if (
+          displayMathOpen.length > 4 &&
+          displayMathOpen.startsWith('$$') &&
+          displayMathOpen.endsWith('$$')
+        ) {
+          const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+          displayMathPlaceholders.push(line);
+          output.push(token);
+          return;
+        }
+
+        if (
+          displayMathOpen.length > 4 &&
+          displayMathOpen.startsWith('\\[') &&
+          displayMathOpen.endsWith('\\]')
+        ) {
+          const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+          displayMathPlaceholders.push(line);
+          output.push(token);
+          return;
+        }
+
+        if (displayMathOpen === '$$' || displayMathOpen === '\\[') {
+          displayMathBlock = {
+            close: displayMathOpen === '$$' ? '$$' : '\\]',
+            lines: [line]
+          };
+          return;
+        }
+
         const abbreviationMatch = line.match(/^\s*\*\[([^\]]+)\]:\s+(.+?)\s*$/);
         if (abbreviationMatch) {
           abbreviations.push({
@@ -229,7 +275,7 @@ class MarkdownRenderer {
           return `${prefix}${token}`;
         });
 
-        line = line.replace(/(^|[^\w\\])\$([^\s$][^$\n]*?[^\s$])\$(?![\w])/g, (match, prefix, content) => {
+        line = line.replace(/(^|[^\w\\])\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?![\w])/g, (match, prefix, content) => {
           if (!looksLikeInlineMath(content)) return match;
 
           const token = `@@MARKTIDE_MATH_${mathPlaceholders.length}@@`;
@@ -241,21 +287,35 @@ class MarkdownRenderer {
       output.push(line);
     });
 
+    if (displayMathBlock) {
+      output.push(...displayMathBlock.lines);
+    }
+
     return {
       markdown: output.join('\n'),
       abbreviations,
       markPlaceholders,
+      displayMathPlaceholders,
       mathPlaceholders
     };
   }
 
   applyMarkdownExtensions(html, context) {
     let output = context.markPlaceholders.reduce((result, markup, index) => {
-      return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), markup);
+      return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), () => markup);
     }, html);
 
     output = context.mathPlaceholders.reduce((result, math, index) => {
-      return result.replace(new RegExp(`@@MARKTIDE_MATH_${index}@@`, 'g'), math);
+      return result.replace(new RegExp(`@@MARKTIDE_MATH_${index}@@`, 'g'), () => math);
+    }, output);
+
+    output = context.displayMathPlaceholders.reduce((result, math, index) => {
+      const escapedMath = this.escapeHtml(math);
+      const token = `@@MARKTIDE_DISPLAY_MATH_${index}@@`;
+      const paragraphPattern = new RegExp(`<p>\\s*${token}\\s*</p>`, 'g');
+      return result
+        .replace(paragraphPattern, () => escapedMath)
+        .replace(new RegExp(token, 'g'), () => escapedMath);
     }, output);
 
     const abbreviations = context.abbreviations
