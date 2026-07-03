@@ -513,6 +513,62 @@ class PrintHandler {
       font-weight: 600 !important;
       color: #24292e !important;
     }
+
+    .markdown-body .footnotes {
+      margin-top: 2rem !important;
+      font-size: 0.92em !important;
+    }
+
+    .markdown-body .footnotes ol {
+      list-style: decimal !important;
+      counter-reset: none !important;
+      padding-left: 2em !important;
+    }
+
+    .markdown-body .footnotes ol li {
+      list-style: decimal !important;
+      color: #24292e !important;
+    }
+
+    .markdown-body .footnotes ol li::marker {
+      content: normal !important;
+    }
+
+    .markdown-body .footnotes ol > li {
+      counter-increment: none !important;
+    }
+
+    .markdown-body .footnotes ol > li::before {
+      content: none !important;
+    }
+
+    .markdown-body .footnote-ref {
+      font-size: 0.8em !important;
+      line-height: 0 !important;
+    }
+
+    .markdown-body .footnote-backref {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-width: 1.25em !important;
+      height: 1.25em !important;
+      margin-left: 0.2em !important;
+      border-radius: 4px !important;
+      color: #8b7cff !important;
+      font-size: 0.9em !important;
+      font-weight: 700 !important;
+      line-height: 1 !important;
+      text-decoration: none !important;
+      vertical-align: 0.05em !important;
+      background: transparent !important;
+    }
+
+    .markdown-body .footnote-backref:hover {
+      color: #a99fff !important;
+      background: rgba(139, 124, 255, 0.14) !important;
+      text-decoration: none !important;
+    }
     
     .markdown-body li {
       margin: 0.25em 0 !important;

@@ -197,6 +197,8 @@ class MarkdownRenderer {
 
   prepareMarkdownExtensions(markdownText) {
     const abbreviations = [];
+    const footnotes = [];
+    const footnotePlaceholders = [];
     const markPlaceholders = [];
     const displayMathPlaceholders = [];
     const mathPlaceholders = [];
@@ -204,11 +206,51 @@ class MarkdownRenderer {
     const output = [];
     let inFence = false;
     let displayMathBlock = null;
+    let currentFootnote = null;
     const looksLikeInlineMath = (content) => {
       return /^[A-Za-z]$/.test(content) || /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
     };
+    const finishFootnote = () => {
+      if (!currentFootnote) return;
+
+      while (currentFootnote.lines.length && currentFootnote.lines[currentFootnote.lines.length - 1] === '') {
+        currentFootnote.lines.pop();
+      }
+
+      footnotes.push(currentFootnote);
+      currentFootnote = null;
+    };
+    const normalizeFootnoteContinuation = (line) => {
+      if (line.startsWith('    ')) return line.slice(4);
+      if (line.startsWith('\t')) return line.slice(1);
+      return line;
+    };
 
     lines.forEach((line) => {
+      if (currentFootnote) {
+        const nextFootnoteMatch = line.match(/^\[\^([^\]\s]+)\]:\s*(.*)$/);
+        if (nextFootnoteMatch) {
+          finishFootnote();
+          currentFootnote = {
+            label: nextFootnoteMatch[1],
+            lines: [nextFootnoteMatch[2] || '']
+          };
+          return;
+        }
+
+        if (/^(?: {4}|\t)/.test(line)) {
+          currentFootnote.lines.push(normalizeFootnoteContinuation(line));
+          return;
+        }
+
+        if (/^\s*$/.test(line)) {
+          currentFootnote.lines.push('');
+          return;
+        }
+
+        finishFootnote();
+      }
+
       if (/^\s*(```|~~~)/.test(line)) {
         inFence = !inFence;
         output.push(line);
@@ -260,6 +302,16 @@ class MarkdownRenderer {
           return;
         }
 
+        const footnoteDefinitionMatch = line.match(/^\[\^([^\]\s]+)\]:\s*(.*)$/);
+        if (footnoteDefinitionMatch) {
+          finishFootnote();
+          currentFootnote = {
+            label: footnoteDefinitionMatch[1],
+            lines: [footnoteDefinitionMatch[2] || '']
+          };
+          return;
+        }
+
         const abbreviationMatch = line.match(/^\s*\*\[([^\]]+)\]:\s+(.+?)\s*$/);
         if (abbreviationMatch) {
           abbreviations.push({
@@ -275,6 +327,12 @@ class MarkdownRenderer {
           return `${prefix}${token}`;
         });
 
+        line = line.replace(/(^|[^\\])\[\^([^\]\s]+)\]/g, (match, prefix, label) => {
+          const token = `@@MARKTIDE_FOOTNOTE_REF_${footnotePlaceholders.length}@@`;
+          footnotePlaceholders.push(label);
+          return `${prefix}${token}`;
+        });
+
         line = line.replace(/(^|[^\w\\])\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?![\w])/g, (match, prefix, content) => {
           if (!looksLikeInlineMath(content)) return match;
 
@@ -287,6 +345,8 @@ class MarkdownRenderer {
       output.push(line);
     });
 
+    finishFootnote();
+
     if (displayMathBlock) {
       output.push(...displayMathBlock.lines);
     }
@@ -294,13 +354,58 @@ class MarkdownRenderer {
     return {
       markdown: output.join('\n'),
       abbreviations,
+      footnotes,
+      footnotePlaceholders,
       markPlaceholders,
       displayMathPlaceholders,
       mathPlaceholders
     };
   }
 
-  applyMarkdownExtensions(html, context) {
+  slugifyFootnoteLabel(label) {
+    return String(label || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'note';
+  }
+
+  renderFootnoteReference(label, number, duplicateIndex) {
+    const slug = this.slugifyFootnoteLabel(label);
+    const suffix = duplicateIndex > 1 ? `-${duplicateIndex}` : '';
+
+    return `<sup class="footnote-ref" id="fnref-${slug}${suffix}"><a href="#fn-${slug}" aria-label="Footnote ${number}">[${number}]</a></sup>`;
+  }
+
+  renderFootnotes(context, options = {}) {
+    if (!context.footnotes.length) return '';
+
+    const referencedLabels = context.footnotePlaceholders.filter((label, index, labels) => {
+      return labels.indexOf(label) === index;
+    });
+    const orderedFootnotes = referencedLabels
+      .map((label) => context.footnotes.find((footnote) => footnote.label === label))
+      .filter(Boolean);
+    const unreferencedFootnotes = context.footnotes.filter((footnote) => {
+      return !referencedLabels.includes(footnote.label);
+    });
+    const footnotes = orderedFootnotes.concat(unreferencedFootnotes);
+
+    if (!footnotes.length) return '';
+
+    const items = footnotes.map((footnote) => {
+      const slug = this.slugifyFootnoteLabel(footnote.label);
+      const markdown = footnote.lines.join('\n').trim();
+      const html = marked.parse(markdown || ' ', options);
+      const backref = ` <a href="#fnref-${slug}" class="footnote-backref" aria-label="Back to reference"><span aria-hidden="true">&#8617;</span></a>`;
+      const body = html.replace(/<\/p>\s*$/, `${backref}</p>`);
+      return `<li id="fn-${slug}">${body}</li>`;
+    }).join('\n');
+
+    return `\n<section class="footnotes">\n<hr>\n<ol>\n${items}\n</ol>\n</section>`;
+  }
+
+  applyMarkdownExtensions(html, context, options = {}) {
     let output = context.markPlaceholders.reduce((result, markup, index) => {
       return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), () => markup);
     }, html);
@@ -317,6 +422,24 @@ class MarkdownRenderer {
         .replace(paragraphPattern, () => escapedMath)
         .replace(new RegExp(token, 'g'), () => escapedMath);
     }, output);
+
+    const referencedLabels = context.footnotePlaceholders.filter((label, index, labels) => {
+      return labels.indexOf(label) === index;
+    });
+    const footnoteNumbers = referencedLabels.reduce((map, label, index) => {
+      map[label] = index + 1;
+      return map;
+    }, {});
+    const seenReferences = {};
+
+    output = context.footnotePlaceholders.reduce((result, label, index) => {
+      seenReferences[label] = (seenReferences[label] || 0) + 1;
+      const number = footnoteNumbers[label] || referencedLabels.length + 1;
+      const reference = this.renderFootnoteReference(label, number, seenReferences[label]);
+      return result.replace(new RegExp(`@@MARKTIDE_FOOTNOTE_REF_${index}@@`, 'g'), () => reference);
+    }, output);
+
+    output += this.renderFootnotes(context, options);
 
     const abbreviations = context.abbreviations
       .filter((item) => item.key && item.title)
@@ -385,7 +508,7 @@ class MarkdownRenderer {
     const normalizedMarkdown = this.normalizeListSyntax(markdownText || '');
     const extensionContext = this.prepareMarkdownExtensions(normalizedMarkdown);
     const html = marked.parse(extensionContext.markdown, options);
-    return this.applyMarkdownExtensions(html, extensionContext);
+    return this.applyMarkdownExtensions(html, extensionContext, options);
   }
 
   renderMarkdown() {
