@@ -50,6 +50,14 @@
   --code-pre-bg: #242628;
   --code-inline-bg: #29241E;
   --code-inline-color: #FFD085;
+  --code-inline-font-weight: 400;
+  --code-header-bg: rgba(255, 255, 255, 0.05);
+  --code-header-border: rgba(255, 255, 255, 0.1);
+  --code-block-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --code-block-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --copy-code-btn-hover-bg: #3a3a3a;
+  --copy-code-btn-active-bg: #4a4a4a;
+  --copy-code-btn-copied-bg: #3a3a3a;
   --hljs-color: #e8eaed;
   
   /* Loading screen colors */
@@ -69,9 +77,14 @@
   
   /* List and content colors */
   --list-marker-color: #e6edf3;
+  --list-item-color: #e6edf3;
   --blockquote-color: #cccccc;
   --blockquote-bold-color: #E2E8F0;
+  --markdown-heading-color: #f0f3f6;
+  --markdown-bold-color: #f0f3f6;
+  --markdown-bold-weight: 900;
   --hr-color: #333333;
+  --markdown-hr-color: #30363d;
   
   /* Danger colors */
   --color-danger-fg: #ff6b6b;
@@ -198,185 +211,6 @@
   --color-danger-fg: #f85149;
 }
 
-/* ===== DARK MODE TABLE STYLING ===== */
-/* Table styling aligned with export/PDF look */
-[data-theme="dark"] .markdown-body table {
-  background-color: var(--table-bg);
-  border-color: var(--table-border);
-}
-
-[data-theme="dark"] .markdown-body table tr {
-  background-color: var(--table-bg);
-  border-top: 1px solid var(--table-border);
-}
-
-[data-theme="dark"] .markdown-body table tr:nth-child(2n) {
-  background-color: var(--table-row-alt);
-}
-
-[data-theme="dark"] .markdown-body table th,
-[data-theme="dark"] .markdown-body table td {
-  border: 1px solid var(--table-border);
-}
-
-/* ===== DARK MODE ENHANCED CODE BLOCK STYLING ===== */
-/* Enhanced code blocks in dark mode */
-[data-theme="dark"] .enhanced-code-block {
-  background-color: var(--code-pre-bg);
-  border-color: var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .enhanced-code-block:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-[data-theme="dark"] .code-block-header {
-  --code-header-bg: rgba(255, 255, 255, 0.05);
-  --code-header-border: rgba(255, 255, 255, 0.1);
-  background: var(--code-header-bg);
-  border-bottom: 1px solid var(--code-header-border);
-}
-
-[data-theme="dark"] .code-language {
-  color: var(--text-color);
-}
-
-[data-theme="dark"] .copy-code-btn {
-  background: transparent;
-  color: var(--text-color);
-  --text-color-rgb: 255, 255, 255;
-}
-
-[data-theme="dark"] .enhanced-code-block .copy-code-btn:hover {
-  background: #3a3a3a !important;
-  color: var(--text-color) !important;
-  border-radius: 50% !important;
-  opacity: 1 !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
-}
-
-[data-theme="dark"] .enhanced-code-block .copy-code-btn:active {
-  background: #4a4a4a;
-}
-
-[data-theme="dark"] .enhanced-code-block .copy-code-btn.copied {
-  background: #3a3a3a !important;
-  color: var(--text-color) !important;
-}
-
-/* Legacy code blocks in dark mode */
-[data-theme="dark"] .markdown-body pre:not(.enhanced-code-block pre) {
-  background-color: var(--code-pre-bg);
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-/* Inline code styling for dark mode */
-[data-theme="dark"] .markdown-body code:not(pre code) {
-  background-color: var(--code-inline-bg);
-  color: var(--code-inline-color);
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-[data-theme="dark"] .markdown-body pre code {
-  background: transparent;
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-/* Syntax highlighting text color */
-[data-theme="dark"] .hljs {
-  color: var(--hljs-color);
-}
-
-
-
-
-/* ===== DARK MODE HEADER ELEMENTS ===== */
-/* H4 styling */
-[data-theme="dark"] .markdown-body h4 {
-  font-weight: bold;
-}
-
-[data-theme="dark"] .markdown-body h1,
-[data-theme="dark"] .markdown-body h2,
-[data-theme="dark"] .markdown-body h3,
-[data-theme="dark"] .markdown-body h4,
-[data-theme="dark"] .markdown-body h5,
-[data-theme="dark"] .markdown-body h6 {
-  color: #f0f3f6;
-}
-
-/* Bold text styling for dark mode */
-[data-theme="dark"] .markdown-body strong,
-[data-theme="dark"] .markdown-body b {
-  font-weight: 900 !important;
-  color: #f0f3f6 !important;
-  font-style: normal !important;
-}
-
-/* Handle nested formatting in dark mode */
-[data-theme="dark"] .markdown-body strong em,
-[data-theme="dark"] .markdown-body strong i,
-[data-theme="dark"] .markdown-body b em,
-[data-theme="dark"] .markdown-body b i {
-  font-weight: 900 !important;
-  color: #f0f3f6 !important;
-}
-
-/* Blockquote bold text should be less aggressive */
-[data-theme="dark"] .markdown-body blockquote strong,
-[data-theme="dark"] .markdown-body blockquote b {
-  font-weight: 700 !important;
-  color: var(--blockquote-bold-color) !important;
-}
-/* Dark theme numbered list styling */
-[data-theme="dark"] .markdown-body ol > li::before {
-  color: var(--list-marker-color);
-  font-weight: 600;
-}
-
-[data-theme="dark"] .markdown-body ol li {
-  color: var(--list-marker-color); /* White text for list items */
-}
-
-/* Dark theme blockquote styling for better readability */
-[data-theme="dark"] .markdown-body blockquote {
-  color: var(--blockquote-color); /* Light gray text for quoted content */
-}
-
-[data-theme="dark"] .markdown-body blockquote p {
-  color: var(--blockquote-color); /* Consistent color for paragraphs within blockquotes */
-}
-
-/* Dark theme quote marks styling within blockquotes */
-[data-theme="dark"] .markdown-body blockquote::before,
-[data-theme="dark"] .markdown-body blockquote::after {
-  color: var(--blockquote-color); /* Light gray for decorative quote marks */
-}
-
-/* Dark theme horizontal rules - Grok-style separators */
-[data-theme="dark"] .markdown-body hr {
-  background-color: #30363d; /* Clear document separator */
-  border: none; /* Remove default border */
-  height: 2px; /* Clear, readable separator */
-  margin: 30px 0; /* Match document-style separator spacing */
-  opacity: 1;
-}
-
 [data-theme="dark"] #markdown-preview .mermaid-container {
   border-color: rgba(255, 255, 255, 0.14);
-}
-
-/* Dark theme bullet points styling for unordered lists */
-[data-theme="dark"] .markdown-body ul {
-  list-style-type: disc; /* Standard bullet points */
-}
-
-[data-theme="dark"] .markdown-body ul li::marker {
-  color: var(--list-marker-color); /* White bullet points for better visibility */
 }

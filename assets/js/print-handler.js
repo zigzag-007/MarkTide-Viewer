@@ -165,6 +165,9 @@ class PrintHandler {
     const printHighlightTokenStyles = window.MarktideHighlightTheme
       ? window.MarktideHighlightTheme.getPrintTokenCss()
       : '';
+    const markdownPrintStyles = window.MarkTideMarkdownStyles
+      ? window.MarkTideMarkdownStyles.getStandaloneStyles({ theme: 'light', mode: 'print' })
+      : '';
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -196,6 +199,7 @@ class PrintHandler {
   <link rel="stylesheet" href="${highlightTheme}">
   <style>
     ${printHighlightTokenStyles}
+    ${markdownPrintStyles}
 
     @media print {
       @page {
@@ -391,19 +395,6 @@ class PrintHandler {
       white-space: normal !important;
     }
 
-    .markdown-body mark {
-      background-color: #fff3a3 !important;
-      color: #24292e !important;
-      padding: 0.08em 0.18em !important;
-      border-radius: 3px !important;
-    }
-
-    .markdown-body abbr[title] {
-      text-decoration: underline dotted currentColor !important;
-      text-underline-offset: 0.18em !important;
-      cursor: help !important;
-    }
-    
     .markdown-body code {
       background-color: #f6f8fa !important;
       color: #24292e !important;
@@ -481,99 +472,6 @@ class PrintHandler {
       list-style-type: disc !important;
     }
 
-    .markdown-body ol,
-    .markdown-body ol ol {
-      list-style: none !important;
-      counter-reset: item !important;
-      margin-left: 0 !important;
-    }
-
-    .markdown-body ol li {
-      list-style: none !important;
-      color: #24292e !important;
-    }
-
-    .markdown-body ol li::marker {
-      content: "" !important;
-    }
-
-    .markdown-body ol > li {
-      counter-increment: item !important;
-      position: relative !important;
-    }
-
-    .markdown-body ol > li::before {
-      content: counters(item, ".") ". " !important;
-      position: absolute !important;
-      left: -2.2em !important;
-      width: 2.2em !important;
-      padding-right: 0.2em !important;
-      box-sizing: border-box !important;
-      text-align: right !important;
-      font-weight: 600 !important;
-      color: #24292e !important;
-    }
-
-    .markdown-body .footnotes {
-      margin-top: 2rem !important;
-      font-size: 0.92em !important;
-    }
-
-    .markdown-body .footnotes ol {
-      list-style: decimal !important;
-      counter-reset: none !important;
-      padding-left: 2em !important;
-    }
-
-    .markdown-body .footnotes ol li {
-      list-style: decimal !important;
-      color: #24292e !important;
-    }
-
-    .markdown-body .footnotes ol li::marker {
-      content: normal !important;
-    }
-
-    .markdown-body .footnotes ol > li {
-      counter-increment: none !important;
-    }
-
-    .markdown-body .footnotes ol > li::before {
-      content: none !important;
-    }
-
-    .markdown-body .footnote-ref {
-      font-size: 0.8em !important;
-      line-height: 0 !important;
-    }
-
-    .markdown-body .footnote-backref {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      min-width: 1.25em !important;
-      height: 1.25em !important;
-      margin-left: 0.2em !important;
-      border-radius: 4px !important;
-      color: #8b7cff !important;
-      font-size: 0.9em !important;
-      font-weight: 700 !important;
-      line-height: 1 !important;
-      text-decoration: none !important;
-      vertical-align: 0.05em !important;
-      background: transparent !important;
-    }
-
-    .markdown-body .footnote-backref:hover {
-      color: #a99fff !important;
-      background: rgba(139, 124, 255, 0.14) !important;
-      text-decoration: none !important;
-    }
-    
-    .markdown-body li {
-      margin: 0.25em 0 !important;
-    }
-    
     /* Mermaid diagrams */
     .mermaid-container, .mermaid {
       overflow: visible !important;
@@ -651,28 +549,6 @@ class PrintHandler {
       background-color: transparent !important;
     }
 
-    .markdown-body img[src*="img.shields.io"] {
-      display: block !important;
-      width: fit-content !important;
-      max-width: 100% !important;
-      height: auto !important;
-      border-radius: 6px !important;
-      image-rendering: auto !important;
-    }
-
-    .markdown-body p:has(img[src*="img.shields.io"]) {
-      margin: 12px 0 !important;
-      line-height: 0.75 !important;
-    }
-
-    .markdown-body hr {
-      background-color: #c9d1d9 !important;
-      border: none !important;
-      height: 2px !important;
-      margin: 30px 0 !important;
-      opacity: 1 !important;
-    }
-    
     /* Page break controls */
     .markdown-body h1 {
       page-break-before: auto !important;
@@ -684,12 +560,6 @@ class PrintHandler {
       page-break-inside: avoid !important;
     }
 
-    .markdown-body h1,
-    .markdown-body h2 {
-      padding-bottom: 0.3em !important;
-      border-bottom: 1px solid #c9d1d9 !important;
-    }
-    
           /* Print-specific adjustments */
       @media print {
           .markdown-body {
