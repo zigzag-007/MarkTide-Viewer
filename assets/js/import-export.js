@@ -1,26 +1,5 @@
 // Import and export functionality for markdown files
 
-/** Same markup as preview (markdown-renderer.js) for exported HTML code blocks */
-function marktideExportWrapButtonHtml() {
-  const wrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  const unwrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  return (
-    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines" data-marktide-tip="Wrap long lines">' +
-    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
-    wrapSvg +
-    "</span>" +
-    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
-    unwrapSvg +
-    "</span></button>"
-  );
-}
-
-function marktideExportEncodeMermaidSource(source) {
-  return encodeURIComponent(source || '');
-}
-
 function marktideExportMermaidToolbarScript() {
   if (typeof MermaidToolbar !== 'function') return '';
 
@@ -38,6 +17,50 @@ function marktideExportMermaidSharedScript() {
   return `
     window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()};
     window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);
+  `;
+}
+
+function marktideExportCodeCopyScript() {
+  if (typeof CodeCopyHandler !== 'function') return '';
+
+  return `
+    ${CodeCopyHandler.toString()}
+    function bootCodeCopy() {
+      var copyHandler = new CodeCopyHandler();
+      copyHandler.init();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootCodeCopy);
+    } else {
+      bootCodeCopy();
+    }
+  `;
+}
+
+function marktideExportCodeWrapScript() {
+  if (typeof window.MarkTideCreateCodeWrapController !== 'function') return '';
+
+  return `
+    window.MarkTideCreateCodeWrapController = ${window.MarkTideCreateCodeWrapController.toString()};
+    function bootCodeWrap() {
+      window.MarkTideCodeWrap = window.MarkTideCreateCodeWrapController(window, {
+        rootSelector: '.markdown-body'
+      });
+      window.MarkTideCodeWrap.init();
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        var typeset = window.MathJax.typesetPromise([document.body]);
+        if (typeset && typeof typeset.then === 'function') {
+          typeset.then(function () {
+            window.MarkTideCodeWrap.scheduleRefresh(document.querySelector('.markdown-body'));
+          }).catch(function () {});
+        }
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootCodeWrap);
+    } else {
+      bootCodeWrap();
+    }
   `;
 }
 
@@ -585,58 +608,12 @@ class ImportExportManager {
   exportAsHTML() {
     const markdown = this.markdownEditor.value;
     
-    // Create an enhanced renderer for HTML export (with copy buttons)
-    const exportRenderer = new marked.Renderer();
-    exportRenderer.code = function (code, language) {
-      if (language === 'mermaid') {
-        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container" data-mermaid-source="${marktideExportEncodeMermaidSource(code)}"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
-      }
-      
-      const displayLanguage = language || "text"; // Keep user's original language label
-      const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        const highlighted = window.MarktideCodeHighlight
-          ? window.MarktideCodeHighlight.highlight(code, language)
-          : {
-              language: hljs.getLanguage(language) ? language : "plaintext",
-              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
-            };
-        
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideExportWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
-          </div>
-        `;
-      } catch (e) {
-        // Fallback to plain text if highlighting fails
-        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideExportWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
-          </div>
-        `;
-      }
-    };
+    const exportRenderer = window.MarkTideCodeBlockRenderer
+      ? window.MarkTideCodeBlockRenderer.createRenderer({
+          enhanced: true,
+          includeMermaidSource: true,
+        })
+      : new marked.Renderer();
     
     // Use the enhanced renderer for HTML export
     const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
@@ -893,198 +870,8 @@ class ImportExportManager {
         };
     `)}</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
-    <script>${this.minifyJS(`
-        class CodeCopyHandler {
-            constructor() {
-                this.initialized = false;
-            }
-
-            init() {
-                if (this.initialized) return;
-                document.addEventListener('click', this.handleCopyClick.bind(this));
-                this.initialized = true;
-            }
-
-            handleCopyClick(event) {
-                const copyBtn = event.target.closest('.copy-code-btn');
-                if (!copyBtn) return;
-                event.preventDefault();
-                event.stopPropagation();
-                const codeId = copyBtn.getAttribute('data-code-id');
-                const codeElement = document.getElementById(codeId);
-                if (!codeElement) {
-                    console.warn('Code element not found for ID:', codeId);
-                    return;
-                }
-                const codeText = codeElement.textContent || codeElement.innerText || '';
-                this.copyToClipboard(codeText, copyBtn);
-            }
-
-            async copyToClipboard(text, button) {
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(text);
-                        this.showCopySuccess(button);
-                    } else {
-                        this.fallbackCopyToClipboard(text, button);
-                    }
-                } catch (error) {
-                    console.error('Copy failed:', error);
-                    this.fallbackCopyToClipboard(text, button);
-                }
-            }
-
-            fallbackCopyToClipboard(text, button) {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                try {
-                    textArea.focus();
-                    textArea.select();
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        this.showCopySuccess(button);
-                    } else {
-                        this.showCopyError(button);
-                    }
-                } catch (error) {
-                    console.error('Fallback copy failed:', error);
-                    this.showCopyError(button);
-                } finally {
-                    document.body.removeChild(textArea);
-                }
-            }
-
-            showCopySuccess(button) {
-                const originalIcon = button.innerHTML;
-                button.classList.add('copied');
-                button.innerHTML = '<i class="bi bi-check2"></i>';
-                setTimeout(() => {
-                    button.classList.remove('copied');
-                    button.innerHTML = originalIcon;
-                }, 1500);
-            }
-
-            showCopyError(button) {
-                const originalIcon = button.innerHTML;
-                button.classList.add('error');
-                button.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
-                setTimeout(() => {
-                    button.classList.remove('error');
-                    button.innerHTML = originalIcon;
-                }, 2000);
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                const copyHandler = new CodeCopyHandler();
-                copyHandler.init();
-            });
-        } else {
-            const copyHandler = new CodeCopyHandler();
-            copyHandler.init();
-        }
-    `)}</script>
-    <script>${this.minifyJS(`
-(function () {
-  var ROOT_SELECTOR = ".markdown-body";
-  var DEBOUNCE_MS = 64;
-  var debounceId = null;
-  function preHasHorizontalOverflow(pre) {
-    return Math.ceil(pre.scrollWidth) > Math.floor(pre.clientWidth) + 1;
-  }
-  function updateBlock(block) {
-    var pre = block.querySelector(":scope > pre");
-    var btn = block.querySelector(".wrap-code-btn");
-    if (!pre || !btn) return;
-    var wrapped = block.classList.contains("is-wrapped");
-    var show = wrapped || preHasHorizontalOverflow(pre);
-    if (show) {
-      btn.classList.add("wrap-code-btn--show");
-      btn.setAttribute("aria-hidden", "false");
-      btn.removeAttribute("tabindex");
-    } else {
-      btn.classList.remove("wrap-code-btn--show");
-      btn.setAttribute("aria-hidden", "true");
-      btn.setAttribute("tabindex", "-1");
-    }
-    btn.setAttribute("aria-pressed", wrapped ? "true" : "false");
-    var unwrapLabel = "Unwrap lines";
-    var wrapLabel = "Wrap long lines";
-    var tip = wrapped ? unwrapLabel : wrapLabel;
-    btn.setAttribute("title", tip);
-    btn.setAttribute("aria-label", tip);
-    btn.setAttribute("data-marktide-tip", tip);
-  }
-  function refresh(root) {
-    if (!root || !root.nodeType) root = document.querySelector(ROOT_SELECTOR);
-    if (!root) return;
-    root.querySelectorAll(".enhanced-code-block").forEach(updateBlock);
-  }
-  function scheduleRefresh(root) {
-    if (debounceId) clearTimeout(debounceId);
-    debounceId = setTimeout(function () {
-      debounceId = null;
-      requestAnimationFrame(function () {
-        refresh(root);
-      });
-    }, DEBOUNCE_MS);
-  }
-  function onWrapClick(event) {
-    var btn = event.target.closest(".wrap-code-btn");
-    if (!btn) return;
-    var root = document.querySelector(ROOT_SELECTOR);
-    if (!root || !root.contains(btn)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    var block = btn.closest(".enhanced-code-block");
-    if (!block) return;
-    block.classList.toggle("is-wrapped");
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        refresh(root);
-      });
-    });
-  }
-  function boot() {
-    document.addEventListener("click", onWrapClick);
-    var root = document.querySelector(ROOT_SELECTOR);
-    if (root && typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(function () {
-        scheduleRefresh(root);
-      }).observe(root);
-    }
-    window.addEventListener("resize", function () {
-      scheduleRefresh(document.querySelector(ROOT_SELECTOR));
-    });
-    var r = document.querySelector(ROOT_SELECTOR);
-    if (r) {
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          refresh(r);
-        });
-      });
-    }
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      var p = window.MathJax.typesetPromise([document.body]);
-      if (p && typeof p.then === "function") {
-        p.then(function () {
-          scheduleRefresh(document.querySelector(ROOT_SELECTOR));
-        }).catch(function () {});
-      }
-    }
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
-})();
-    `)}</script>
+    <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
+    <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
 </body>
 </html>`;
     

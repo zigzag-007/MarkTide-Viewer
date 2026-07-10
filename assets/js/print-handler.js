@@ -126,29 +126,12 @@ class PrintHandler {
       ? window.MarkTideRenderer.normalizeListSyntax(markdown)
       : markdown;
     
-    // Create a clean renderer for print/PDF (without enhanced code blocks)
-    const printRenderer = new marked.Renderer();
-    printRenderer.code = function (code, language) {
-      if (language === 'mermaid') {
-        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
-      }
-      
-      try {
-        const highlighted = window.MarktideCodeHighlight
-          ? window.MarktideCodeHighlight.highlight(code, language)
-          : {
-              language: hljs.getLanguage(language) ? language : "plaintext",
-              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
-            };
-        
-        return `<pre><code class="hljs ${highlighted.language}">${highlighted.value}</code></pre>`;
-      } catch (e) {
-        // Fallback to plain text if highlighting fails
-        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<pre><code class="hljs plaintext">${escapedCode}</code></pre>`;
-      }
-    };
+    const printRenderer = window.MarkTideCodeBlockRenderer
+      ? window.MarkTideCodeBlockRenderer.createRenderer({
+          enhanced: false,
+          includeMermaidSource: false,
+        })
+      : new marked.Renderer();
     
     // Use the clean renderer for print/PDF
     const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)

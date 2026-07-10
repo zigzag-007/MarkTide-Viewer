@@ -57,6 +57,24 @@ const checks = [
     },
   },
   {
+    name: 'shared code block renderer exists',
+    pass: () => exists('assets/js/code-block-renderer.js'),
+  },
+  {
+    name: 'shared code wrap controller is serializable',
+    pass: () => /MarkTideCreateCodeWrapController/.test(read('assets/js/code-wrap-handler.js')),
+  },
+  {
+    name: 'shared code block renderer is loaded before markdown consumers',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/code-block-renderer.js') > -1
+        && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/markdown-renderer.js')
+        && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/import-export.js')
+        && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/print-handler.js');
+    },
+  },
+  {
     name: 'HTML export consumes shared markdown styles',
     pass: () => /MarkTideMarkdownStyles/.test(read('assets/js/import-export.js')),
   },
@@ -81,6 +99,42 @@ const checks = [
   {
     name: 'PDF export consumes shared markdown styles',
     pass: () => /MarkTideMarkdownStyles/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'preview/export/print consume shared code block renderer',
+    pass: () => /MarkTideCodeBlockRenderer/.test(read('assets/js/markdown-renderer.js'))
+      && /MarkTideCodeBlockRenderer/.test(read('assets/js/import-export.js'))
+      && /MarkTideCodeBlockRenderer/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'markdown consumers do not own private code block renderers',
+    pass: () => {
+      const consumers = [
+        read('assets/js/markdown-renderer.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/marktide(?:Export)?WrapButtonHtml/.test(consumers)
+        && !/marktide(?:Export)?EncodeMermaidSource/.test(consumers)
+        && !/\.code\s*=\s*function\s*\(\s*code\s*,\s*language\s*\)/.test(consumers)
+        && !/code-block-['"]\s*\+\s*Math\.random/.test(consumers)
+        && !/mermaid-diagram-['"]\s*\+\s*Math\.random/.test(consumers);
+    },
+  },
+  {
+    name: 'HTML export serializes shared code block runtime',
+    pass: () => {
+      const exportCode = read('assets/js/import-export.js');
+      return /CodeCopyHandler\.toString\(\)/.test(exportCode)
+        && /MarkTideCreateCodeWrapController\.toString\(\)/.test(exportCode)
+        && !/class CodeCopyHandler\s*\{[\s\S]*?handleCopyClick/.test(exportCode)
+        && !/ROOT_SELECTOR\s*=\s*["']\.markdown-body["']/.test(exportCode);
+    },
+  },
+  {
+    name: 'preview sanitizer preserves shared code copy ids',
+    pass: () => /["']data-code-id["']/.test(read('assets/js/markdown-renderer.js')),
   },
   {
     name: 'base CSS no longer owns markdown content block',
