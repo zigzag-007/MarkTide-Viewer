@@ -61,6 +61,14 @@ const checks = [
     pass: () => exists('assets/js/code-block-renderer.js'),
   },
   {
+    name: 'shared MathJax config exists',
+    pass: () => exists('assets/js/mathjax-config.js'),
+  },
+  {
+    name: 'shared sanitizer config exists',
+    pass: () => exists('assets/js/sanitizer-config.js'),
+  },
+  {
     name: 'shared code wrap controller is serializable',
     pass: () => /MarkTideCreateCodeWrapController/.test(read('assets/js/code-wrap-handler.js')),
   },
@@ -72,6 +80,24 @@ const checks = [
         && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/markdown-renderer.js')
         && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/import-export.js')
         && index.indexOf('assets/js/code-block-renderer.js') < index.indexOf('assets/js/print-handler.js');
+    },
+  },
+  {
+    name: 'shared MathJax config is loaded before MathJax library',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/mathjax-config.js') > -1
+        && index.indexOf('assets/js/mathjax-config.js') < index.indexOf('tex-mml-chtml.min.js');
+    },
+  },
+  {
+    name: 'shared sanitizer config is loaded before markdown consumers',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/sanitizer-config.js') > -1
+        && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/markdown-renderer.js')
+        && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/import-export.js')
+        && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/print-handler.js');
     },
   },
   {
@@ -88,6 +114,16 @@ const checks = [
     },
   },
   {
+    name: 'HTML export no longer owns private Mermaid document CSS',
+    pass: () => {
+      const exportCode = read('assets/js/import-export.js');
+      return !/const\s+mermaidStyles\s*=/.test(exportCode)
+        && !/Mermaid diagram styles/.test(exportCode)
+        && !/\.mermaid-container\s*\{[\s\S]*?overflow-x:\s*auto/.test(exportCode)
+        && !/\.mermaid\s+svg\s*\{[\s\S]*?max-width:\s*none/.test(exportCode);
+    },
+  },
+  {
     name: 'HTML export has no dead centralized-style placeholders',
     pass: () => {
       const exportCode = read('assets/js/import-export.js');
@@ -99,6 +135,53 @@ const checks = [
   {
     name: 'PDF export consumes shared markdown styles',
     pass: () => /MarkTideMarkdownStyles/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'HTML and PDF exports consume shared MathJax config',
+    pass: () => /MarkTideMathJax/.test(read('assets/js/import-export.js'))
+      && /MarkTideMathJax/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'MathJax config is not privately duplicated',
+    pass: () => {
+      const sources = [
+        read('index.html'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/inlineMath:\s*\[\[/.test(sources)
+        && !/displayMath:\s*\[\[/.test(sources)
+        && !/processEnvironments:\s*true/.test(sources)
+        && !/skipHtmlTags:\s*\[/.test(sources);
+    },
+  },
+  {
+    name: 'preview/export/print consume shared sanitizer config',
+    pass: () => /MarkTideSanitizer/.test(read('assets/js/markdown-renderer.js'))
+      && /MarkTideSanitizer/.test(read('assets/js/import-export.js'))
+      && /MarkTideSanitizer/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'DOMPurify profiles are not privately duplicated',
+    pass: () => {
+      const sources = [
+        read('assets/js/markdown-renderer.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/DOMPurify\.sanitize\([^,]+,\s*\{\s*ADD_TAGS:/.test(sources)
+        && !/ADD_ATTR:\s*\[/.test(sources);
+    },
+  },
+  {
+    name: 'dead Mermaid print helpers are removed',
+    pass: () => {
+      const source = read('assets/js/mermaid-handler.js');
+      return !/getPrintThemeVariables\s*\(/.test(source)
+        && !/initForPrint\s*\(/.test(source);
+    },
   },
   {
     name: 'preview/export/print consume shared code block renderer',
@@ -134,7 +217,7 @@ const checks = [
   },
   {
     name: 'preview sanitizer preserves shared code copy ids',
-    pass: () => /["']data-code-id["']/.test(read('assets/js/markdown-renderer.js')),
+    pass: () => /["']data-code-id["']/.test(read('assets/js/sanitizer-config.js')),
   },
   {
     name: 'base CSS no longer owns markdown content block',

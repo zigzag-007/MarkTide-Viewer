@@ -64,6 +64,12 @@ function marktideExportCodeWrapScript() {
   `;
 }
 
+function marktideExportMathJaxConfigScript() {
+  return window.MarkTideMathJax
+    ? window.MarkTideMathJax.getConfigScript()
+    : '';
+}
+
 class ImportExportManager {
   constructor() {
     this.fileInput = null;
@@ -619,55 +625,9 @@ class ImportExportManager {
     const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
       ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer })
       : marked.parse(markdown, { renderer: exportRenderer });
-    const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: [
-        'mjx-container',
-        'svg',
-        'line',
-        'path',
-        'g',
-        'circle',
-        'rect',
-        'marker',
-        'defs',
-        'pattern',
-        'clipPath',
-        'mark',
-        'abbr',
-      ],
-      ADD_ATTR: [
-        'id',
-        'class',
-        'style',
-        'viewBox',
-        'xmlns',
-        'width',
-        'height',
-        'stroke',
-        'stroke-width',
-        'stroke-linecap',
-        'fill',
-        'x1',
-        'y1',
-        'x2',
-        'y2',
-        'd',
-        'transform',
-        'marker-end',
-        'marker-start',
-        'aria-hidden',
-        'focusable',
-        'aria-pressed',
-        'aria-label',
-        'title',
-        'tabindex',
-        'role',
-        'type',
-        'data-marktide-tip',
-        'data-code-id',
-        'data-mermaid-source',
-      ],
-    });
+    const sanitizedHtml = window.MarkTideSanitizer
+      ? window.MarkTideSanitizer.sanitize(html, { mode: 'html' })
+      : DOMPurify.sanitize(html);
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -716,54 +676,7 @@ class ImportExportManager {
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
-    const mermaidStyles = `
-        /* Mermaid diagram styles */
-        .mermaid-container {
-            position: relative;
-            text-align: center;
-            margin: 1em 0;
-            overflow-x: auto;
-            overflow-y: visible;
-            max-width: 100%;
-            background: #ffffff;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            padding: 16px;
-        }
-
-        .mermaid {
-            text-align: center;
-            margin: 0;
-            overflow: visible;
-            max-width: 100%;
-        }
-        
-        .mermaid svg {
-            display: block;
-            max-width: none;
-            height: auto;
-            margin: 0 auto;
-            overflow: visible;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-        }
-
-        .mermaid .node rect,
-        .mermaid .node circle,
-        .mermaid .node ellipse,
-        .mermaid .node polygon {
-            stroke-width: 1px;
-        }
-
-        .mermaid .nodeLabel,
-        .mermaid .edgeLabel,
-        .mermaid .label,
-        .mermaid text {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-
-    `;
-    
-    const minifiedStyles = this.minifyCSS(themeStyles + mermaidStyles + exportHighlightTokenStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles + exportHighlightTokenStyles);
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en" data-theme="${currentTheme || 'light'}">
@@ -854,21 +767,7 @@ class ImportExportManager {
             console.warn("Mermaid rendering failed:", e);
         }
     `)}</script>
-    <script>${this.minifyJS(`
-        window.MathJax = {
-            tex: {
-                inlineMath: [['\\\\(', '\\\\)']],
-                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
-                processEscapes: true,
-                processEnvironments: true
-            },
-            options: {
-                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                ignoreHtmlClass: 'tex2jax_ignore',
-                processHtmlClass: 'tex2jax_process'
-            }
-        };
-    `)}</script>
+    <script>${this.minifyJS(marktideExportMathJaxConfigScript())}</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
     <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>

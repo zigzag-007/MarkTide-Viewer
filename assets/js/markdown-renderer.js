@@ -453,48 +453,9 @@ class MarkdownRenderer {
     try {
       const markdown = this.markdownEditor.value;
       const html = this.parseMarkdown(markdown);
-      const sanitizedHtml = DOMPurify.sanitize(html, {
-        ADD_TAGS: [
-          "mjx-container",
-          "svg",
-          "line",
-          "path",
-          "g",
-          "circle",
-          "rect",
-          "mark",
-          "abbr",
-        ],
-        ADD_ATTR: [
-          "id",
-          "class",
-          "style",
-          "viewBox",
-          "xmlns",
-          "width",
-          "height",
-          "stroke",
-          "stroke-width",
-          "stroke-linecap",
-          "fill",
-          "x1",
-          "y1",
-          "x2",
-          "y2",
-          "d",
-          "aria-hidden",
-          "focusable",
-          "aria-pressed",
-          "aria-label",
-          "title",
-          "tabindex",
-          "role",
-          "type",
-          "data-marktide-tip",
-          "data-code-id",
-          "data-mermaid-source",
-        ],
-      });
+      const sanitizedHtml = window.MarkTideSanitizer
+        ? window.MarkTideSanitizer.sanitize(html, { mode: 'preview' })
+        : DOMPurify.sanitize(html);
       this.markdownPreview.innerHTML = sanitizedHtml;
 
       this.markdownPreview.querySelectorAll("pre code").forEach((block) => {

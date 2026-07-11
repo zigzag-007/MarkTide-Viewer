@@ -154,17 +154,6 @@ class MermaidHandler {
     }
   }
 
-  // Get theme variables for print mode (always light)
-  getPrintThemeVariables() {
-    return this.getThemeVariables('light', 'pdf');
-  }
-
-  initForPrint(printWindow) {
-    printWindow.mermaid.initialize(this.getMermaidConfig({
-      mode: 'pdf',
-      theme: 'light'
-    }));
-  }
 }
 
 // Create global instance

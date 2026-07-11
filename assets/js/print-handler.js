@@ -137,10 +137,9 @@ class PrintHandler {
     const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
       ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer })
       : marked.parse(normalizedMarkdown, { renderer: printRenderer });
-    const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath', 'wbr', 'mark', 'abbr'],
-      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start', 'title']
-    });
+    const sanitizedHtml = window.MarkTideSanitizer
+      ? window.MarkTideSanitizer.sanitize(html, { mode: 'print' })
+      : DOMPurify.sanitize(html);
     const printableHtml = this.preparePrintTables(sanitizedHtml);
     const highlightTheme = window.MarktideHighlightTheme
       ? window.MarktideHighlightTheme.getThemeUrl(false)
@@ -664,19 +663,7 @@ class PrintHandler {
     ${window.MarkTideCreateMermaidShared ? `window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()}; window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);` : ''}
   </script>
   <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['\\\\(', '\\\\)']],
-        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
-        processEscapes: true,
-        processEnvironments: true
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-        ignoreHtmlClass: 'tex2jax_ignore',
-        processHtmlClass: 'tex2jax_process'
-      }
-    };
+    ${window.MarkTideMathJax ? window.MarkTideMathJax.getConfigScript() : ''}
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
 </body>
