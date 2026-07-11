@@ -69,6 +69,10 @@ const checks = [
     pass: () => exists('assets/js/sanitizer-config.js'),
   },
   {
+    name: 'shared print style helper exists',
+    pass: () => exists('assets/js/print-styles.js'),
+  },
+  {
     name: 'shared code wrap controller is serializable',
     pass: () => /MarkTideCreateCodeWrapController/.test(read('assets/js/code-wrap-handler.js')),
   },
@@ -98,6 +102,14 @@ const checks = [
         && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/markdown-renderer.js')
         && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/import-export.js')
         && index.indexOf('assets/js/sanitizer-config.js') < index.indexOf('assets/js/print-handler.js');
+    },
+  },
+  {
+    name: 'shared print style helper is loaded before PDF export',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/print-styles.js') > -1
+        && index.indexOf('assets/js/print-styles.js') < index.indexOf('assets/js/print-handler.js');
     },
   },
   {
@@ -135,6 +147,32 @@ const checks = [
   {
     name: 'PDF export consumes shared markdown styles',
     pass: () => /MarkTideMarkdownStyles/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'PDF export consumes shared print styles',
+    pass: () => /MarkTidePrintStyles/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'PDF export does not own private print stylesheet',
+    pass: () => {
+      const source = read('assets/js/print-handler.js');
+      return !/@page\s*\{/.test(source)
+        && !/Force all text to wrap and prevent overflow/.test(source)
+        && !/Table responsiveness for print/.test(source)
+        && !/Mermaid flowchart specific styling for print/.test(source);
+    },
+  },
+  {
+    name: 'shared print styles preserve accepted PDF layout values',
+    pass: () => {
+      const source = read('assets/js/print-styles.js');
+      return /margin:\s*0\.55in 0\.38in/.test(source)
+        && /width:\s*16%[\s\S]*?min-width:\s*88px/.test(source)
+        && /width:\s*13%[\s\S]*?min-width:\s*86px/.test(source)
+        && /width:\s*12%[\s\S]*?min-width:\s*78px/.test(source)
+        && /width:\s*14%[\s\S]*?min-width:\s*74px/.test(source)
+        && /background-color:\s*#e8f5e8/.test(source);
+    },
   },
   {
     name: 'HTML and PDF exports consume shared MathJax config',
