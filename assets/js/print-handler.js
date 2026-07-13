@@ -109,6 +109,14 @@ class PrintHandler {
     }
   }
 
+  getPrintMermaidConfig() {
+    if (window.MarkTideMermaidShared && window.MarkTideMermaidShared.getMermaidConfig) {
+      return window.MarkTideMermaidShared.getMermaidConfig({ mode: 'pdf', theme: 'light' });
+    }
+
+    throw new Error('Shared Mermaid helper is required for PDF export rendering.');
+  }
+
   printPreview(titleOverride) {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
@@ -249,25 +257,7 @@ ${markdownPrintStyles}`;
 
         // Initialize and render Mermaid
         try {
-          const mermaidConfig = window.MarkTideMermaid
-            ? window.MarkTideMermaid.getMermaidConfig({ mode: 'pdf', theme: 'light' })
-            : {
-                startOnLoad: false,
-                theme: 'neutral',
-                themeVariables: {
-                  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-                },
-                securityLevel: 'strict',
-                htmlLabels: false,
-                flowchart: {
-                  useMaxWidth: true,
-                  htmlLabels: false,
-                  curve: 'basis',
-                  nodeSpacing: 60,
-                  rankSpacing: 70
-                },
-                fontSize: 16
-              };
+          const mermaidConfig = printHandler.getPrintMermaidConfig();
 
           printFrame.contentWindow.mermaid.initialize(mermaidConfig);
           

@@ -220,6 +220,27 @@ const checks = [
       && /MarkTideMathJax/.test(read('assets/js/print-handler.js')),
   },
   {
+    name: 'HTML and PDF exports consume shared Mermaid config',
+    pass: () => /MarkTideMermaidShared/.test(read('assets/js/import-export.js'))
+      && /MarkTideMermaidShared/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'PDF export does not depend on preview Mermaid handler for config',
+    pass: () => !/MarkTideMermaid\.getMermaidConfig/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'Mermaid config is not privately duplicated in exports',
+    pass: () => {
+      const consumers = [
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/flowchart:\s*\{[\s\S]*?nodeSpacing:\s*60/.test(consumers)
+        && !/securityLevel:\s*['"]strict['"][\s\S]*?fontSize:\s*16/.test(consumers);
+    },
+  },
+  {
     name: 'MathJax config is not privately duplicated',
     pass: () => {
       const sources = [

@@ -11,6 +11,14 @@ function marktideExportMermaidToolbarScript() {
   `;
 }
 
+function marktideRequireMermaidShared() {
+  if (!window.MarkTideMermaidShared || !window.MarkTideMermaidShared.getMermaidConfig) {
+    throw new Error('Shared Mermaid helper is required for export rendering.');
+  }
+
+  return window.MarkTideMermaidShared;
+}
+
 function marktideExportMermaidSharedScript() {
   if (typeof window.MarkTideCreateMermaidShared !== 'function') return '';
 
@@ -716,25 +724,7 @@ class ImportExportManager {
         });
         
         // Initialize and render Mermaid diagrams
-        const mermaidConfig = window.MarkTideMermaidShared
-            ? window.MarkTideMermaidShared.getMermaidConfig({ mode: 'export' })
-            : {
-                startOnLoad: false,
-                theme: 'default',
-                themeVariables: {
-                    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-                },
-                securityLevel: 'strict',
-                htmlLabels: false,
-                flowchart: {
-                    useMaxWidth: false,
-                    htmlLabels: false,
-                    curve: 'basis',
-                    nodeSpacing: 60,
-                    rankSpacing: 70
-                },
-                fontSize: 16
-            };
+        const mermaidConfig = marktideRequireMermaidShared().getMermaidConfig({ mode: 'export' });
 
         mermaid.initialize(mermaidConfig);
 
