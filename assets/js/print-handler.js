@@ -117,6 +117,14 @@ class PrintHandler {
     throw new Error('Shared Mermaid helper is required for PDF export rendering.');
   }
 
+  getExportAssets() {
+    if (window.MarkTideExportAssets) {
+      return window.MarkTideExportAssets;
+    }
+
+    throw new Error('Shared export assets are required for PDF export rendering.');
+  }
+
   printPreview(titleOverride) {
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
@@ -149,12 +157,12 @@ class PrintHandler {
       ? window.MarkTideSanitizer.sanitize(html, { mode: 'print' })
       : DOMPurify.sanitize(html);
     const printableHtml = this.preparePrintTables(sanitizedHtml);
-    const highlightTheme = window.MarktideHighlightTheme
-      ? window.MarktideHighlightTheme.getThemeUrl(false)
-      : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
-    const printHighlightTokenStyles = window.MarktideHighlightTheme
-      ? window.MarktideHighlightTheme.getPrintTokenCss()
-      : '';
+    if (!window.MarktideHighlightTheme) {
+      throw new Error('Shared highlight theme helper is required for PDF export.');
+    }
+
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false);
+    const printHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
     const markdownPrintStyles = window.MarkTideMarkdownStyles
       ? window.MarkTideMarkdownStyles.getStandaloneStyles({ theme: 'light', mode: 'print' })
       : '';
@@ -162,6 +170,7 @@ class PrintHandler {
       ? window.MarkTidePrintStyles.getStyles({ printHighlightTokenStyles, markdownPrintStyles })
       : `${printHighlightTokenStyles}
 ${markdownPrintStyles}`;
+    const exportAssets = this.getExportAssets();
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -184,12 +193,8 @@ ${markdownPrintStyles}`;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${smartTitle}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+  ${exportAssets.getFontLinks()}
+  ${exportAssets.getCommonStylesheetLinks({ includeBootstrapIcons: false })}
   <link rel="stylesheet" href="${highlightTheme}">
   <style>
     ${printStyles}
@@ -200,18 +205,15 @@ ${markdownPrintStyles}`;
       ${printableHtml}
   </article>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
+  ${exportAssets.getHighlightScriptTags()}
+  ${exportAssets.getMermaidScriptTag()}
   <script>
     ${window.MarkTideCreateMermaidShared ? `window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()}; window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);` : ''}
   </script>
   <script>
     ${window.MarkTideMathJax ? window.MarkTideMathJax.getConfigScript() : ''}
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+  ${exportAssets.getMathJaxScriptTag()}
 </body>
 </html>
     `);

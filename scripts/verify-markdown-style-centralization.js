@@ -73,6 +73,39 @@ const checks = [
     pass: () => exists('assets/js/print-styles.js'),
   },
   {
+    name: 'shared export asset helper exists',
+    pass: () => exists('assets/js/export-assets.js'),
+  },
+  {
+    name: 'shared export asset helper is loaded before exports',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/export-assets.js') > -1
+        && index.indexOf('assets/js/export-assets.js') < index.indexOf('assets/js/import-export.js')
+        && index.indexOf('assets/js/export-assets.js') < index.indexOf('assets/js/print-handler.js');
+    },
+  },
+  {
+    name: 'HTML and PDF exports consume shared export assets',
+    pass: () => /MarkTideExportAssets/.test(read('assets/js/import-export.js'))
+      && /MarkTideExportAssets/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'export asset URLs are not privately duplicated',
+    pass: () => {
+      const consumers = [
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/fonts\.googleapis\.com/.test(consumers)
+        && !/github-markdown-css\/5\.3\.0/.test(consumers)
+        && !/mermaid@11\.15\.0/.test(consumers)
+        && !/mathjax\/3\.2\.2/.test(consumers)
+        && !/highlight\.js\/11\.9\.0/.test(consumers);
+    },
+  },
+  {
     name: 'shared Mermaid toolbar CSS exists',
     pass: () => exists('assets/css/mermaid-toolbar.css'),
   },

@@ -19,6 +19,14 @@ function marktideRequireMermaidShared() {
   return window.MarkTideMermaidShared;
 }
 
+function marktideRequireExportAssets() {
+  if (!window.MarkTideExportAssets) {
+    throw new Error('Shared export assets are required for document export.');
+  }
+
+  return window.MarkTideExportAssets;
+}
+
 function marktideExportMermaidSharedScript() {
   if (typeof window.MarkTideCreateMermaidShared !== 'function') return '';
 
@@ -672,19 +680,23 @@ class ImportExportManager {
         }
       `;
     // Choose appropriate highlight.js theme
-    const highlightTheme = window.MarktideHighlightTheme
-        ? window.MarktideHighlightTheme.getThemeUrl(isDarkMode)
-        : (isDarkMode
-            ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css"
-            : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css");
-    const exportHighlightTokenStyles = window.MarktideHighlightTheme
-        ? window.MarktideHighlightTheme.getPrintTokenCss()
-        : '';
+    if (!window.MarktideHighlightTheme) {
+      throw new Error('Shared highlight theme helper is required for HTML export.');
+    }
+
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(isDarkMode);
+    const exportHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
     
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
     const minifiedStyles = this.minifyCSS(themeStyles + exportHighlightTokenStyles);
+    const exportAssetLinks = marktideRequireExportAssets();
+    const fontLinks = exportAssetLinks.getFontLinks();
+    const commonStylesheetLinks = exportAssetLinks.getCommonStylesheetLinks({ includeBootstrapIcons: true });
+    const highlightScripts = exportAssetLinks.getHighlightScriptTags();
+    const mermaidScript = exportAssetLinks.getMermaidScriptTag();
+    const mathJaxScript = exportAssetLinks.getMathJaxScriptTag();
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en" data-theme="${currentTheme || 'light'}">
@@ -693,13 +705,8 @@ class ImportExportManager {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${documentTitle || 'Exported Markdown'}</title>
     <link rel="icon" href="https://raw.githubusercontent.com/zigzag-007/MarkTide-Viewer/main/assets/img/icon.jpg" type="image/jpeg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    ${fontLinks}
+    ${commonStylesheetLinks}
     <link rel="stylesheet" href="${highlightTheme}">
     <style>${minifiedStyles}</style>
 </head>
@@ -708,11 +715,8 @@ class ImportExportManager {
         ${sanitizedHtml}
     </article>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
+    ${highlightScripts}
+    ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>
     <script>${this.minifyJS(marktideExportMermaidToolbarScript())}</script>
     <script>${this.minifyJS(`
@@ -758,7 +762,7 @@ class ImportExportManager {
         }
     `)}</script>
     <script>${this.minifyJS(marktideExportMathJaxConfigScript())}</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    ${mathJaxScript}
     <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
 </body>
