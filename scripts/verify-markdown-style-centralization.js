@@ -73,6 +73,46 @@ const checks = [
     pass: () => exists('assets/js/print-styles.js'),
   },
   {
+    name: 'shared Mermaid toolbar CSS exists',
+    pass: () => exists('assets/css/mermaid-toolbar.css'),
+  },
+  {
+    name: 'preview loads shared Mermaid toolbar CSS',
+    pass: () => /assets\/css\/mermaid-toolbar\.css/.test(read('index.html')),
+  },
+  {
+    name: 'HTML export consumes shared Mermaid toolbar CSS',
+    pass: () => {
+      const helper = read('assets/js/markdown-styles.js');
+      return /mermaid-toolbar\.css/.test(helper)
+        && /mode\s*===\s*['"]html['"]/.test(helper);
+    },
+  },
+  {
+    name: 'Mermaid toolbar JavaScript owns behavior only',
+    pass: () => {
+      const source = read('assets/js/mermaid-toolbar.js');
+      return !/ensureStyles\s*\(/.test(source)
+        && !/getStyles\s*\(/.test(source)
+        && !/marktide-mermaid-toolbar-styles/.test(source)
+        && !/document\.createElement\(['"]style['"]\)/.test(source);
+    },
+  },
+  {
+    name: 'shared Mermaid toolbar CSS preserves accepted layout and themes',
+    pass: () => {
+      if (!exists('assets/css/mermaid-toolbar.css')) return false;
+
+      const css = read('assets/css/mermaid-toolbar.css');
+      return /\.mermaid-toolbar\s*\{[\s\S]*?top:\s*4px[\s\S]*?right:\s*8px/.test(css)
+        && /\.mermaid-toolbar-btn,[\s\S]*?width:\s*30px[\s\S]*?height:\s*30px/.test(css)
+        && /\[data-theme=["']dark["']\]\s+\.mermaid-toolbar/.test(css)
+        && /\[data-theme=["']light["']\]\s+\.mermaid-toolbar/.test(css)
+        && /\.mermaid-modal-toolbar\s*\{[\s\S]*?bottom:\s*24px/.test(css)
+        && /@media\s+print[\s\S]*?\.mermaid-toolbar,[\s\S]*?\.mermaid-modal-overlay/.test(css);
+    },
+  },
+  {
     name: 'shared code wrap controller is serializable',
     pass: () => /MarkTideCreateCodeWrapController/.test(read('assets/js/code-wrap-handler.js')),
   },

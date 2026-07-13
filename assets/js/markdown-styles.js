@@ -1,20 +1,21 @@
 // Shared Markdown document styles for preview and export surfaces.
 (function (window) {
   const MARKDOWN_CONTENT_HREF = 'assets/css/markdown-content.css';
+  const MERMAID_TOOLBAR_HREF = 'assets/css/mermaid-toolbar.css';
 
   function normalizeHref(value) {
     return (value || '').replace(/\\/g, '/').split('?')[0].split('#')[0];
   }
 
-  function stylesheetMatches(sheet) {
+  function stylesheetMatches(sheet, hrefToMatch) {
     const owner = sheet && sheet.ownerNode;
     const href = normalizeHref((owner && owner.getAttribute && owner.getAttribute('href')) || sheet.href);
-    return href.endsWith(MARKDOWN_CONTENT_HREF);
+    return href.endsWith(hrefToMatch);
   }
 
-  function readLoadedStylesheet() {
+  function readLoadedStylesheet(hrefToMatch) {
     const sheets = Array.from(window.document.styleSheets || []);
-    const sharedSheet = sheets.find(stylesheetMatches);
+    const sharedSheet = sheets.find((sheet) => stylesheetMatches(sheet, hrefToMatch));
 
     if (!sharedSheet || !sharedSheet.cssRules) {
       return '';
@@ -30,10 +31,10 @@
     }
   }
 
-  function readStylesheetWithRequest() {
+  function readStylesheetWithRequest(hrefToMatch) {
     try {
       const request = new XMLHttpRequest();
-      request.open('GET', MARKDOWN_CONTENT_HREF, false);
+      request.open('GET', hrefToMatch, false);
       request.send(null);
 
       if (request.status === 0 || (request.status >= 200 && request.status < 300)) {
@@ -46,9 +47,17 @@
     return '';
   }
 
+  function getStylesheet(hrefToMatch) {
+    const loadedStyles = readLoadedStylesheet(hrefToMatch);
+    return loadedStyles || readStylesheetWithRequest(hrefToMatch);
+  }
+
   function getContentStyles() {
-    const loadedStyles = readLoadedStylesheet();
-    return loadedStyles || readStylesheetWithRequest();
+    return getStylesheet(MARKDOWN_CONTENT_HREF);
+  }
+
+  function getMermaidToolbarStyles() {
+    return getStylesheet(MERMAID_TOOLBAR_HREF);
   }
 
   function getThemeVariables(theme) {
@@ -127,6 +136,7 @@
     const bodyPadding = mode === 'html' ? '45px' : '0';
     const articlePadding = mode === 'html' ? '0' : '20px';
     const contentStyles = getContentStyles();
+    const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
 
     return `
       html,
@@ -154,6 +164,8 @@
 
       ${contentStyles}
 
+      ${mermaidToolbarStyles}
+
       .markdown-body {
         max-width: ${maxWidth} !important;
         padding: ${articlePadding} !important;
@@ -163,6 +175,7 @@
 
   window.MarkTideMarkdownStyles = {
     getContentStyles,
+    getMermaidToolbarStyles,
     getStandaloneStyles,
   };
 })(window);
