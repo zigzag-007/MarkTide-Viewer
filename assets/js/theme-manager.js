@@ -69,17 +69,20 @@ class ThemeManager {
   }
 
   initializeHighlightThemeLinks() {
+    if (!window.MarktideHighlightTheme) return;
+
     const primaryLink = document.getElementById("highlight-theme");
     if (!primaryLink) return;
 
     this.highlightThemeLink = primaryLink;
+    this.highlightThemeLink.href = window.MarktideHighlightTheme.getThemeUrl(false);
 
     let darkLink = document.getElementById("highlight-theme-dark");
     if (!darkLink) {
       darkLink = document.createElement("link");
       darkLink.id = "highlight-theme-dark";
       darkLink.rel = "stylesheet";
-      darkLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css";
+      darkLink.href = window.MarktideHighlightTheme.getThemeUrl(true);
       darkLink.disabled = true;
       primaryLink.insertAdjacentElement("afterend", darkLink);
     }
@@ -267,6 +270,8 @@ class ThemeManager {
   }
 
   updateHighlightTheme() {
+    if (!window.MarktideHighlightTheme) return;
+
     // Switch highlight.js theme by toggling pre-mounted links to reduce flash.
     const lightLink = this.highlightThemeLink || document.getElementById("highlight-theme");
     const darkLink = this.highlightThemeDarkLink || document.getElementById("highlight-theme-dark");
@@ -281,11 +286,7 @@ class ThemeManager {
     // Fallback path (in case links are unavailable)
     const fallbackLink = document.getElementById("highlight-theme");
     if (!fallbackLink) return;
-    if (this.currentTheme === "dark") {
-      fallbackLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css";
-    } else {
-      fallbackLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
-    }
+    fallbackLink.href = window.MarktideHighlightTheme.getThemeUrl(this.currentTheme === "dark");
   }
 
   updateThemeColorMeta() {

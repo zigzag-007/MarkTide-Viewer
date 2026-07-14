@@ -77,12 +77,27 @@ const checks = [
     pass: () => exists('assets/js/export-assets.js'),
   },
   {
+    name: 'shared highlight theme helper exists',
+    pass: () => exists('assets/js/highlight-theme.js')
+      && /MarktideHighlightTheme/.test(read('assets/js/highlight-theme.js')),
+  },
+  {
     name: 'shared export asset helper is loaded before exports',
     pass: () => {
       const index = read('index.html');
       return index.indexOf('assets/js/export-assets.js') > -1
         && index.indexOf('assets/js/export-assets.js') < index.indexOf('assets/js/import-export.js')
         && index.indexOf('assets/js/export-assets.js') < index.indexOf('assets/js/print-handler.js');
+    },
+  },
+  {
+    name: 'shared highlight theme helper is loaded before theme and exports',
+    pass: () => {
+      const index = read('index.html');
+      return index.indexOf('assets/js/highlight-theme.js') > -1
+        && index.indexOf('assets/js/highlight-theme.js') < index.indexOf('assets/js/theme-manager.js')
+        && index.indexOf('assets/js/highlight-theme.js') < index.indexOf('assets/js/import-export.js')
+        && index.indexOf('assets/js/highlight-theme.js') < index.indexOf('assets/js/print-handler.js');
     },
   },
   {
@@ -104,6 +119,30 @@ const checks = [
         && !/mathjax\/3\.2\.2/.test(consumers)
         && !/highlight\.js\/11\.9\.0/.test(consumers);
     },
+  },
+  {
+    name: 'theme manager and exports consume shared highlight theme helper',
+    pass: () => /MarktideHighlightTheme/.test(read('assets/js/theme-manager.js'))
+      && /MarktideHighlightTheme/.test(read('assets/js/import-export.js'))
+      && /MarktideHighlightTheme/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'highlight theme URLs are not privately duplicated outside the shared helper',
+    pass: () => {
+      const consumers = [
+        read('index.html'),
+        read('assets/js/theme-manager.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/highlight\.js\/11\.9\.0\/styles\/github\.min\.css/.test(consumers)
+        && !/highlight\.js\/11\.9\.0\/styles\/monokai-sublime\.min\.css/.test(consumers);
+    },
+  },
+  {
+    name: 'utils no longer owns highlight theme configuration',
+    pass: () => !/MarktideHighlightTheme/.test(read('assets/js/utils.js')),
   },
   {
     name: 'shared Mermaid toolbar CSS exists',
