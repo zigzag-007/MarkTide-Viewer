@@ -628,22 +628,20 @@ class ImportExportManager {
   }
 
   exportAsHTML() {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+      throw new Error('Shared Markdown rendering pipeline is required for HTML export.');
+    }
+
     const markdown = this.markdownEditor.value;
     
-    const exportRenderer = window.MarkTideCodeBlockRenderer
-      ? window.MarkTideCodeBlockRenderer.createRenderer({
-          enhanced: true,
-          includeMermaidSource: true,
-        })
-      : new marked.Renderer();
+    const exportRenderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: true,
+      includeMermaidSource: true,
+    });
     
     // Use the enhanced renderer for HTML export
-    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
-      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer })
-      : marked.parse(markdown, { renderer: exportRenderer });
-    const sanitizedHtml = window.MarkTideSanitizer
-      ? window.MarkTideSanitizer.sanitize(html, { mode: 'html' })
-      : DOMPurify.sanitize(html);
+    const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer });
+    const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'html' });
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");

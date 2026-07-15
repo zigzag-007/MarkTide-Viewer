@@ -361,6 +361,22 @@ const checks = [
       && /MarkTideCodeBlockRenderer/.test(read('assets/js/print-handler.js')),
   },
   {
+    name: 'markdown consumers do not silently downgrade shared rendering',
+    pass: () => {
+      const preview = read('assets/js/markdown-renderer.js');
+      const exports = [
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+
+      return !/:\s*new\s+marked\.Renderer\(\)/.test(preview)
+        && !/:\s*new\s+marked\.Renderer\(\)/.test(exports)
+        && !/:\s*DOMPurify\.sanitize\(/.test(preview)
+        && !/:\s*DOMPurify\.sanitize\(/.test(exports)
+        && !/:\s*marked\.parse\(/.test(exports);
+    },
+  },
+  {
     name: 'markdown consumers do not own private code block renderers',
     pass: () => {
       const consumers = [

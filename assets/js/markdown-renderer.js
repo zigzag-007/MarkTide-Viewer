@@ -20,6 +20,10 @@ class MarkdownRenderer {
   }
 
   setupMarked() {
+    if (!window.MarkTideCodeBlockRenderer) {
+      throw new Error('Shared code block renderer is required for Markdown preview.');
+    }
+
     // Check if soft line breaks are enabled (default: true for user-friendliness)
     const softLineBreaks = localStorage.getItem('marktide-soft-breaks') !== 'false';
     
@@ -34,12 +38,10 @@ class MarkdownRenderer {
       mangle: false,
     };
 
-    this.renderer = window.MarkTideCodeBlockRenderer
-      ? window.MarkTideCodeBlockRenderer.createRenderer({
-          enhanced: true,
-          includeMermaidSource: true,
-        })
-      : new marked.Renderer();
+    this.renderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: true,
+      includeMermaidSource: true,
+    });
 
     marked.setOptions({
       ...markedOptions,
@@ -453,9 +455,11 @@ class MarkdownRenderer {
     try {
       const markdown = this.markdownEditor.value;
       const html = this.parseMarkdown(markdown);
-      const sanitizedHtml = window.MarkTideSanitizer
-        ? window.MarkTideSanitizer.sanitize(html, { mode: 'preview' })
-        : DOMPurify.sanitize(html);
+      if (!window.MarkTideSanitizer) {
+        throw new Error('Shared sanitizer is required for Markdown preview.');
+      }
+
+      const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'preview' });
       this.markdownPreview.innerHTML = sanitizedHtml;
 
       this.markdownPreview.querySelectorAll("pre code").forEach((block) => {

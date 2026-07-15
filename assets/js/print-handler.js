@@ -126,6 +126,10 @@ class PrintHandler {
   }
 
   printPreview(titleOverride) {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+      throw new Error('Shared Markdown rendering pipeline is required for PDF export.');
+    }
+
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
     
@@ -138,24 +142,15 @@ class PrintHandler {
     }
     document.title = smartTitle;
     const markdown = markdownEditor.value;
-    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
-      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
-      : markdown;
     
-    const printRenderer = window.MarkTideCodeBlockRenderer
-      ? window.MarkTideCodeBlockRenderer.createRenderer({
-          enhanced: false,
-          includeMermaidSource: false,
-        })
-      : new marked.Renderer();
+    const printRenderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: false,
+      includeMermaidSource: false,
+    });
     
     // Use the clean renderer for print/PDF
-    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
-      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer })
-      : marked.parse(normalizedMarkdown, { renderer: printRenderer });
-    const sanitizedHtml = window.MarkTideSanitizer
-      ? window.MarkTideSanitizer.sanitize(html, { mode: 'print' })
-      : DOMPurify.sanitize(html);
+    const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer });
+    const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'print' });
     const printableHtml = this.preparePrintTables(sanitizedHtml);
     if (!window.MarktideHighlightTheme) {
       throw new Error('Shared highlight theme helper is required for PDF export.');
