@@ -101,6 +101,18 @@ const checks = [
     },
   },
   {
+    name: 'unused legacy export libraries are not loaded',
+    pass: () => {
+      const index = read('index.html');
+      return !/FileSaver(?:\.min)?\.js/i.test(index)
+        && !/html2pdf(?:\.bundle)?\.min\.js/i.test(index)
+        && !/jspdf(?:\.umd)?\.min\.js/i.test(index)
+        && !/html2canvas(?:\.min)?\.js/i.test(index)
+        && !/pdfmake(?:\.min)?\.js/i.test(index)
+        && !/vfs_fonts\.js/i.test(index);
+    },
+  },
+  {
     name: 'HTML and PDF exports consume shared export assets',
     pass: () => /MarkTideExportAssets/.test(read('assets/js/import-export.js'))
       && /MarkTideExportAssets/.test(read('assets/js/print-handler.js')),
