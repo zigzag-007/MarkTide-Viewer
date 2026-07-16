@@ -10,6 +10,17 @@ class MermaidToolbar {
     this.lastInteractionWasPointer = false;
   }
 
+  getSharedHelper() {
+    const helper = window.MarkTideMermaidShared;
+    if (!helper
+      || typeof helper.prepareSvgClone !== 'function'
+      || typeof helper.sanitizeSvgInteractions !== 'function') {
+      throw new Error('Shared Mermaid helper is required for diagram tools.');
+    }
+
+    return helper;
+  }
+
   init() {
     this.ensureModal();
     document.addEventListener('pointerdown', () => {
@@ -260,11 +271,7 @@ class MermaidToolbar {
   }
 
   prepareSvgClone(svg) {
-    if (!window.MarkTideMermaidShared) {
-      throw new Error('Mermaid export helper is unavailable');
-    }
-
-    return window.MarkTideMermaidShared.prepareSvgClone(svg);
+    return this.getSharedHelper().prepareSvgClone(svg);
   }
 
   svgToPngBlob(svg) {
@@ -331,9 +338,7 @@ class MermaidToolbar {
     this.zoom = 1;
     this.modalContent.innerHTML = '';
     const modalSvg = svg.cloneNode(true);
-    if (window.MarkTideMermaidShared && window.MarkTideMermaidShared.sanitizeSvgInteractions) {
-      window.MarkTideMermaidShared.sanitizeSvgInteractions(modalSvg);
-    }
+    this.getSharedHelper().sanitizeSvgInteractions(modalSvg);
     this.modalContent.appendChild(modalSvg);
     this.setZoom(this.zoom);
     this.modal.classList.add('open');

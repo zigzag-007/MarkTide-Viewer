@@ -313,6 +313,25 @@ const checks = [
     },
   },
   {
+    name: 'preview Mermaid handler does not duplicate shared config',
+    pass: () => {
+      const source = read('assets/js/mermaid-handler.js');
+      return !/securityLevel:\s*['"]strict['"]/.test(source)
+        && !/nodeSpacing:\s*60/.test(source)
+        && !/rankSpacing:\s*70/.test(source)
+        && !/fontSize:\s*16/.test(source);
+    },
+  },
+  {
+    name: 'Mermaid modal clone always uses shared sanitizer',
+    pass: () => {
+      const source = read('assets/js/mermaid-toolbar.js');
+      return /getSharedHelper\s*\(\)/.test(source)
+        && /getSharedHelper\(\)\.sanitizeSvgInteractions\(modalSvg\)/.test(source)
+        && !/MarkTideMermaidShared\s*&&\s*window\.MarkTideMermaidShared\.sanitizeSvgInteractions/.test(source);
+    },
+  },
+  {
     name: 'MathJax config is not privately duplicated',
     pass: () => {
       const sources = [

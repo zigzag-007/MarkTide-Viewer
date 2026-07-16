@@ -8,49 +8,19 @@ class MermaidHandler {
     this.currentTheme = null;
   }
 
-  getDiagramFontFamily() {
-    return window.MarkTideMermaidShared
-      ? window.MarkTideMermaidShared.getDiagramFontFamily()
-      : '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-  }
-
-  getThemeName(theme, mode = 'preview') {
-    if (mode === 'pdf') {
-      return 'neutral';
+  getSharedHelper() {
+    const helper = window.MarkTideMermaidShared;
+    if (!helper
+      || typeof helper.getMermaidConfig !== 'function'
+      || typeof helper.stabilizeMermaidDiagrams !== 'function') {
+      throw new Error('Shared Mermaid helper is required for preview rendering.');
     }
 
-    return 'default';
-  }
-
-  getThemeVariables() {
-    return window.MarkTideMermaidShared
-      ? window.MarkTideMermaidShared.getThemeVariables()
-      : { fontFamily: this.getDiagramFontFamily() };
+    return helper;
   }
 
   getMermaidConfig(options = {}) {
-    if (window.MarkTideMermaidShared) {
-      return window.MarkTideMermaidShared.getMermaidConfig(options);
-    }
-
-    const mode = options.mode || 'preview';
-    const htmlLabels = mode !== 'pdf';
-
-    return {
-      startOnLoad: false,
-      theme: this.getThemeName(options.theme, mode),
-      themeVariables: this.getThemeVariables(),
-      securityLevel: 'strict',
-      htmlLabels: htmlLabels,
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: htmlLabels,
-        curve: 'basis',
-        nodeSpacing: 60,
-        rankSpacing: 70
-      },
-      fontSize: 16
-    };
+    return this.getSharedHelper().getMermaidConfig(options);
   }
 
   markDiagramTypes(container) {
@@ -149,9 +119,7 @@ class MermaidHandler {
   }
 
   afterRender(container) {
-    if (window.MarkTideMermaidShared) {
-      window.MarkTideMermaidShared.stabilizeMermaidDiagrams(container);
-    }
+    this.getSharedHelper().stabilizeMermaidDiagrams(container);
   }
 
 }
