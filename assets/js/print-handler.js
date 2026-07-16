@@ -125,6 +125,24 @@ class PrintHandler {
     throw new Error('Shared export assets are required for PDF export rendering.');
   }
 
+  getMarkdownStyles() {
+    if (window.MarkTideMarkdownStyles
+      && typeof window.MarkTideMarkdownStyles.getStandaloneStyles === 'function') {
+      return window.MarkTideMarkdownStyles;
+    }
+
+    throw new Error('Shared Markdown styles are required for PDF export rendering.');
+  }
+
+  getPrintStyles() {
+    if (window.MarkTidePrintStyles
+      && typeof window.MarkTidePrintStyles.getStyles === 'function') {
+      return window.MarkTidePrintStyles;
+    }
+
+    throw new Error('Shared print styles are required for PDF export rendering.');
+  }
+
   printPreview(titleOverride) {
     if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
       throw new Error('Shared Markdown rendering pipeline is required for PDF export.');
@@ -158,13 +176,14 @@ class PrintHandler {
 
     const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false);
     const printHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
-    const markdownPrintStyles = window.MarkTideMarkdownStyles
-      ? window.MarkTideMarkdownStyles.getStandaloneStyles({ theme: 'light', mode: 'print' })
-      : '';
-    const printStyles = window.MarkTidePrintStyles
-      ? window.MarkTidePrintStyles.getStyles({ printHighlightTokenStyles, markdownPrintStyles })
-      : `${printHighlightTokenStyles}
-${markdownPrintStyles}`;
+    const markdownPrintStyles = this.getMarkdownStyles().getStandaloneStyles({
+      theme: 'light',
+      mode: 'print'
+    });
+    const printStyles = this.getPrintStyles().getStyles({
+      printHighlightTokenStyles,
+      markdownPrintStyles
+    });
     const exportAssets = this.getExportAssets();
 
     // Create a hidden iframe for printing

@@ -1,22 +1,30 @@
 // Import and export functionality for markdown files
 
+function marktideRequireMermaidToolbar() {
+  if (typeof MermaidToolbar !== 'function') {
+    throw new Error('Shared Mermaid toolbar is required for HTML export.');
+  }
+
+  return MermaidToolbar;
+}
+
 function marktideExportMermaidToolbarScript() {
-  if (typeof MermaidToolbar !== 'function') return '';
+  const Toolbar = marktideRequireMermaidToolbar();
 
   return `
-    ${MermaidToolbar.toString()}
+    ${Toolbar.toString()}
     window.MarkTideMermaidToolbar = new MermaidToolbar();
     window.MarkTideMermaidToolbar.init();
     window.MarkTideMermaidToolbar.enhance(document);
   `;
 }
 
-function marktideRequireMermaidShared() {
-  if (!window.MarkTideMermaidShared || !window.MarkTideMermaidShared.getMermaidConfig) {
-    throw new Error('Shared Mermaid helper is required for export rendering.');
+function marktideRequireMermaidFactory() {
+  if (typeof window.MarkTideCreateMermaidShared !== 'function') {
+    throw new Error('Shared Mermaid factory is required for HTML export.');
   }
 
-  return window.MarkTideMermaidShared;
+  return window.MarkTideCreateMermaidShared;
 }
 
 function marktideRequireExportAssets() {
@@ -27,11 +35,20 @@ function marktideRequireExportAssets() {
   return window.MarkTideExportAssets;
 }
 
+function marktideRequireMarkdownStyles() {
+  if (!window.MarkTideMarkdownStyles
+    || typeof window.MarkTideMarkdownStyles.getStandaloneStyles !== 'function') {
+    throw new Error('Shared Markdown styles are required for HTML export.');
+  }
+
+  return window.MarkTideMarkdownStyles;
+}
+
 function marktideExportMermaidSharedScript() {
-  if (typeof window.MarkTideCreateMermaidShared !== 'function') return '';
+  const createMermaidShared = marktideRequireMermaidFactory();
 
   return `
-    window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()};
+    window.MarkTideCreateMermaidShared = ${createMermaidShared.toString()};
     window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);
   `;
 }
@@ -648,35 +665,10 @@ class ImportExportManager {
     const isDarkMode = currentTheme === "dark";
     
     // Shared Markdown document styles used by preview, HTML export, and PDF export.
-    const themeStyles = window.MarkTideMarkdownStyles
-      ? window.MarkTideMarkdownStyles.getStandaloneStyles({
-          theme: isDarkMode ? 'dark' : 'light',
-          mode: 'html'
-        })
-      : `
-        html,
-        body {
-            box-sizing: border-box;
-            background-color: ${isDarkMode ? '#000000' : '#ffffff'} !important;
-            color: ${isDarkMode ? '#e6edf3' : '#24292e'} !important;
-            color-scheme: ${isDarkMode ? 'dark' : 'light'};
-        }
-        body {
-            min-width: 200px;
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 45px;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-        .markdown-body {
-            background-color: ${isDarkMode ? '#000000' : '#ffffff'} !important;
-            color: ${isDarkMode ? '#e6edf3' : '#24292e'} !important;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-            max-width: 920px !important;
-            font-size: 1.05rem !important;
-            line-height: 1.7 !important;
-        }
-      `;
+    const themeStyles = marktideRequireMarkdownStyles().getStandaloneStyles({
+      theme: isDarkMode ? 'dark' : 'light',
+      mode: 'html'
+    });
     // Choose appropriate highlight.js theme
     if (!window.MarktideHighlightTheme) {
       throw new Error('Shared highlight theme helper is required for HTML export.');
@@ -726,14 +718,12 @@ class ImportExportManager {
         });
         
         // Initialize and render Mermaid diagrams
-        const mermaidConfig = marktideRequireMermaidShared().getMermaidConfig({ mode: 'export' });
+        const mermaidConfig = window.MarkTideMermaidShared.getMermaidConfig({ mode: 'export' });
 
         mermaid.initialize(mermaidConfig);
 
         function stabilizeMermaidDiagrams() {
-            if (window.MarkTideMermaidShared) {
-                window.MarkTideMermaidShared.stabilizeMermaidDiagrams(document);
-            }
+            window.MarkTideMermaidShared.stabilizeMermaidDiagrams(document);
         }
         
         // Render all mermaid diagrams
@@ -745,15 +735,11 @@ class ImportExportManager {
             if (mermaidResult && typeof mermaidResult.then === 'function') {
                 mermaidResult.then(() => {
                     stabilizeMermaidDiagrams();
-                    if (window.MarkTideMermaidToolbar) {
-                        window.MarkTideMermaidToolbar.enhance(document);
-                    }
+                    window.MarkTideMermaidToolbar.enhance(document);
                 }).catch((e) => console.warn("Mermaid rendering failed:", e));
             } else {
                 stabilizeMermaidDiagrams();
-                if (window.MarkTideMermaidToolbar) {
-                    window.MarkTideMermaidToolbar.enhance(document);
-                }
+                window.MarkTideMermaidToolbar.enhance(document);
             }
         } catch (e) {
             console.warn("Mermaid rendering failed:", e);

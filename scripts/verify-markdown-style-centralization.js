@@ -229,6 +229,16 @@ const checks = [
     pass: () => /MarkTideMarkdownStyles/.test(read('assets/js/import-export.js')),
   },
   {
+    name: 'HTML export requires shared markdown styles without private fallback CSS',
+    pass: () => {
+      const source = read('assets/js/import-export.js');
+      return /marktideRequireMarkdownStyles\s*\(\)/.test(source)
+        && /marktideRequireMarkdownStyles\(\)\.getStandaloneStyles/.test(source)
+        && !/const\s+themeStyles\s*=\s*window\.MarkTideMarkdownStyles\s*\?/.test(source)
+        && !/body\s*\{[\s\S]*?max-width:\s*920px[\s\S]*?padding:\s*45px/.test(source);
+    },
+  },
+  {
     name: 'HTML export no longer owns private code block CSS copies',
     pass: () => {
       const exportCode = read('assets/js/import-export.js');
@@ -265,6 +275,18 @@ const checks = [
     pass: () => /MarkTidePrintStyles/.test(read('assets/js/print-handler.js')),
   },
   {
+    name: 'PDF export requires shared markdown and print style helpers',
+    pass: () => {
+      const source = read('assets/js/print-handler.js');
+      return /getMarkdownStyles\s*\(\)/.test(source)
+        && /getPrintStyles\s*\(\)/.test(source)
+        && /this\.getMarkdownStyles\(\)\.getStandaloneStyles/.test(source)
+        && /this\.getPrintStyles\(\)\.getStyles/.test(source)
+        && !/window\.MarkTideMarkdownStyles\s*\?/.test(source)
+        && !/window\.MarkTidePrintStyles\s*\?/.test(source);
+    },
+  },
+  {
     name: 'PDF export does not own private print stylesheet',
     pass: () => {
       const source = read('assets/js/print-handler.js');
@@ -295,6 +317,26 @@ const checks = [
     name: 'HTML and PDF exports consume shared Mermaid config',
     pass: () => /MarkTideMermaidShared/.test(read('assets/js/import-export.js'))
       && /MarkTideMermaidShared/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'HTML export Mermaid runtime only uses serialized shared globals',
+    pass: () => {
+      const source = read('assets/js/import-export.js');
+      return !/const\s+mermaidConfig\s*=\s*marktideRequireMermaidShared\(\)/.test(source)
+        && /const\s+mermaidConfig\s*=\s*window\.MarkTideMermaidShared\.getMermaidConfig/.test(source)
+        && /window\.MarkTideMermaidShared\.stabilizeMermaidDiagrams\(document\)/.test(source)
+        && /window\.MarkTideMermaidToolbar\.enhance\(document\)/.test(source);
+    },
+  },
+  {
+    name: 'HTML export requires Mermaid helper and toolbar serialization',
+    pass: () => {
+      const source = read('assets/js/import-export.js');
+      return /marktideRequireMermaidFactory\s*\(\)/.test(source)
+        && /marktideRequireMermaidToolbar\s*\(\)/.test(source)
+        && !/if\s*\(typeof\s+window\.MarkTideCreateMermaidShared\s*!==\s*['"]function['"]\)\s*return\s*['"]{2}/.test(source)
+        && !/if\s*\(typeof\s+MermaidToolbar\s*!==\s*['"]function['"]\)\s*return\s*['"]{2}/.test(source);
+    },
   },
   {
     name: 'PDF export does not depend on preview Mermaid handler for config',
