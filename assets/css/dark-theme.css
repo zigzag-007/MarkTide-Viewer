@@ -16,7 +16,6 @@
   --text-color: #e6edf3;
   --border-color: #1a1a1a;
   --accent-color: #4fc3f7; /* Subtle light blue accent */
-  --accent-color-rgb: 79, 195, 247;
 
   /* Header colors */
   --header-bg: #000000;
@@ -27,9 +26,6 @@
   --button-bg-rgb: 26, 26, 26; /* RGB values for frosted glass */
   --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
   --button-active: #1a1a1a;
-  
-  /* Stats background */
-  --stats-bg: rgba(0, 0, 0, 0.8);
   
   /* Editor and preview colors - Different for visual separation */
   --editor-bg: #1a1a1a; /* Dark gray for editor */
@@ -46,7 +42,6 @@
   
   /* Dropzone colors */
   /* Code highlighting */
-  --code-bg: #1a1a1a;
   --code-pre-bg: #242628;
   --code-inline-bg: #29241E;
   --code-inline-color: #FFD085;
@@ -83,7 +78,6 @@
   --markdown-heading-color: #f0f3f6;
   --markdown-bold-color: #f0f3f6;
   --markdown-bold-weight: 900;
-  --hr-color: #333333;
   --markdown-hr-color: #30363d;
   
   /* Danger colors */

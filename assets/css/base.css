@@ -215,9 +215,6 @@
     height: auto;
   }
 
-  /* Expose header height as a CSS var; updated via JS compute path */
-  .app-header { --header-height: 0px; }
-  
   /* =================================================================
      5. HEADER COMPONENTS
      ================================================================= */

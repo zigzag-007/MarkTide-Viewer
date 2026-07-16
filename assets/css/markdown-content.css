@@ -3,7 +3,6 @@
      ================================================================= */
   
   .markdown-body {
-    padding: 10px;
     width: 100%;
     background-color: var(--preview-bg);
     color: var(--preview-text-color);

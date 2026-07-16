@@ -91,10 +91,6 @@ class ViewManager {
       dropzoneTotal = dropzone.offsetHeight + marginBottom;
     }
 
-    if (header) {
-      header.style.setProperty('--header-height', `${headerHeight}px`);
-    }
-
     const offset = Math.max(0, Math.round(headerHeight + dropzoneTotal));
     previewPane.style.minHeight = `max(0px, calc(var(--app-vh, 1vh) * 100 - ${offset}px))`;
   }
@@ -456,10 +452,6 @@ class ViewManager {
     }
 
     const targetHeight = `calc(var(--app-vh, 1vh) * 100 - ${headerHeight + dropzoneTotal}px)`;
-    // Sync header height to CSS var so container can clamp too
-    if (header) {
-      header.style.setProperty('--header-height', `${headerHeight}px`);
-    }
     editorPane.style.height = targetHeight;
     editorPane.style.minHeight = targetHeight;
     editorPane.style.overflowY = 'auto';

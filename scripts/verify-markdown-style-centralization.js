@@ -484,6 +484,38 @@ const checks = [
     pass: () => !/MARKDOWN PREVIEW CONTENT/.test(read('assets/css/base.css')),
   },
   {
+    name: 'dead CSS declarations and stale stylesheet placeholder are removed',
+    pass: () => {
+      const markdownCss = read('assets/css/markdown-content.css');
+      const keyframesCss = read('assets/css/keyframes.css');
+      const themes = [
+        read('assets/css/light-theme.css'),
+        read('assets/css/dark-theme.css'),
+      ].join('\n');
+      const index = read('index.html');
+      const markdownBody = markdownCss.match(/\.markdown-body\s*\{([\s\S]*?)\}/);
+      const paddingCount = markdownBody
+        ? (markdownBody[1].match(/\bpadding\s*:/g) || []).length
+        : 0;
+
+      return paddingCount === 1
+        && !/@keyframes\s+fadeIn\b/.test(keyframesCss)
+        && !/--(?:accent-color-rgb|stats-bg|code-bg|hr-color)\s*:/.test(themes)
+        && !/assets\/css\/styles\.css/.test(index);
+    },
+  },
+  {
+    name: 'unused header height CSS variable is removed',
+    pass: () => {
+      const consumers = [
+        read('assets/css/base.css'),
+        read('assets/js/view-manager.js'),
+      ].join('\n');
+
+      return !/--header-height/.test(consumers);
+    },
+  },
+  {
     name: 'shared badge spacing survives soft-break differences',
     pass: () => {
       const css = read('assets/css/markdown-content.css');

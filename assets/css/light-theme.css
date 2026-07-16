@@ -17,7 +17,6 @@
   --text-color: #000000;
   --border-color: #e0e0e0;
   --accent-color: #4fc3f7; /* Light blue accent */
-  --accent-color-rgb: 79, 195, 247;
 
   /* Header colors */
   --header-bg: #ffffff;
@@ -28,9 +27,6 @@
   --button-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
   --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
   --button-active: #e9ecef;
-  
-  /* Stats background */
-  --stats-bg: rgba(255, 255, 255, 0.9);
   
   /* Editor and preview colors - Different for visual separation */
   --editor-bg: #f8f9fa; /* Light gray for editor */
@@ -57,7 +53,6 @@
   --dropzone-hover-bg: rgba(0, 0, 0, 0.03);
   
   /* Code highlighting */
-  --code-bg: #f8f9fa;
   --code-pre-bg: #f6f8fa;
   --code-inline-bg: #FFF8EC;
   --code-inline-color: #8B4500;
@@ -103,7 +98,6 @@
   --markdown-heading-color: #24292e;
   --markdown-bold-color: inherit;
   --markdown-bold-weight: 900;
-  --hr-color: #e0e0e0;
   --markdown-hr-color: #c9d1d9;
   --logo-bg: rgba(0, 0, 0, 0.1);
   --logo-border: rgba(0, 0, 0, 0.3);
