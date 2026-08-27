@@ -2,25 +2,18 @@
 
 class MermaidHandler {
   constructor() {
-    this.initialized = false;
     this.renderToken = 0;
     this.renderChain = Promise.resolve();
-    this.currentTheme = null;
   }
 
   getSharedHelper() {
     const helper = window.MarkTideMermaidShared;
     if (!helper
-      || typeof helper.getMermaidConfig !== 'function'
-      || typeof helper.stabilizeMermaidDiagrams !== 'function') {
+      || typeof helper.renderDiagrams !== 'function') {
       throw new Error('Shared Mermaid helper is required for preview rendering.');
     }
 
     return helper;
-  }
-
-  getMermaidConfig(options = {}) {
-    return this.getSharedHelper().getMermaidConfig(options);
   }
 
   markDiagramTypes(container) {
@@ -52,21 +45,6 @@ class MermaidHandler {
     }
   }
 
-  initMermaid() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    if (this.initialized && this.currentTheme === currentTheme) {
-      return;
-    }
-
-    mermaid.initialize(this.getMermaidConfig({
-      mode: 'preview',
-      theme: currentTheme
-    }));
-
-    this.currentTheme = currentTheme;
-    this.initialized = true;
-  }
-
   async renderDiagrams(container) {
     const renderToken = ++this.renderToken;
     const diagrams = Array.from(container.querySelectorAll('.mermaid'));
@@ -77,21 +55,17 @@ class MermaidHandler {
         return;
       }
 
-      this.initMermaid();
-
       const currentDiagrams = diagrams.filter((diagram) => {
         return diagram.isConnected && container.contains(diagram) && !diagram.querySelector('svg');
       });
 
       if (!currentDiagrams.length) return;
 
-      const renderResult = mermaid.run
-        ? mermaid.run({ nodes: currentDiagrams })
-        : mermaid.init(undefined, currentDiagrams);
-
-      if (renderResult && typeof renderResult.then === 'function') {
-        await renderResult;
-      }
+      await this.getSharedHelper().renderDiagrams(container, {
+        mode: 'preview',
+        theme: document.documentElement.getAttribute('data-theme'),
+        nodes: currentDiagrams,
+      });
     };
 
     try {
@@ -109,17 +83,12 @@ class MermaidHandler {
         return;
       }
 
-      this.afterRender(container);
     } catch (e) {
       if (renderToken !== this.renderToken) {
         return;
       }
       console.warn("Mermaid rendering failed:", e);
     }
-  }
-
-  afterRender(container) {
-    this.getSharedHelper().stabilizeMermaidDiagrams(container);
   }
 
 }

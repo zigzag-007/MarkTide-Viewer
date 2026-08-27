@@ -15,7 +15,6 @@ function marktideExportMermaidToolbarScript() {
     ${Toolbar.toString()}
     window.MarkTideMermaidToolbar = new MermaidToolbar();
     window.MarkTideMermaidToolbar.init();
-    window.MarkTideMermaidToolbar.enhance(document);
   `;
 }
 
@@ -54,7 +53,9 @@ function marktideExportMermaidSharedScript() {
 }
 
 function marktideExportCodeCopyScript() {
-  if (typeof CodeCopyHandler !== 'function') return '';
+  if (typeof CodeCopyHandler !== 'function') {
+    throw new Error('Shared code copy handler is required for HTML export.');
+  }
 
   return `
     ${CodeCopyHandler.toString()}
@@ -71,7 +72,9 @@ function marktideExportCodeCopyScript() {
 }
 
 function marktideExportCodeWrapScript() {
-  if (typeof window.MarkTideCreateCodeWrapController !== 'function') return '';
+  if (typeof window.MarkTideCreateCodeWrapController !== 'function') {
+    throw new Error('Shared code wrap controller is required for HTML export.');
+  }
 
   return `
     window.MarkTideCreateCodeWrapController = ${window.MarkTideCreateCodeWrapController.toString()};
@@ -80,14 +83,15 @@ function marktideExportCodeWrapScript() {
         rootSelector: '.markdown-body'
       });
       window.MarkTideCodeWrap.init();
-      if (window.MathJax && window.MathJax.typesetPromise) {
-        var typeset = window.MathJax.typesetPromise([document.body]);
-        if (typeset && typeof typeset.then === 'function') {
-          typeset.then(function () {
-            window.MarkTideCodeWrap.scheduleRefresh(document.querySelector('.markdown-body'));
-          }).catch(function () {});
+      var mermaidReady = window.MarkTideMermaidRenderPromise || Promise.resolve();
+      Promise.resolve(mermaidReady).then(function () {
+        if (window.MarkTideMathJax && window.MarkTideMathJax.typeset) {
+          return window.MarkTideMathJax.typeset(document.body);
         }
-      }
+        return false;
+      }).then(function () {
+        window.MarkTideCodeWrap.scheduleRefresh(document.querySelector('.markdown-body'));
+      }).catch(function () {});
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', bootCodeWrap);
@@ -97,10 +101,17 @@ function marktideExportCodeWrapScript() {
   `;
 }
 
+function marktideRequireMathJax() {
+  if (!window.MarkTideMathJax
+    || typeof window.MarkTideMathJax.getConfigScript !== 'function') {
+    throw new Error('Shared MathJax configuration is required for HTML export.');
+  }
+
+  return window.MarkTideMathJax;
+}
+
 function marktideExportMathJaxConfigScript() {
-  return window.MarkTideMathJax
-    ? window.MarkTideMathJax.getConfigScript()
-    : '';
+  return marktideRequireMathJax().getConfigScript();
 }
 
 class ImportExportManager {
@@ -658,7 +669,7 @@ class ImportExportManager {
     
     // Use the enhanced renderer for HTML export
     const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer });
-    const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'html' });
+    const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'html' });
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -666,7 +677,6 @@ class ImportExportManager {
     
     // Shared Markdown document styles used by preview, HTML export, and PDF export.
     const themeStyles = marktideRequireMarkdownStyles().getStandaloneStyles({
-      theme: isDarkMode ? 'dark' : 'light',
       mode: 'html'
     });
     // Choose appropriate highlight.js theme
@@ -675,16 +685,14 @@ class ImportExportManager {
     }
 
     const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(isDarkMode);
-    const exportHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
     
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
-    const minifiedStyles = this.minifyCSS(themeStyles + exportHighlightTokenStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles);
     const exportAssetLinks = marktideRequireExportAssets();
     const fontLinks = exportAssetLinks.getFontLinks();
     const commonStylesheetLinks = exportAssetLinks.getCommonStylesheetLinks({ includeBootstrapIcons: true });
-    const highlightScripts = exportAssetLinks.getHighlightScriptTags();
     const mermaidScript = exportAssetLinks.getMermaidScriptTag();
     const mathJaxScript = exportAssetLinks.getMathJaxScriptTag();
 
@@ -702,48 +710,16 @@ class ImportExportManager {
 </head>
 <body>
     <article class="markdown-body">
-        ${sanitizedHtml}
+        ${renderedHtml}
     </article>
     
-    ${highlightScripts}
     ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>
     <script>${this.minifyJS(marktideExportMermaidToolbarScript())}</script>
     <script>${this.minifyJS(`
-        // Apply syntax highlighting to code blocks
-        document.querySelectorAll('pre code').forEach((block) => {
-            if (!block.classList.contains('mermaid') && !block.classList.contains('pseudocode')) {
-                hljs.highlightElement(block);
-            }
-        });
-        
-        // Initialize and render Mermaid diagrams
-        const mermaidConfig = window.MarkTideMermaidShared.getMermaidConfig({ mode: 'export' });
-
-        mermaid.initialize(mermaidConfig);
-
-        function stabilizeMermaidDiagrams() {
-            window.MarkTideMermaidShared.stabilizeMermaidDiagrams(document);
-        }
-        
-        // Render all mermaid diagrams
-        try {
-            const mermaidResult = mermaid.run
-                ? mermaid.run({ nodes: document.querySelectorAll('.mermaid') })
-                : mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-
-            if (mermaidResult && typeof mermaidResult.then === 'function') {
-                mermaidResult.then(() => {
-                    stabilizeMermaidDiagrams();
-                    window.MarkTideMermaidToolbar.enhance(document);
-                }).catch((e) => console.warn("Mermaid rendering failed:", e));
-            } else {
-                stabilizeMermaidDiagrams();
-                window.MarkTideMermaidToolbar.enhance(document);
-            }
-        } catch (e) {
-            console.warn("Mermaid rendering failed:", e);
-        }
+        window.MarkTideMermaidRenderPromise = window.MarkTideMermaidShared.renderDiagrams(document, { mode: 'html' })
+            .catch((e) => console.warn("Mermaid rendering failed:", e))
+            .finally(() => window.MarkTideMermaidToolbar.enhance(document));
     `)}</script>
     <script>${this.minifyJS(marktideExportMathJaxConfigScript())}</script>
     ${mathJaxScript}

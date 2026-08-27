@@ -1,16 +1,47 @@
 // Print handling functionality
 
 class PrintHandler {
-  constructor() {
-    this.printButton = null;
-    this.mobilePrintButton = null;
+  getLogicalTableCells(rows) {
+    const occupiedColumns = [];
+    const logicalCells = [];
+
+    Array.from(rows || []).forEach((row) => {
+      let columnIndex = 0;
+
+      Array.from(row.children || []).forEach((cell) => {
+        while (occupiedColumns[columnIndex] > 0) {
+          columnIndex += 1;
+        }
+
+        const columnSpan = Math.max(1, Number.parseInt(cell.colSpan, 10) || 1);
+        const rowSpan = Math.max(1, Number.parseInt(cell.rowSpan, 10) || 1);
+        logicalCells.push({
+          cell,
+          columnIndex,
+          columnSpan,
+          rowSpan,
+        });
+        for (let offset = 0; offset < columnSpan; offset += 1) {
+          occupiedColumns[columnIndex + offset] = Math.max(
+            occupiedColumns[columnIndex + offset] || 0,
+            rowSpan
+          );
+        }
+        columnIndex += columnSpan;
+      });
+
+      occupiedColumns.forEach((remainingRows, index) => {
+        occupiedColumns[index] = Math.max(0, remainingRows - 1);
+      });
+    });
+
+    return logicalCells;
   }
 
-  init() {
-    this.printButton = document.getElementById("print-button");
-    this.mobilePrintButton = document.getElementById("mobile-print-button");
-    
-    // removed old event listeners since we now use dropdown menu
+  getLogicalColumnCount(rows) {
+    return this.getLogicalTableCells(rows).reduce((widestRow, entry) => {
+      return Math.max(widestRow, entry.columnIndex + entry.columnSpan);
+    }, 0);
   }
 
   preparePrintTables(html) {
@@ -48,10 +79,15 @@ class PrintHandler {
     };
 
     wrapper.querySelectorAll('table').forEach((table) => {
-      const firstRow = table.querySelector('tr');
-      const columnCount = firstRow ? firstRow.children.length : 0;
-      const hasLongValue = Array.from(table.querySelectorAll('td:not(:first-child), th:not(:first-child)'))
-        .some((cell) => needsSoftWrap(cell.textContent || ''));
+      const rows = table.rows || table.querySelectorAll('tr');
+      const logicalCells = this.getLogicalTableCells(rows);
+      const valueCells = logicalCells
+        .filter((entry) => entry.columnIndex > 0)
+        .map((entry) => entry.cell);
+      const columnCount = logicalCells.reduce((widestRow, entry) => {
+        return Math.max(widestRow, entry.columnIndex + entry.columnSpan);
+      }, 0);
+      const hasLongValue = valueCells.some((cell) => needsSoftWrap(cell.textContent || ''));
 
       if (columnCount > 0) {
         table.classList.add(`marktide-print-cols-${columnCount}`);
@@ -64,57 +100,66 @@ class PrintHandler {
       if (hasLongValue) {
         table.classList.add('marktide-print-long-table');
       }
-    });
 
-    wrapper.querySelectorAll('table td:not(:first-child), table th:not(:first-child)').forEach((cell) => {
-      if (!needsSoftWrap(cell.textContent || '')) return;
+      valueCells.forEach((cell) => {
+        if (!needsSoftWrap(cell.textContent || '')) return;
 
-      cell.classList.add('marktide-print-soft-wrap');
+        cell.classList.add('marktide-print-soft-wrap');
 
-      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
-        acceptNode(node) {
-          if (!needsSoftWrap(node.nodeValue || '')) {
-            return NodeFilter.FILTER_REJECT;
+        const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!needsSoftWrap(node.nodeValue || '')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+
+            if (node.parentElement && node.parentElement.closest('pre')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+
+            return NodeFilter.FILTER_ACCEPT;
           }
+        });
+        const textNodes = [];
 
-          if (node.parentElement && node.parentElement.closest('pre')) {
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          return NodeFilter.FILTER_ACCEPT;
+        while (walker.nextNode()) {
+          textNodes.push(walker.currentNode);
         }
-      });
-      const textNodes = [];
 
-      while (walker.nextNode()) {
-        textNodes.push(walker.currentNode);
-      }
-
-      textNodes.forEach((node) => {
-        const fragment = document.createDocumentFragment();
-        addWrappedText(fragment, node.nodeValue || '');
-        node.parentNode.replaceChild(fragment, node);
+        textNodes.forEach((node) => {
+          const fragment = document.createDocumentFragment();
+          addWrappedText(fragment, node.nodeValue || '');
+          node.parentNode.replaceChild(fragment, node);
+        });
       });
     });
 
     return wrapper.innerHTML;
   }
 
-  stabilizeMermaidDiagrams(printDocument) {
-    const printWindow = printDocument.defaultView || window;
-    const helper = printWindow.MarkTideMermaidShared || window.MarkTideMermaidShared;
-
-    if (helper && helper.stabilizeMermaidDiagrams) {
-      helper.stabilizeMermaidDiagrams(printDocument, { stabilizeDimensions: true });
+  triggerPrint(printFrame, cleanup) {
+    try {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    } finally {
+      cleanup();
     }
   }
 
-  getPrintMermaidConfig() {
-    if (window.MarkTideMermaidShared && window.MarkTideMermaidShared.getMermaidConfig) {
-      return window.MarkTideMermaidShared.getMermaidConfig({ mode: 'pdf', theme: 'light' });
+  getMermaidFactory() {
+    if (typeof window.MarkTideCreateMermaidShared === 'function') {
+      return window.MarkTideCreateMermaidShared;
     }
 
-    throw new Error('Shared Mermaid helper is required for PDF export rendering.');
+    throw new Error('Shared Mermaid factory is required for PDF export rendering.');
+  }
+
+  getMathJaxConfig() {
+    if (window.MarkTideMathJax
+      && typeof window.MarkTideMathJax.getConfigScript === 'function') {
+      return window.MarkTideMathJax;
+    }
+
+    throw new Error('Shared MathJax configuration is required for PDF export rendering.');
   }
 
   getExportAssets() {
@@ -158,7 +203,6 @@ class PrintHandler {
     } else if (markdownEditor && window.MarkTideImportExport) {
       smartTitle = window.MarkTideImportExport.generateSmartFilename(markdownEditor.value, '') || 'MarkTide Document';
     }
-    document.title = smartTitle;
     const markdown = markdownEditor.value;
     
     const printRenderer = window.MarkTideCodeBlockRenderer.createRenderer({
@@ -168,8 +212,8 @@ class PrintHandler {
     
     // Use the clean renderer for print/PDF
     const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer });
-    const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'print' });
-    const printableHtml = this.preparePrintTables(sanitizedHtml);
+    const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'pdf' });
+    const printableHtml = this.preparePrintTables(renderedHtml);
     if (!window.MarktideHighlightTheme) {
       throw new Error('Shared highlight theme helper is required for PDF export.');
     }
@@ -177,14 +221,19 @@ class PrintHandler {
     const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false);
     const printHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
     const markdownPrintStyles = this.getMarkdownStyles().getStandaloneStyles({
-      theme: 'light',
-      mode: 'print'
+      mode: 'pdf'
     });
     const printStyles = this.getPrintStyles().getStyles({
       printHighlightTokenStyles,
       markdownPrintStyles
     });
     const exportAssets = this.getExportAssets();
+    const fontLinks = exportAssets.getFontLinks();
+    const stylesheetLinks = exportAssets.getCommonStylesheetLinks({ includeBootstrapIcons: false });
+    const mermaidScriptTag = exportAssets.getMermaidScriptTag();
+    const mathJaxScriptTag = exportAssets.getMathJaxScriptTag();
+    const mermaidFactoryScript = this.getMermaidFactory().toString();
+    const mathJaxConfigScript = this.getMathJaxConfig().getConfigScript();
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -195,20 +244,16 @@ class PrintHandler {
     printFrame.style.height = '1123px';
     printFrame.style.border = 'none';
     
-    document.body.appendChild(printFrame);
-    
-    const printDocument = printFrame.contentDocument || printFrame.contentWindow.document;
     const printHandler = this;
-    
-    printDocument.write(`
+    const printDocumentHtml = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${smartTitle}</title>
-  ${exportAssets.getFontLinks()}
-  ${exportAssets.getCommonStylesheetLinks({ includeBootstrapIcons: false })}
+  ${fontLinks}
+  ${stylesheetLinks}
   <link rel="stylesheet" href="${highlightTheme}">
   <style>
     ${printStyles}
@@ -219,50 +264,47 @@ class PrintHandler {
       ${printableHtml}
   </article>
   
-  ${exportAssets.getHighlightScriptTags()}
-  ${exportAssets.getMermaidScriptTag()}
+  ${mermaidScriptTag}
   <script>
-    ${window.MarkTideCreateMermaidShared ? `window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()}; window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);` : ''}
+    window.MarkTideCreateMermaidShared = ${mermaidFactoryScript};
+    window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);
   </script>
   <script>
-    ${window.MarkTideMathJax ? window.MarkTideMathJax.getConfigScript() : ''}
+    ${mathJaxConfigScript}
   </script>
-  ${exportAssets.getMathJaxScriptTag()}
+  ${mathJaxScriptTag}
 </body>
 </html>
-    `);
-    
-    printDocument.close();
+    `;
 
     let cleanupDone = false;
-    let cleanupTimer = null;
     const cleanupPrintFrame = () => {
       if (cleanupDone) return;
       cleanupDone = true;
-      if (cleanupTimer) {
-        clearTimeout(cleanupTimer);
-        cleanupTimer = null;
-      }
       if (printFrame.parentNode) {
         document.body.removeChild(printFrame);
       }
       document.title = originalTitle;
     };
+
+    document.title = smartTitle;
+    try {
+      document.body.appendChild(printFrame);
+      const printDocument = printFrame.contentDocument
+        || (printFrame.contentWindow && printFrame.contentWindow.document);
+      if (!printDocument) {
+        throw new Error('Unable to create the PDF print document.');
+      }
+      printDocument.write(printDocumentHtml);
+      printDocument.close();
+    } catch (error) {
+      cleanupPrintFrame();
+      throw error;
+    }
     
     // Wait for content to load, then trigger print
     printFrame.onload = function() {
       setTimeout(async function() {
-        // Apply syntax highlighting
-        printFrame.contentDocument.querySelectorAll('pre code').forEach((block) => {
-          if (!block.classList.contains('mermaid') && !block.classList.contains('pseudocode')) {
-            try {
-              printFrame.contentWindow.hljs.highlightElement(block);
-    } catch (e) {
-              console.warn("Syntax highlighting failed:", e);
-            }
-          }
-        });
-        
         if (printFrame.contentDocument.fonts && printFrame.contentDocument.fonts.ready) {
           try {
             await printFrame.contentDocument.fonts.ready;
@@ -273,61 +315,48 @@ class PrintHandler {
 
         // Initialize and render Mermaid
         try {
-          const mermaidConfig = printHandler.getPrintMermaidConfig();
-
-          printFrame.contentWindow.mermaid.initialize(mermaidConfig);
-          
-          // Render mermaid diagrams one by one
           const mermaidElements = printFrame.contentDocument.querySelectorAll('.mermaid');
           if (mermaidElements.length > 0) {
-            const mermaidRender = printFrame.contentWindow.mermaid.run
-              ? printFrame.contentWindow.mermaid.run({ nodes: mermaidElements })
-              : printFrame.contentWindow.mermaid.init(undefined, mermaidElements);
-
-            if (mermaidRender && typeof mermaidRender.then === 'function') {
-              await mermaidRender;
-            }
-
-            printHandler.stabilizeMermaidDiagrams(printFrame.contentDocument);
+            await printFrame.contentWindow.MarkTideMermaidShared.renderDiagrams(
+              printFrame.contentDocument,
+              {
+                mode: 'pdf',
+                theme: 'light',
+                nodes: mermaidElements,
+                stabilizeDimensions: true,
+              }
+            );
           }
         } catch (e) {
           console.warn("Mermaid rendering failed:", e);
         }
         
         // Render MathJax
-        if (printFrame.contentWindow.MathJax) {
+        if (printFrame.contentWindow.MarkTideMathJax) {
           try {
-            printFrame.contentWindow.MathJax.typesetPromise([printFrame.contentDocument.body]).then(() => {
+            printFrame.contentWindow.MarkTideMathJax.typeset(printFrame.contentDocument.body).then(() => {
               // After MathJax is done, trigger print
               setTimeout(function() {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+                printHandler.triggerPrint(printFrame, cleanupPrintFrame);
               }, 300);
             }).catch((err) => {
               console.warn('MathJax typesetting failed:', err);
               // Still print even if MathJax fails
               setTimeout(function() {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+                printHandler.triggerPrint(printFrame, cleanupPrintFrame);
               }, 300);
             });
           } catch (e) {
             console.warn("MathJax rendering failed:", e);
             // Fallback print
             setTimeout(function() {
-              printFrame.contentWindow.focus();
-              printFrame.contentWindow.print();
-              cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+              printHandler.triggerPrint(printFrame, cleanupPrintFrame);
             }, 300);
           }
         } else {
           // No MathJax, just print
           setTimeout(function() {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-            cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+            printHandler.triggerPrint(printFrame, cleanupPrintFrame);
           }, 300);
         }
       }, 100);

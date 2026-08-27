@@ -27,8 +27,6 @@ class MarkTideCore {
   }
 
   showLoadingScreen() {
-    // Apply theme immediately for loading screen
-    this.applyInitialTheme();
     this.loadingStartedAt = performance.now();
     this.loadingHidden = false;
     this.setLoadingScrollLock(true);
@@ -171,9 +169,6 @@ class MarkTideCore {
       // Setup formatting toolbar
       this.setupFormattingToolbar();
       
-      // Initialize theme system
-      this.initializeTheme();
-      
       // Load sample content
       this.loadSampleContent();
       
@@ -192,7 +187,6 @@ class MarkTideCore {
   initializeModules() {
     // Initialize all MarkTide modules
     if (window.MarkTideTheme) window.MarkTideTheme.init();
-    if (window.MarkTideMermaid) window.MarkTideMermaid.initMermaid();
     if (window.MarkTideRenderer) window.MarkTideRenderer.init();
     if (window.MarkTideSoftBreaks) window.MarkTideSoftBreaks.init();
     if (window.MarkTideEditor) window.MarkTideEditor.init(document.getElementById("markdown-editor"));
@@ -200,8 +194,6 @@ class MarkTideCore {
     if (window.MarkTideScrollSync) window.MarkTideScrollSync.init();
     if (window.MarkTideViewManager) window.MarkTideViewManager.init();
     if (window.MarkTideImportExport) window.MarkTideImportExport.init();
-    if (window.MarkTidePrintHandler) window.MarkTidePrintHandler.init();
-    if (window.MarkTideMobileMenu) window.MarkTideMobileMenu.init();
     if (window.MarkTideKeyboardShortcuts) window.MarkTideKeyboardShortcuts.init();
   }
 
@@ -316,27 +308,6 @@ class MarkTideCore {
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
     }
-  }
-
-  initializeTheme() {
-    // Apply saved theme or default
-    const savedTheme = localStorage.getItem('marktide-theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    document.documentElement.classList.toggle('light', savedTheme === 'light');
-  }
-  
-  applyInitialTheme() {
-    // Apply theme immediately for loading screen
-    let savedTheme = localStorage.getItem('marktide-theme');
-    if (!savedTheme) {
-      // Detect system theme
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      savedTheme = prefersDark ? 'dark' : 'light';
-    }
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    document.documentElement.classList.toggle('light', savedTheme === 'light');
   }
 
   loadSampleContent() {

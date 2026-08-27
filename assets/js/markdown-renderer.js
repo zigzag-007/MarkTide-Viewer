@@ -9,6 +9,8 @@ class MarkdownRenderer {
     this.markdownPreview = null;
     this.renderer = null;
     this.initialized = false;
+    this.renderPipeline = Promise.resolve();
+    this.renderVersion = 0;
   }
 
   init() {
@@ -46,22 +48,41 @@ class MarkdownRenderer {
     marked.setOptions({
       ...markedOptions,
       renderer: this.renderer,
-      highlight: function (code, language) {
-        if (language === 'mermaid') return code;
-
-        try {
-          return window.MarktideCodeHighlight
-            ? window.MarktideCodeHighlight.highlight(code, language).value
-            : hljs.highlight(code, {
-                language: hljs.getLanguage(language) ? language : "plaintext",
-                ignoreIllegals: true  // Prevent HTML injection
-              }).value;
-        } catch (e) {
-          // Fallback to escaped plain text
-          return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-      },
     });
+  }
+
+  createFenceState() {
+    return {
+      character: '',
+      length: 0,
+    };
+  }
+
+  consumeFencedLine(line, state) {
+    const openingMatch = String(line).match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+
+    if (!state.character) {
+      if (!openingMatch) return false;
+
+      const marker = openingMatch[1];
+      const info = openingMatch[2] || '';
+      if (marker[0] === '`' && info.includes('`')) return false;
+
+      state.character = marker[0];
+      state.length = marker.length;
+      return true;
+    }
+
+    const closingMatch = String(line).match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+    if (closingMatch) {
+      const marker = closingMatch[1];
+      if (marker[0] === state.character && marker.length >= state.length) {
+        state.character = '';
+        state.length = 0;
+      }
+    }
+
+    return true;
   }
 
   // Normalize Word-style list syntax to Markdown-compatible nested lists.
@@ -76,17 +97,10 @@ class MarkdownRenderer {
     const LIST_INDENT_SIZE = LIST_INDENT.length;
     const lines = markdownText.split('\n');
     const normalized = [];
-    let inFence = false;
+    const fenceState = this.createFenceState();
 
     for (let rawLine of lines) {
-      const fenceMatch = rawLine.match(/^\s*(```|~~~)/);
-      if (fenceMatch) {
-        inFence = !inFence;
-        normalized.push(rawLine);
-        continue;
-      }
-
-      if (inFence) {
+      if (this.consumeFencedLine(rawLine, fenceState)) {
         normalized.push(rawLine);
         continue;
       }
@@ -140,7 +154,7 @@ class MarkdownRenderer {
     const mathPlaceholders = [];
     const lines = String(markdownText || '').split('\n');
     const output = [];
-    let inFence = false;
+    const fenceState = this.createFenceState();
     let displayMathBlock = null;
     let currentFootnote = null;
     const looksLikeInlineMath = (content) => {
@@ -187,13 +201,12 @@ class MarkdownRenderer {
         finishFootnote();
       }
 
-      if (/^\s*(```|~~~)/.test(line)) {
-        inFence = !inFence;
+      if (this.consumeFencedLine(line, fenceState)) {
         output.push(line);
         return;
       }
 
-      if (!inFence) {
+      if (!fenceState.character) {
         if (displayMathBlock) {
           displayMathBlock.lines.push(line);
 
@@ -332,7 +345,7 @@ class MarkdownRenderer {
     const items = footnotes.map((footnote) => {
       const slug = this.slugifyFootnoteLabel(footnote.label);
       const markdown = footnote.lines.join('\n').trim();
-      const html = marked.parse(markdown || ' ', options);
+      const html = this.parseMarkdown(markdown || ' ', options);
       const backref = ` <a href="#fnref-${slug}" class="footnote-backref" aria-label="Back to reference"><span aria-hidden="true">&#8617;</span></a>`;
       const body = html.replace(/<\/p>\s*$/, `${backref}</p>`);
       return `<li id="fn-${slug}">${body}</li>`;
@@ -447,6 +460,72 @@ class MarkdownRenderer {
     return this.applyMarkdownExtensions(html, extensionContext, options);
   }
 
+  prepareRenderedHtml(html, options = {}) {
+    if (!window.MarkTideSanitizer) {
+      throw new Error('Shared sanitizer is required for Markdown rendering.');
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = window.MarkTideSanitizer.sanitize(html, {
+      mode: options.mode || 'preview'
+    });
+
+    if (window.MarkTideUtils && window.MarkTideUtils.processEmojis) {
+      window.MarkTideUtils.processEmojis(wrapper);
+    }
+
+    return wrapper.innerHTML;
+  }
+
+  queuePreviewRender(renderedHtml, shouldEnhance) {
+    const renderVersion = ++this.renderVersion;
+
+    this.renderPipeline = this.renderPipeline
+      .catch(() => false)
+      .then(async () => {
+        if (renderVersion !== this.renderVersion) return false;
+
+        const updateContent = () => {
+          this.markdownPreview.innerHTML = renderedHtml;
+        };
+        if (window.MarkTideMathJax && typeof window.MarkTideMathJax.updateContent === 'function') {
+          await window.MarkTideMathJax.updateContent(this.markdownPreview, updateContent);
+        } else {
+          updateContent();
+        }
+
+        if (renderVersion !== this.renderVersion || !shouldEnhance) return true;
+
+        if (window.MarkTideMermaid) {
+          try {
+            await window.MarkTideMermaid.renderDiagrams(this.markdownPreview);
+          } catch (error) {
+            console.warn('Mermaid rendering failed:', error);
+          }
+        }
+
+        if (renderVersion !== this.renderVersion) return false;
+        if (window.MarkTideMermaidToolbar) {
+          window.MarkTideMermaidToolbar.enhance(this.markdownPreview);
+        }
+
+        if (window.MarkTideMathJax) {
+          try {
+            await window.MarkTideMathJax.typeset(this.markdownPreview);
+          } catch (error) {
+            console.warn('MathJax typesetting failed:', error);
+          }
+        }
+
+        if (window.MarkTideCodeWrap) {
+          window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
+        }
+        return true;
+      });
+
+    return this.renderPipeline;
+  }
+
   renderMarkdown() {
     if (!this.initialized) {
       this.init();
@@ -455,78 +534,22 @@ class MarkdownRenderer {
     try {
       const markdown = this.markdownEditor.value;
       const html = this.parseMarkdown(markdown);
-      if (!window.MarkTideSanitizer) {
-        throw new Error('Shared sanitizer is required for Markdown preview.');
-      }
-
-      const sanitizedHtml = window.MarkTideSanitizer.sanitize(html, { mode: 'preview' });
-      this.markdownPreview.innerHTML = sanitizedHtml;
-
-      this.markdownPreview.querySelectorAll("pre code").forEach((block) => {
-        try {
-          if (!block.classList.contains('mermaid')) {
-            // Sanitize content before highlighting to prevent HTML injection
-            const content = block.textContent || block.innerText || '';
-            block.textContent = content; // This removes any HTML
-            hljs.highlightElement(block);
-          }
-        } catch (e) {
-          console.warn("Syntax highlighting failed for a code block:", e);
-          // Fallback: ensure content is escaped
-          const content = block.textContent || block.innerText || '';
-          block.textContent = content;
-        }
-      });
-
-      if (window.MarkTideUtils && window.MarkTideUtils.processEmojis) {
-        window.MarkTideUtils.processEmojis(this.markdownPreview);
-      }
-      
-      // Render mermaid diagrams with the current theme.
-      if (window.MarkTideMermaid) {
-        window.MarkTideMermaid.renderDiagrams(this.markdownPreview).then(() => {
-          if (window.MarkTideMermaidToolbar) {
-            window.MarkTideMermaidToolbar.enhance(this.markdownPreview);
-          }
-        });
-      }
-      
-      if (window.MathJax) {
-        try {
-          const mjPromise = MathJax.typesetPromise([this.markdownPreview]);
-          if (mjPromise && typeof mjPromise.then === "function") {
-            mjPromise
-              .then(() => {
-                if (window.MarkTideCodeWrap) {
-                  window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
-                }
-              })
-              .catch((err) => {
-                console.warn("MathJax typesetting failed:", err);
-              });
-          }
-        } catch (e) {
-          console.warn("MathJax rendering failed:", e);
-        }
-      }
+      const renderedHtml = this.prepareRenderedHtml(html, { mode: 'preview' });
+      const renderPromise = this.queuePreviewRender(renderedHtml, true);
 
       if (window.MarkTideUtils && window.MarkTideUtils.updateDocumentStats) {
         window.MarkTideUtils.updateDocumentStats();
       }
 
-      if (window.MarkTideCodeWrap) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
-          });
-        });
-      }
+      return renderPromise;
     } catch (e) {
       console.error("Markdown rendering failed:", e);
-      this.markdownPreview.innerHTML = `<div class="alert alert-danger">
-              <strong>Error rendering markdown:</strong> ${e.message}
+      const errorMessage = this.escapeHtml(e && e.message ? e.message : 'Unknown error');
+      const markdownSource = this.escapeHtml(this.markdownEditor.value);
+      return this.queuePreviewRender(`<div class="alert alert-danger">
+              <strong>Error rendering markdown:</strong> ${errorMessage}
           </div>
-          <pre>${this.markdownEditor.value}</pre>`;
+          <pre>${markdownSource}</pre>`, false);
     }
   }
 

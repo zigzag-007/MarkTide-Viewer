@@ -4,13 +4,6 @@
     return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  function escapeCode(code) {
-    return String(code || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
   function wrapButtonHtml() {
     const wrapSvg =
       '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
@@ -37,26 +30,11 @@
   }
 
   function highlightCode(code, language) {
-    if (window.MarktideCodeHighlight) {
-      return window.MarktideCodeHighlight.highlight(code, language);
+    if (!window.MarktideCodeHighlight) {
+      throw new Error('Shared code highlight helper is required for code block rendering.');
     }
 
-    const validLanguage = window.hljs && hljs.getLanguage(language) ? language : 'plaintext';
-
-    try {
-      return {
-        language: validLanguage,
-        value: hljs.highlight(String(code || ''), {
-          language: validLanguage,
-          ignoreIllegals: true
-        }).value
-      };
-    } catch (error) {
-      return {
-        language: 'plaintext',
-        value: escapeCode(code)
-      };
-    }
+    return window.MarktideCodeHighlight.highlight(code, language);
   }
 
   function renderMermaidBlock(code, options) {
@@ -117,11 +95,5 @@
 
   window.MarkTideCodeBlockRenderer = {
     createRenderer,
-    encodeMermaidSource,
-    highlightCode,
-    renderEnhancedCodeBlock,
-    renderMermaidBlock,
-    renderPlainCodeBlock,
-    wrapButtonHtml,
   };
 })(window);

@@ -1,11 +1,77 @@
   /* =================================================================
      MARKDOWN CONTENT
      ================================================================= */
-  
+
+  :root {
+    --markdown-color-scheme: light;
+    --markdown-bg: #ffffff;
+    --markdown-text-color: #24292e;
+    --markdown-border-color: #e0e0e0;
+    --markdown-accent-color: #4fc3f7;
+    --markdown-blockquote-color: #666666;
+    --markdown-blockquote-bold-color: inherit;
+    --markdown-list-marker-color: currentColor;
+    --markdown-list-item-color: inherit;
+    --markdown-heading-color: #24292e;
+    --markdown-bold-color: inherit;
+    --markdown-bold-weight: 900;
+    --markdown-hr-color: #c9d1d9;
+    --markdown-table-bg: #ffffff;
+    --markdown-table-row-alt: #f8f9fa;
+    --markdown-table-border: #e0e0e0;
+    --markdown-code-pre-bg: #f6f8fa;
+    --markdown-code-inline-bg: #FFF8EC;
+    --markdown-code-inline-color: #8B4500;
+    --markdown-code-inline-font-weight: 600;
+    --markdown-code-header-bg: rgba(0, 0, 0, 0.03);
+    --markdown-code-header-border: rgba(0, 0, 0, 0.08);
+    --markdown-code-block-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --markdown-code-block-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    --markdown-copy-code-btn-hover-bg: #e0e0e0;
+    --markdown-copy-code-btn-active-bg: #d0d0d0;
+    --markdown-copy-code-btn-copied-bg: #e0e0e0;
+    --markdown-hljs-color: inherit;
+    --markdown-mermaid-border-color: transparent;
+  }
+
+  :root[data-theme="dark"],
+  :root.dark {
+    --markdown-color-scheme: dark;
+    --markdown-bg: #000000;
+    --markdown-text-color: #e6edf3;
+    --markdown-border-color: #1a1a1a;
+    --markdown-accent-color: #4fc3f7;
+    --markdown-blockquote-color: #cccccc;
+    --markdown-blockquote-bold-color: #E2E8F0;
+    --markdown-list-marker-color: #e6edf3;
+    --markdown-list-item-color: #e6edf3;
+    --markdown-heading-color: #f0f3f6;
+    --markdown-bold-color: #f0f3f6;
+    --markdown-bold-weight: 900;
+    --markdown-hr-color: #30363d;
+    --markdown-table-bg: #0f1318;
+    --markdown-table-row-alt: #141a22;
+    --markdown-table-border: #30363d;
+    --markdown-code-pre-bg: #242628;
+    --markdown-code-inline-bg: #29241E;
+    --markdown-code-inline-color: #FFD085;
+    --markdown-code-inline-font-weight: 400;
+    --markdown-code-header-bg: rgba(255, 255, 255, 0.05);
+    --markdown-code-header-border: rgba(255, 255, 255, 0.1);
+    --markdown-code-block-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --markdown-code-block-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    --markdown-copy-code-btn-hover-bg: #3a3a3a;
+    --markdown-copy-code-btn-active-bg: #4a4a4a;
+    --markdown-copy-code-btn-copied-bg: #3a3a3a;
+    --markdown-hljs-color: #e8eaed;
+    --markdown-mermaid-border-color: rgba(255, 255, 255, 0.14);
+  }
+
   .markdown-body {
     width: 100%;
-    background-color: var(--preview-bg);
-    color: var(--preview-text-color);
+    color-scheme: var(--markdown-color-scheme);
+    background-color: var(--markdown-bg);
+    color: var(--markdown-text-color);
     box-sizing: border-box;
     min-width: 200px;
     max-width: 800px;
@@ -15,6 +81,94 @@
     font-size: 1.05rem;
     line-height: 1.7;
     overflow-x: hidden;
+    --color-prettylights-syntax-comment: #6a737d;
+    --color-prettylights-syntax-constant: #005cc5;
+    --color-prettylights-syntax-entity: #6f42c1;
+    --color-prettylights-syntax-storage-modifier-import: #24292e;
+    --color-prettylights-syntax-entity-tag: #22863a;
+    --color-prettylights-syntax-keyword: #d73a49;
+    --color-prettylights-syntax-string: #032f62;
+    --color-prettylights-syntax-variable: #e36209;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #b31d28;
+    --color-prettylights-syntax-invalid-illegal-text: #fafbfc;
+    --color-prettylights-syntax-invalid-illegal-bg: #b31d28;
+    --color-prettylights-syntax-carriage-return-text: #fafbfc;
+    --color-prettylights-syntax-carriage-return-bg: #d73a49;
+    --color-prettylights-syntax-string-regexp: #22863a;
+    --color-prettylights-syntax-markup-list: #735c0f;
+    --color-prettylights-syntax-markup-heading: #005cc5;
+    --color-prettylights-syntax-markup-italic: #24292e;
+    --color-prettylights-syntax-markup-bold: #24292e;
+    --color-prettylights-syntax-markup-deleted-text: #b31d28;
+    --color-prettylights-syntax-markup-deleted-bg: #ffeef0;
+    --color-prettylights-syntax-markup-inserted-text: #22863a;
+    --color-prettylights-syntax-markup-inserted-bg: #f0fff4;
+    --color-prettylights-syntax-markup-changed-text: #e36209;
+    --color-prettylights-syntax-markup-changed-bg: #ffebda;
+    --color-prettylights-syntax-markup-ignored-text: #f6f8fa;
+    --color-prettylights-syntax-markup-ignored-bg: #005cc5;
+    --color-prettylights-syntax-meta-diff-range: #6f42c1;
+    --color-prettylights-syntax-brackethighlighter-angle: #586069;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #e1e4e8;
+    --color-prettylights-syntax-constant-other-reference-link: #032f62;
+    --color-fg-default: #24292e;
+    --color-fg-muted: #586069;
+    --color-fg-subtle: #6a737d;
+    --color-canvas-default: #ffffff;
+    --color-canvas-subtle: #f6f8fa;
+    --color-border-default: #e1e4e8;
+    --color-border-muted: #eaecef;
+    --color-neutral-muted: rgba(175,184,193,0.2);
+    --color-accent-fg: #0366d6;
+    --color-accent-emphasis: #0366d6;
+    --color-attention-subtle: #fff5b1;
+    --color-danger-fg: #d73a49;
+  }
+
+  :root[data-theme="dark"] .markdown-body,
+  :root.dark .markdown-body {
+    --color-prettylights-syntax-comment: #8b949e;
+    --color-prettylights-syntax-constant: #79c0ff;
+    --color-prettylights-syntax-entity: #d2a8ff;
+    --color-prettylights-syntax-storage-modifier-import: #c9d1d9;
+    --color-prettylights-syntax-entity-tag: #7ee787;
+    --color-prettylights-syntax-keyword: #ff7b72;
+    --color-prettylights-syntax-string: #a5d6ff;
+    --color-prettylights-syntax-variable: #ffa657;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+    --color-prettylights-syntax-invalid-illegal-text: #f0f6fc;
+    --color-prettylights-syntax-invalid-illegal-bg: #8e1519;
+    --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+    --color-prettylights-syntax-carriage-return-bg: #b62324;
+    --color-prettylights-syntax-string-regexp: #7ee787;
+    --color-prettylights-syntax-markup-list: #f2cc60;
+    --color-prettylights-syntax-markup-heading: #1f6feb;
+    --color-prettylights-syntax-markup-italic: #c9d1d9;
+    --color-prettylights-syntax-markup-bold: #f0f3f6;
+    --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+    --color-prettylights-syntax-markup-deleted-bg: #67060c;
+    --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+    --color-prettylights-syntax-markup-inserted-bg: #033a16;
+    --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+    --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+    --color-prettylights-syntax-markup-ignored-text: #c9d1d9;
+    --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+    --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+    --color-prettylights-syntax-brackethighlighter-angle: #8b949e;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #484f58;
+    --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+    --color-fg-default: #c9d1d9;
+    --color-fg-muted: #8b949e;
+    --color-fg-subtle: #484f58;
+    --color-canvas-default: #0d1117;
+    --color-canvas-subtle: #161b22;
+    --color-border-default: #30363d;
+    --color-border-muted: #21262d;
+    --color-neutral-muted: rgba(110,118,129,0.4);
+    --color-accent-fg: #58a6ff;
+    --color-accent-emphasis: #1f6feb;
+    --color-attention-subtle: rgba(187,128,9,0.15);
+    --color-danger-fg: #f85149;
   }
 
   /* Normalize heading spacing across themes */
@@ -73,7 +227,7 @@
   }
 
   .markdown-body ul li::marker {
-    color: var(--list-marker-color, currentColor);
+    color: var(--markdown-list-marker-color, currentColor);
   }
   
   .markdown-body ol,
@@ -86,7 +240,7 @@
 
   .markdown-body ol li {
     list-style: none !important;
-    color: var(--list-item-color, inherit);
+    color: var(--markdown-list-item-color, inherit);
   }
 
   .markdown-body ol li::marker {
@@ -107,7 +261,7 @@
     box-sizing: border-box;
     text-align: right;
     font-weight: 600;
-    color: var(--list-marker-color, currentColor);
+    color: var(--markdown-list-marker-color, currentColor);
   }
   
   .markdown-body li {
@@ -176,8 +330,8 @@
   
   /* --- Block Elements --- */
   .markdown-body blockquote {
-    color: var(--blockquote-color, #cccccc);
-    border-left: 4px solid var(--accent-color);
+    color: var(--markdown-blockquote-color, #cccccc);
+    border-left: 4px solid var(--markdown-accent-color);
     padding-left: 1em;
     margin: 1em 0;
   }
@@ -200,11 +354,11 @@
   .markdown-body blockquote strong,
   .markdown-body blockquote b {
     font-weight: var(--blockquote-bold-weight, 700) !important;
-    color: var(--blockquote-bold-color, var(--markdown-bold-color, inherit)) !important;
+    color: var(--markdown-blockquote-bold-color, var(--markdown-bold-color, inherit)) !important;
   }
   
   .markdown-body hr {
-    background-color: var(--markdown-hr-color, color-mix(in srgb, var(--preview-text-color) 38%, transparent));
+    background-color: var(--markdown-hr-color, color-mix(in srgb, var(--markdown-text-color) 38%, transparent));
     border: none;
     height: 2px;
     margin: 30px 0;
@@ -232,48 +386,48 @@
   .markdown-body h6 {
     font-weight: 900;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    color: var(--markdown-heading-color, var(--preview-text-color));
+    color: var(--markdown-heading-color, var(--markdown-text-color));
   }
 
   .markdown-body h1,
   .markdown-body h2 {
     padding-bottom: 0.3em;
-    border-bottom: 1px solid color-mix(in srgb, var(--preview-text-color) 24%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--markdown-text-color) 24%, transparent);
   }
 
   /* --- Tables --- */
   .markdown-body table {
-    background-color: var(--table-bg, var(--preview-bg));
-    border-color: var(--table-border, var(--border-color));
+    background-color: var(--markdown-table-bg, var(--markdown-bg));
+    border-color: var(--markdown-table-border, var(--markdown-border-color));
   }
 
   .markdown-body table tr {
-    background-color: var(--table-bg, var(--preview-bg));
-    border-top: 1px solid var(--table-border, var(--border-color));
+    background-color: var(--markdown-table-bg, var(--markdown-bg));
+    border-top: 1px solid var(--markdown-table-border, var(--markdown-border-color));
   }
 
   .markdown-body table tr:nth-child(2n) {
-    background-color: var(--table-row-alt, color-mix(in srgb, var(--preview-text-color) 4%, var(--preview-bg)));
+    background-color: var(--markdown-table-row-alt, color-mix(in srgb, var(--markdown-text-color) 4%, var(--markdown-bg)));
   }
 
   .markdown-body table th,
   .markdown-body table td {
-    border: 1px solid var(--table-border, var(--border-color));
+    border: 1px solid var(--markdown-table-border, var(--markdown-border-color));
   }
   
   /* --- Enhanced Code Blocks --- */
   .enhanced-code-block {
-    background-color: var(--code-pre-bg, #f6f8fa);
+    background-color: var(--markdown-code-pre-bg, #f6f8fa);
     border-radius: 12px;
     margin: 1.5em 0;
     overflow: hidden;
-    border: 1px solid var(--border-color, #e1e4e8);
-    box-shadow: var(--code-block-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+    border: 1px solid var(--markdown-border-color, #e1e4e8);
+    box-shadow: var(--markdown-code-block-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
     transition: all 0.2s ease;
   }
 
   .enhanced-code-block:hover {
-    box-shadow: var(--code-block-hover-shadow, 0 6px 20px rgba(0, 0, 0, 0.15));
+    box-shadow: var(--markdown-code-block-hover-shadow, 0 6px 20px rgba(0, 0, 0, 0.15));
     transform: translateY(-1px);
   }
 
@@ -282,14 +436,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 6px 16px;
-    background: var(--code-header-bg, rgba(0, 0, 0, 0.05));
-    border-bottom: 1px solid var(--code-header-border, rgba(0, 0, 0, 0.1));
+    background: var(--markdown-code-header-bg, rgba(0, 0, 0, 0.05));
+    border-bottom: 1px solid var(--markdown-code-header-border, rgba(0, 0, 0, 0.1));
     font-size: 13px;
     font-weight: 500;
   }
 
   .code-language {
-    color: var(--text-color, #24292e);
+    color: var(--markdown-text-color, #24292e);
     font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
     text-transform: lowercase;
     opacity: 0.8;
@@ -323,7 +477,7 @@
     white-space: nowrap;
     color: #f3f4f8;
     background: rgba(22, 24, 30, 0.96);
-    border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--markdown-border-color) 45%, transparent);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
     pointer-events: none;
     opacity: 0;
@@ -347,7 +501,7 @@
     background: transparent;
     border: none;
     border-radius: 50%;
-    color: var(--text-color, #24292e);
+    color: var(--markdown-text-color, #24292e);
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -408,7 +562,7 @@
     background: transparent;
     border: none;
     border-radius: 50%; /* Circular shape */
-    color: var(--text-color, #24292e);
+    color: var(--markdown-text-color, #24292e);
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -422,8 +576,8 @@
   }
 
   .enhanced-code-block .copy-code-btn:hover {
-    background: var(--copy-code-btn-hover-bg, #e0e0e0) !important;
-    color: var(--text-color, #24292e) !important;
+    background: var(--markdown-copy-code-btn-hover-bg, #e0e0e0) !important;
+    color: var(--markdown-text-color, #24292e) !important;
     border-radius: 50% !important;
     opacity: 1;
     -webkit-backdrop-filter: none !important;
@@ -432,14 +586,14 @@
   }
 
   .enhanced-code-block .copy-code-btn:active {
-    background: var(--copy-code-btn-active-bg, #d0d0d0);
+    background: var(--markdown-copy-code-btn-active-bg, #d0d0d0);
     transform: scale(0.9);
     transition: transform 0.1s ease;
   }
 
   .enhanced-code-block .copy-code-btn.copied {
-    background: var(--copy-code-btn-copied-bg, var(--copy-code-btn-hover-bg, #e0e0e0)) !important;
-    color: var(--text-color, #24292e) !important;
+    background: var(--markdown-copy-code-btn-copied-bg, var(--markdown-copy-code-btn-hover-bg, #e0e0e0)) !important;
+    color: var(--markdown-text-color, #24292e) !important;
     opacity: 1;
   }
 
@@ -471,7 +625,7 @@
 
   /* Legacy code blocks (fallback) */
   .markdown-body pre:not(.enhanced-code-block pre) {
-    background-color: var(--code-pre-bg, #f6f8fa);
+    background-color: var(--markdown-code-pre-bg, #f6f8fa);
     border-radius: 6px;
     padding: 16px;
     margin: 1.5em 0;
@@ -492,8 +646,8 @@
   }
   
   .markdown-body code {
-    background-color: var(--code-inline-bg, #f6f8fa);
-    color: var(--code-inline-color, #24292e);
+    background-color: var(--markdown-code-inline-bg, #f6f8fa);
+    color: var(--markdown-code-inline-color, #24292e);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 85%;
@@ -502,11 +656,11 @@
   }
 
   .markdown-body code:not(pre code) {
-    font-weight: var(--code-inline-font-weight, 600);
+    font-weight: var(--markdown-code-inline-font-weight, 600);
   }
 
   .markdown-body .hljs {
-    color: var(--hljs-color, inherit);
+    color: var(--markdown-hljs-color, inherit);
   }
 
   /* hljs themes (CDN) use `pre code.hljs { overflow-x: auto }`, which attaches the scrollbar to
@@ -603,7 +757,7 @@
 
   .markdown-body .mermaid-container {
     background: #ffffff;
-    border: 1px solid transparent;
+    border: 1px solid var(--markdown-mermaid-border-color);
     border-radius: 6px;
     padding: 16px;
   }

@@ -32,12 +32,6 @@
   --editor-bg: #f8f9fa; /* Light gray for editor */
   --editor-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
   --preview-bg: #ffffff; /* Pure white for preview */
-  --preview-text-color: #24292e;
-  
-  /* Table colors */
-  --table-bg: #ffffff;
-  --table-row-alt: #f8f9fa;
-  --table-border: #e0e0e0;
   
   /* Scrollbar colors */
   --scrollbar-track-light: rgba(0, 0, 0, 0.1);
@@ -51,19 +45,7 @@
   --dropzone-active-bg: rgba(0, 0, 0, 0.05);
   --dropzone-hover-border: rgba(0, 0, 0, 0.5);
   --dropzone-hover-bg: rgba(0, 0, 0, 0.03);
-  
-  /* Code highlighting */
-  --code-pre-bg: #f6f8fa;
-  --code-inline-bg: #FFF8EC;
-  --code-inline-color: #8B4500;
-  --code-inline-font-weight: 600;
-  --code-header-bg: rgba(0, 0, 0, 0.03);
-  --code-header-border: rgba(0, 0, 0, 0.08);
-  --code-block-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --code-block-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  --copy-code-btn-hover-bg: #e0e0e0;
-  --copy-code-btn-active-bg: #d0d0d0;
-  --copy-code-btn-copied-bg: #e0e0e0;
+  --dropzone-text-color: #666666;
   
   /* Loading screen colors - light theme (high contrast on bright bg) */
   --loading-bg-start: #ffffff; /* neutral */
@@ -91,14 +73,6 @@
   --view-border: rgba(0, 0, 0, 0.2);
   --button-border: rgba(0, 0, 0, 0.2);
   --separator-color: rgba(0, 0, 0, 0.3);
-  --blockquote-color: #666666;
-  --blockquote-bold-color: inherit;
-  --list-marker-color: currentColor;
-  --list-item-color: inherit;
-  --markdown-heading-color: #24292e;
-  --markdown-bold-color: inherit;
-  --markdown-bold-weight: 900;
-  --markdown-hr-color: #c9d1d9;
   --logo-bg: rgba(0, 0, 0, 0.1);
   --logo-border: rgba(0, 0, 0, 0.3);
   --logo-text: #333333;
@@ -110,54 +84,6 @@
   
   /* Danger colors */
   --color-danger-fg: #dc3545;
-}
-
-/* ===== GITHUB MARKDOWN LIGHT THEME ===== */
-/* GitHub's official light mode syntax highlighting variables */
-.markdown-body {
-  color-scheme: light;
-  --color-prettylights-syntax-comment: #6a737d;
-  --color-prettylights-syntax-constant: #005cc5;
-  --color-prettylights-syntax-entity: #6f42c1;
-  --color-prettylights-syntax-storage-modifier-import: #24292e;
-  --color-prettylights-syntax-entity-tag: #22863a;
-  --color-prettylights-syntax-keyword: #d73a49;
-  --color-prettylights-syntax-string: #032f62;
-  --color-prettylights-syntax-variable: #e36209;
-  --color-prettylights-syntax-brackethighlighter-unmatched: #b31d28;
-  --color-prettylights-syntax-invalid-illegal-text: #fafbfc;
-  --color-prettylights-syntax-invalid-illegal-bg: #b31d28;
-  --color-prettylights-syntax-carriage-return-text: #fafbfc;
-  --color-prettylights-syntax-carriage-return-bg: #d73a49;
-  --color-prettylights-syntax-string-regexp: #22863a;
-  --color-prettylights-syntax-markup-list: #735c0f;
-  --color-prettylights-syntax-markup-heading: #005cc5;
-  --color-prettylights-syntax-markup-italic: #24292e;
-  --color-prettylights-syntax-markup-bold: #24292e;
-  --color-prettylights-syntax-markup-deleted-text: #b31d28;
-  --color-prettylights-syntax-markup-deleted-bg: #ffeef0;
-  --color-prettylights-syntax-markup-inserted-text: #22863a;
-  --color-prettylights-syntax-markup-inserted-bg: #f0fff4;
-  --color-prettylights-syntax-markup-changed-text: #e36209;
-  --color-prettylights-syntax-markup-changed-bg: #ffebda;
-  --color-prettylights-syntax-markup-ignored-text: #f6f8fa;
-  --color-prettylights-syntax-markup-ignored-bg: #005cc5;
-  --color-prettylights-syntax-meta-diff-range: #6f42c1;
-  --color-prettylights-syntax-brackethighlighter-angle: #586069;
-  --color-prettylights-syntax-sublimelinter-gutter-mark: #e1e4e8;
-  --color-prettylights-syntax-constant-other-reference-link: #032f62;
-  --color-fg-default: #24292e;
-  --color-fg-muted: #586069;
-  --color-fg-subtle: #6a737d;
-  --color-canvas-default: #ffffff;
-  --color-canvas-subtle: #f6f8fa;
-  --color-border-default: #e1e4e8;
-  --color-border-muted: #eaecef;
-  --color-neutral-muted: rgba(175,184,193,0.2);
-  --color-accent-fg: #0366d6;
-  --color-accent-emphasis: #0366d6;
-  --color-attention-subtle: #fff5b1;
-  --color-danger-fg: #d73a49;
 }
 
 /* ===== GROK LIGHT THEME FROSTED GLASS EFFECTS ===== */
@@ -220,23 +146,6 @@
 [data-theme="light"] .loading-screen {
   animation: loadingPulseLight 4s ease-in-out infinite;
 }
-/* Grok's signature frosted glass hover effect for light theme */
-button,
-.dropdown-item {
-  transition: all 0.2s ease;
-  -webkit-backdrop-filter: blur(0px);
-  backdrop-filter: blur(0px);
-}
-
-button:hover,
-.dropdown-item:hover {
-  background-color: var(--hover-accent) !important; /* Light blue with transparency */
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  border-radius: 4px;
-  box-shadow: 0 0 10px var(--hover-shadow);
-}
-
 /* ==============================================
    LIGHT THEME STYLES
    ============================================== */
@@ -244,20 +153,6 @@ button:hover,
 /* Light theme view controls with subtle border */
 [data-theme="light"] .view-controls {
   border: 1px solid var(--view-border); /* Semi-transparent black border */
-}
-
-/* Light theme view button hover effects for better contrast */
-[data-theme="light"] .view-btn:hover {
-  background: var(--button-hover); /* Use CSS custom property for consistency */
-  color: var(--text-color); /* Black text for maximum contrast in light mode */
-}
-
-/* Light theme active view button styling */
-[data-theme="light"] .view-btn.active {
-  background: var(--button-hover);
-  color: var(--text-color); /* Black text for better readability */
-  -webkit-backdrop-filter: blur(8px); /* Webkit prefix for Safari support */
-  backdrop-filter: blur(8px); /* Glass-morphism effect */
 }
 
 /* Light theme separator between view buttons */
@@ -324,7 +219,7 @@ button:hover,
 
 /* Light theme dropzone text styling */
 [data-theme="light"] .dropzone p {
-  color: var(--blockquote-color); /* Medium gray instructional text */
+  color: var(--dropzone-text-color); /* Medium gray instructional text */
 }
 
 /* Light theme dropzone hover effects */

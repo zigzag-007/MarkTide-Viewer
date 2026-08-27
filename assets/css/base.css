@@ -382,6 +382,22 @@
     align-items: center;
     gap: 0.5rem;
   }
+
+  button,
+  .dropdown-item {
+    transition: all 0.2s ease;
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+  }
+
+  button:hover,
+  .dropdown-item:hover {
+    background-color: var(--hover-accent) !important;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-radius: 4px;
+    box-shadow: 0 0 10px var(--hover-shadow);
+  }
   
   .action-btn {
     display: flex;
@@ -1652,6 +1668,7 @@
   /* Fallback ripple for browsers without View Transitions support */
   .theme-ripple-fallback {
     position: fixed;
+    border: 1.5px solid transparent;
     border-radius: 50%;
     pointer-events: none;
     z-index: 2147483646;
@@ -1660,6 +1677,16 @@
     opacity: 0;
     box-shadow: 0 0 0 1px rgba(127, 127, 127, 0.18), 0 0 24px rgba(0, 0, 0, 0.10);
     will-change: transform, opacity;
+  }
+
+  .theme-ripple-fallback--dark {
+    background: rgba(0, 0, 0, 0.18);
+    border-color: rgba(255, 255, 255, 0.34);
+  }
+
+  .theme-ripple-fallback--light {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(0, 0, 0, 0.28);
   }
 
   /* =================================================================
@@ -1704,6 +1731,8 @@
     max-height: calc(100vh - 2.5rem);
     max-height: calc(100dvh - 2.5rem);
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     overscroll-behavior: contain;
     padding: 1.75rem 1.75rem 1.5rem;
     background:
@@ -1722,6 +1751,12 @@
       transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
       opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
       filter 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .whats-new-dialog::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .whats-new-overlay.open .whats-new-dialog {

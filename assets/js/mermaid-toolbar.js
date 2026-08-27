@@ -14,7 +14,8 @@ class MermaidToolbar {
     const helper = window.MarkTideMermaidShared;
     if (!helper
       || typeof helper.prepareSvgClone !== 'function'
-      || typeof helper.sanitizeSvgInteractions !== 'function') {
+      || typeof helper.sanitizeSvgInteractions !== 'function'
+      || typeof helper.isMermaidErrorSvg !== 'function') {
       throw new Error('Shared Mermaid helper is required for diagram tools.');
     }
 
@@ -40,7 +41,8 @@ class MermaidToolbar {
   enhance(root = document) {
     root.querySelectorAll('.mermaid-container').forEach((container) => {
       if (container.dataset.mermaidToolbarReady === 'true') return;
-      if (!container.querySelector('.mermaid svg')) return;
+      const svg = container.querySelector('.mermaid svg');
+      if (!svg || this.getSharedHelper().isMermaidErrorSvg(svg)) return;
 
       container.dataset.mermaidToolbarReady = 'true';
       container.insertAdjacentHTML('beforeend', this.getToolbarHtml());

@@ -108,14 +108,13 @@ class CodeCopyHandler {
   }
 }
 
-// Create global instance
-window.MarkTideCodeCopy = new CodeCopyHandler();
+const codeCopyHandler = new CodeCopyHandler();
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    window.MarkTideCodeCopy.init();
+    codeCopyHandler.init();
   });
 } else {
-  window.MarkTideCodeCopy.init();
+  codeCopyHandler.init();
 }

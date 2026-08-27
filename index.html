@@ -75,25 +75,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
     <!-- highlight.js theme (dynamically switched by theme-manager.js) -->
-    <script src="assets/js/highlight-theme.js?v=20260714-highlight-theme"></script>
+    <script src="assets/js/highlight-theme.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/theme-manager.js?v=20260827-render-centralization"></script>
     <link rel="stylesheet" id="highlight-theme">
     <script>
-        document.getElementById('highlight-theme').href = window.MarktideHighlightTheme.getThemeUrl(false);
+      (function () {
+        const initialTheme = window.MarkTideTheme.applyInitialRootTheme();
+        document.getElementById('highlight-theme').href =
+          window.MarktideHighlightTheme.getThemeUrl(initialTheme === 'dark');
+      })();
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.2.1/hamburgers.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/extras/css/joypixels.min.css">
     
     <!-- Custom stylesheet -->
-    <link rel="stylesheet" href="assets/css/base.css">
-    <link rel="stylesheet" href="assets/css/markdown-content.css">
-    <link rel="stylesheet" href="assets/css/mermaid-toolbar.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
-    <link rel="stylesheet" href="assets/css/keyframes.css">
-    <link rel="stylesheet" href="assets/css/light-theme.css">
-    <link rel="stylesheet" href="assets/css/dark-theme.css">
-    <!-- Mermaid diagram specific CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.css">
+    <link rel="stylesheet" href="assets/css/base.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/markdown-content.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/mermaid-toolbar.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/responsive.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/keyframes.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/light-theme.css?v=20260827-render-centralization">
+    <link rel="stylesheet" href="assets/css/dark-theme.css?v=20260827-render-centralization">
     
     <!-- External JavaScript libraries (order can be important for dependencies) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
@@ -102,24 +105,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
-    <!-- Immediate theme application to prevent flash -->
-    <script>
-      // Apply theme immediately to prevent flash
-      (function() {
-        let savedTheme = localStorage.getItem('marktide-theme');
-        if (!savedTheme) {
-          // Detect system theme
-          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          savedTheme = prefersDark ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-        document.documentElement.classList.toggle('light', savedTheme === 'light');
-      })();
-    </script>
     
     <!-- MathJax configuration -->
-    <script src="assets/js/mathjax-config.js?v=20260710-mathjax-config"></script>
+    <script src="assets/js/mathjax-config.js?v=20260827-render-centralization"></script>
     <!-- More JavaScript libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
@@ -536,33 +524,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
     <!-- MarkTide Code Editor & Viewer Modular JavaScript Files -->
     <!-- Load in dependency order: utilities first, then core modules, then initialization -->
-    <script src="assets/js/monaco-bridge.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/utils.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/sample-content.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/undo-redo.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/mermaid-shared.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/mermaid-handler.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/mermaid-toolbar.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/theme-manager.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/editor.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/code-wrap-handler.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/markdown-styles.js?v=20260707-markdown-style"></script>
-    <script src="assets/js/code-block-renderer.js?v=20260707-code-block-renderer"></script>
-    <script src="assets/js/sanitizer-config.js?v=20260710-sanitizer-config"></script>
-    <script src="assets/js/markdown-renderer.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/code-copy-handler.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/soft-breaks-manager.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/scroll-sync.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/view-manager.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/export-assets.js?v=20260713-export-assets"></script>
-    <script src="assets/js/import-export.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/print-styles.js?v=20260711-print-styles"></script>
-    <script src="assets/js/print-handler.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/mobile-menu.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/keyboard-shortcuts.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/beautify.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/core.js?v=20260630-mermaid-export"></script>
-    <script src="assets/js/whats-new.js?v=20260630-mermaid-export"></script>
+    <script src="assets/js/monaco-bridge.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/utils.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/sample-content.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/undo-redo.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/mermaid-shared.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/mermaid-handler.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/mermaid-toolbar.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/editor.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/code-wrap-handler.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/markdown-styles.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/code-block-renderer.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/sanitizer-config.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/markdown-renderer.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/code-copy-handler.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/soft-breaks-manager.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/scroll-sync.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/view-manager.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/export-assets.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/import-export.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/print-styles.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/print-handler.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/keyboard-shortcuts.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/beautify.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/core.js?v=20260827-render-centralization"></script>
+    <script src="assets/js/whats-new.js?v=20260827-render-centralization"></script>
 </body>
 </html>
 

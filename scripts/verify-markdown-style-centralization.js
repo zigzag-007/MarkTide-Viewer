@@ -316,8 +316,37 @@ const checks = [
         && /width:\s*16%[\s\S]*?min-width:\s*88px/.test(source)
         && /width:\s*13%[\s\S]*?min-width:\s*86px/.test(source)
         && /width:\s*12%[\s\S]*?min-width:\s*78px/.test(source)
-        && /width:\s*14%[\s\S]*?min-width:\s*74px/.test(source)
-        && /background-color:\s*#e8f5e8/.test(source);
+        && /width:\s*14%[\s\S]*?min-width:\s*74px/.test(source);
+    },
+  },
+  {
+    name: 'print styles contain layout rules only for shared Markdown content',
+    pass: () => {
+      const source = read('assets/js/print-styles.js');
+      return !/\.markdown-body blockquote\s*\{/.test(source)
+        && !/\.markdown-body table tr:nth-child/.test(source)
+        && !/\.markdown-body code:not\(pre code\)\s*\{/.test(source)
+        && !/\.mermaid \.nodeLabel/.test(source)
+        && !/\.mermaid \.edgeLabel foreignObject (?:div|span|p)/.test(source);
+    },
+  },
+  {
+    name: 'PDF export keeps inline code highlighting visible',
+    pass: () => {
+      const sharedCss = read('assets/css/markdown-content.css');
+      const printHandler = read('assets/js/print-handler.js');
+      return /--markdown-code-inline-bg:\s*#FFF8EC/.test(sharedCss)
+        && /--markdown-code-inline-color:\s*#8B4500/.test(sharedCss)
+        && /--markdown-code-inline-font-weight:\s*600/.test(sharedCss)
+        && /getStandaloneStyles\(\{[\s\S]*?mode:\s*['"]pdf['"]/.test(printHandler);
+    },
+  },
+  {
+    name: 'PDF export preserves inline authored text colors',
+    pass: () => {
+      const source = read('assets/js/print-styles.js');
+      return !/\.markdown-body (?:h[1-6]|p|li|span|div|section|article)[^{]*\{[^}]*color:\s*#24292e\s*!important/.test(source)
+        && !/:not\(\[style\]\)/.test(source);
     },
   },
   {
@@ -331,12 +360,25 @@ const checks = [
       && /MarkTideMermaidShared/.test(read('assets/js/print-handler.js')),
   },
   {
+    name: 'shared Mermaid helper owns every render lifecycle',
+    pass: () => {
+      const consumers = [
+        read('assets/js/mermaid-handler.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+      const helper = read('assets/js/mermaid-shared.js');
+      return !/\bmermaid\.(?:initialize|run|init)\s*\(/.test(consumers)
+        && (consumers.match(/(?:MarkTideMermaidShared|getSharedHelper\(\)|\bhelper)\.renderDiagrams\s*\(/g) || []).length === 3
+        && /async function renderDiagrams\s*\(/.test(helper);
+    },
+  },
+  {
     name: 'HTML export Mermaid runtime only uses serialized shared globals',
     pass: () => {
       const source = read('assets/js/import-export.js');
-      return !/const\s+mermaidConfig\s*=\s*marktideRequireMermaidShared\(\)/.test(source)
-        && /const\s+mermaidConfig\s*=\s*window\.MarkTideMermaidShared\.getMermaidConfig/.test(source)
-        && /window\.MarkTideMermaidShared\.stabilizeMermaidDiagrams\(document\)/.test(source)
+      return !/const\s+mermaidConfig\s*=/.test(source)
+        && /window\.MarkTideMermaidShared\.renderDiagrams\(document,\s*\{\s*mode:\s*['"]html['"]/.test(source)
         && /window\.MarkTideMermaidToolbar\.enhance\(document\)/.test(source);
     },
   },
@@ -401,10 +443,52 @@ const checks = [
     },
   },
   {
+    name: 'shared MathJax helper owns every explicit typeset pass',
+    pass: () => {
+      const consumers = [
+        read('assets/js/markdown-renderer.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+      const helper = read('assets/js/mathjax-config.js');
+      return !/typesetPromise\s*\(/.test(consumers)
+        && (consumers.match(/MarkTideMathJax\.typeset\s*\(/g) || []).length === 3
+        && /startup:\s*\{\s*typeset:\s*false/.test(helper)
+        && /function typeset\s*\(/.test(helper);
+    },
+  },
+  {
+    name: 'shared MathJax lifecycle clears and queues dynamic content',
+    pass: () => {
+      const config = read('assets/js/mathjax-config.js');
+      const preview = read('assets/js/markdown-renderer.js');
+      return /let operationQueue\s*=\s*Promise\.resolve\(\)/.test(config)
+        && /function updateContent\s*\(/.test(config)
+        && /typesetClear\(\[target\]\)/.test(config)
+        && /MarkTideMathJax\.updateContent\(this\.markdownPreview,\s*updateContent\)/.test(preview)
+        && /await window\.MarkTideMermaid\.renderDiagrams[\s\S]*?await window\.MarkTideMathJax\.typeset/.test(preview);
+    },
+  },
+  {
     name: 'preview/export/print consume shared sanitizer config',
     pass: () => /MarkTideSanitizer/.test(read('assets/js/markdown-renderer.js'))
       && /MarkTideSanitizer/.test(read('assets/js/import-export.js'))
       && /MarkTideSanitizer/.test(read('assets/js/print-handler.js')),
+  },
+  {
+    name: 'render surfaces use preview HTML and PDF mode names',
+    pass: () => {
+      const consumers = [
+        read('assets/js/markdown-renderer.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+        read('assets/js/sanitizer-config.js'),
+      ].join('\n');
+      return !/mode\s*[:=]{1,3}\s*['"]print['"]/.test(consumers)
+        && /mode:\s*['"]preview['"]/.test(consumers)
+        && /mode:\s*['"]html['"]/.test(consumers)
+        && /mode:\s*['"]pdf['"]/.test(consumers);
+    },
   },
   {
     name: 'DOMPurify profiles are not privately duplicated',
@@ -417,6 +501,14 @@ const checks = [
 
       return !/DOMPurify\.sanitize\([^,]+,\s*\{\s*ADD_TAGS:/.test(sources)
         && !/ADD_ATTR:\s*\[/.test(sources);
+    },
+  },
+  {
+    name: 'shared sanitizer blocks embedded stylesheet takeover',
+    pass: () => {
+      const source = read('assets/js/sanitizer-config.js');
+      return /const FORBIDDEN_TAGS\s*=\s*\[['"]style['"]\]/.test(source)
+        && (source.match(/FORBID_TAGS:\s*FORBIDDEN_TAGS\.slice\(\)/g) || []).length === 3;
     },
   },
   {
@@ -516,6 +608,193 @@ const checks = [
     },
   },
   {
+    name: 'shared button interactions live only in base CSS',
+    pass: () => {
+      const base = read('assets/css/base.css');
+      const themes = [
+        read('assets/css/light-theme.css'),
+        read('assets/css/dark-theme.css'),
+      ].join('\n');
+
+      return /button,\s*\n\s*\.dropdown-item\s*\{[\s\S]*?transition:\s*all 0\.2s ease/.test(base)
+        && /button:hover,\s*\n\s*\.dropdown-item:hover\s*\{[\s\S]*?background-color:\s*var\(--hover-accent\)\s*!important/.test(base)
+        && !/(?:\[data-theme=["'](?:light|dark)["']\]\s+)?button,\s*\n\s*(?:\[data-theme=["'](?:light|dark)["']\]\s+)?\.dropdown-item\s*\{/.test(themes)
+        && !/(?:\[data-theme=["'](?:light|dark)["']\]\s+)?button:hover,\s*\n\s*(?:\[data-theme=["'](?:light|dark)["']\]\s+)?\.dropdown-item:hover\s*\{/.test(themes);
+    },
+  },
+  {
+    name: 'theme ripple presentation lives in CSS',
+    pass: () => {
+      const css = read('assets/css/base.css');
+      const manager = read('assets/js/theme-manager.js');
+      return /\.theme-ripple-fallback--dark[\s\S]*background:\s*rgba\(0,\s*0,\s*0,\s*0\.18\)[\s\S]*border-color:\s*rgba\(255,\s*255,\s*255,\s*0\.34\)/.test(css)
+        && /\.theme-ripple-fallback--light[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.14\)[\s\S]*border-color:\s*rgba\(0,\s*0,\s*0,\s*0\.28\)/.test(css)
+        && !/getFallbackRippleColors/.test(manager)
+        && !/ripple\.style\.(?:backgroundColor|border)/.test(manager);
+    },
+  },
+  {
+    name: 'shared Markdown CSS owns the Mermaid border theme',
+    pass: () => {
+      const sharedCss = read('assets/css/markdown-content.css');
+      const darkCss = read('assets/css/dark-theme.css');
+      return /--markdown-mermaid-border-color:\s*transparent/.test(sharedCss)
+        && /:root\[data-theme="dark"\][\s\S]*--markdown-mermaid-border-color:\s*rgba\(255,\s*255,\s*255,\s*0\.14\)/.test(sharedCss)
+        && /\.markdown-body \.mermaid-container[\s\S]*border:\s*1px solid var\(--markdown-mermaid-border-color\)/.test(sharedCss)
+        && !/#markdown-preview\s+\.mermaid-container/.test(darkCss);
+    },
+  },
+  {
+    name: 'PDF uses shared Markdown palette tokens',
+    pass: () => {
+      const source = read('assets/js/print-styles.js');
+      return /background(?:-color)?:\s*var\(--markdown-bg\)\s*!important/.test(source)
+        && /color:\s*var\(--markdown-text-color\)\s*!important/.test(source)
+        && !/background(?:-color)?:\s*(?:white|#ffffff)\s*!important/.test(source)
+        && !/color:\s*#24292e\s*!important/.test(source);
+    },
+  },
+  {
+    name: 'browser theme color reads the CSS theme token',
+    pass: () => {
+      const source = read('assets/js/theme-manager.js');
+      return /getComputedStyle\(document\.documentElement\)[\s\S]*getPropertyValue\(['"]--bg-color['"]\)/.test(source)
+        && !/currentTheme === ['"]dark['"]\s*\?\s*['"]#000000['"]\s*:\s*['"]#ffffff['"]/.test(source);
+    },
+  },
+  {
+    name: 'light theme does not duplicate shared view button states',
+    pass: () => {
+      const source = read('assets/css/light-theme.css');
+      return !/\[data-theme=["']light["']\]\s+\.view-btn:hover\s*\{/.test(source)
+        && !/\[data-theme=["']light["']\]\s+\.view-btn\.active\s*\{/.test(source);
+    },
+  },
+  {
+    name: 'print table classification rules have one owner',
+    pass: () => {
+      const source = read('assets/js/print-styles.js');
+      const selectors = [
+        /\.markdown-body table\.marktide-print-cols-2 th:first-child/g,
+        /\.markdown-body table\.marktide-print-cols-3 th:first-child/g,
+        /\.markdown-body table\.marktide-print-cols-3 th:last-child/g,
+        /\.markdown-body table\.marktide-print-long-table,/g,
+        /\.markdown-body table\.marktide-print-long-table\.marktide-print-cols-2 th:first-child/g,
+        /\.markdown-body table\.marktide-print-wide-table th,/g,
+      ];
+
+      return selectors.every((selector) => (source.match(selector) || []).length === 1)
+        && /marktide-print-wide-table th,[\s\S]*?padding:\s*5px 7px\s*!important/.test(source);
+    },
+  },
+  {
+    name: 'print handler has no empty initialization lifecycle',
+    pass: () => {
+      const handler = read('assets/js/print-handler.js');
+      const core = read('assets/js/core.js');
+      return !/\bconstructor\s*\(\)\s*\{[\s\S]*?printButton/.test(handler)
+        && !/\binit\s*\(\)\s*\{/.test(handler)
+        && !/MarkTidePrintHandler\.init\s*\(/.test(core);
+    },
+  },
+  {
+    name: 'PDF resolves its iframe document after attachment',
+    pass: () => {
+      const source = read('assets/js/print-handler.js');
+      const appendIndex = source.indexOf('document.body.appendChild(printFrame)');
+      const documentIndex = source.indexOf('const printDocument = printFrame.contentDocument');
+      return appendIndex > -1
+        && documentIndex > appendIndex
+        && /if \(!printDocument\)\s*\{\s*throw new Error\(['"]Unable to create the PDF print document\./.test(source);
+    },
+  },
+  {
+    name: 'dead mobile menu compatibility module is removed',
+    pass: () => !exists('assets/js/mobile-menu.js')
+      && !/assets\/js\/mobile-menu\.js/.test(read('index.html'))
+      && !/MarkTideMobileMenu/.test(read('assets/js/core.js')),
+  },
+  {
+    name: 'shared style helpers expose only consumer APIs',
+    pass: () => {
+      const markdown = read('assets/js/markdown-styles.js');
+      const mermaid = read('assets/js/mermaid-shared.js');
+      const mermaidApi = mermaid.match(/return\s*\{\s*getMermaidConfig,[\s\S]*?\n\s*\};/);
+      return !/window\.MarkTideMarkdownStyles\s*=\s*\{[\s\S]*?\bgetContentStyles\s*,/.test(markdown)
+        && !/window\.MarkTideMarkdownStyles\s*=\s*\{[\s\S]*?\bgetMermaidToolbarStyles\s*,/.test(markdown)
+        && Boolean(mermaidApi)
+        && !/\b(?:constants|getDiagramFontFamily|getThemeVariables|getReadableTextColor|setSolidEdgeLabelBackground|replaceForeignObjectLabels|inlineComputedStyles|parseSvgNumber)\b/.test(mermaidApi[0]);
+    },
+  },
+  {
+    name: 'shared code renderer is the only syntax highlighting pass',
+    pass: () => {
+      const consumers = [
+        read('assets/js/markdown-renderer.js'),
+        read('assets/js/import-export.js'),
+        read('assets/js/print-handler.js'),
+      ].join('\n');
+      const exportAssets = read('assets/js/export-assets.js');
+
+      return !/highlightElement\s*\(/.test(consumers)
+        && !/getHighlightScriptTags/.test(exportAssets)
+        && !/highlight(?:Core|Dos|Dockerfile|Powershell)\s*:/.test(exportAssets);
+    },
+  },
+  {
+    name: 'footnote bodies use the shared Markdown extension pipeline',
+    pass: () => {
+      const source = read('assets/js/markdown-renderer.js');
+      return source.includes("const html = this.parseMarkdown(markdown || ' ', options);")
+        && !source.includes("const html = marked.parse(markdown || ' ', options);");
+    },
+  },
+  {
+    name: 'standalone style assembly rejects missing shared CSS',
+    pass: () => {
+      const source = read('assets/js/markdown-styles.js');
+      return /function getStylesheet\s*\([\s\S]*?throw new Error\(`Shared stylesheet is required: \$\{hrefToMatch\}`\)/.test(source);
+    },
+  },
+  {
+    name: 'HTML export requires interactive code runtimes and MathJax config',
+    pass: () => {
+      const source = read('assets/js/import-export.js');
+      return /typeof CodeCopyHandler !== ['"]function['"]\)\s*\{\s*throw new Error/.test(source)
+        && /typeof window\.MarkTideCreateCodeWrapController !== ['"]function['"]\)\s*\{\s*throw new Error/.test(source)
+        && /function marktideRequireMathJax\s*\(/.test(source)
+        && /marktideRequireMathJax\(\)\.getConfigScript\(\)/.test(source)
+        && !/MarkTideMathJax\s*\?\s*window\.MarkTideMathJax\.getConfigScript\(\)\s*:\s*['"]{2}/.test(source);
+    },
+  },
+  {
+    name: 'PDF export requires serialized Mermaid and MathJax helpers',
+    pass: () => {
+      const source = read('assets/js/print-handler.js');
+      return /getMathJaxConfig\s*\(\)/.test(source)
+        && /getMermaidFactory\s*\(\)/.test(source)
+        && /this\.getMathJaxConfig\(\)\.getConfigScript\(\)/.test(source)
+        && /this\.getMermaidFactory\(\)\.toString\(\)/.test(source)
+        && !/window\.MarkTideMathJax\s*\?/.test(source)
+        && !/window\.MarkTideCreateMermaidShared\s*\?/.test(source);
+    },
+  },
+  {
+    name: 'shared modules expose only their used public contracts',
+    pass: () => {
+      const codeRenderer = read('assets/js/code-block-renderer.js');
+      const mathJax = read('assets/js/mathjax-config.js');
+      const sanitizer = read('assets/js/sanitizer-config.js');
+      const exportAssets = read('assets/js/export-assets.js');
+
+      return /window\.MarkTideCodeBlockRenderer\s*=\s*\{\s*createRenderer\s*,?\s*\}/.test(codeRenderer)
+        && /window\.MarkTideMathJax\s*=\s*\{[\s\S]*?getConfigScript,[\s\S]*?typeset:\s*helper\.typeset,[\s\S]*?updateContent:\s*helper\.updateContent,[\s\S]*?\}/.test(mathJax)
+        && /window\.MarkTideSanitizer\s*=\s*\{\s*sanitize\s*,?\s*\}/.test(sanitizer)
+        && !/window\.MarkTideExportAssets\s*=\s*\{[\s\S]*?\blinks\s*,/.test(exportAssets)
+        && !/window\.MarkTideExportAssets\s*=\s*\{[\s\S]*?\bscripts\s*,/.test(exportAssets);
+    },
+  },
+  {
     name: 'shared badge spacing survives soft-break differences',
     pass: () => {
       const css = read('assets/css/markdown-content.css');
@@ -541,7 +820,152 @@ const checks = [
         && /\.markdown-body\s+strong/.test(css)
         && /\.markdown-body\s+ol\s*>\s*li::before/.test(css)
         && /\.markdown-body\s+ul\s+li::marker/.test(css)
-        && /--copy-code-btn-hover-bg/.test(css);
+        && /--markdown-copy-code-btn-hover-bg/.test(css);
+    },
+  },
+  {
+    name: 'shared CSS owns light and dark markdown theme tokens',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const requiredTokens = [
+        'markdown-bg',
+        'markdown-text-color',
+        'markdown-border-color',
+        'markdown-accent-color',
+        'markdown-table-bg',
+        'markdown-code-pre-bg',
+        'markdown-code-inline-bg',
+        'markdown-code-inline-color',
+      ];
+
+      return /:root\s*\{[\s\S]*?--markdown-bg:\s*#ffffff/.test(css)
+        && /:root\[data-theme=["']dark["']\][\s\S]*?--markdown-bg:\s*#000000/.test(css)
+        && /\.markdown-body\s*\{[\s\S]*?--color-prettylights-syntax-comment:\s*#6a737d/.test(css)
+        && /:root\[data-theme=["']dark["']\]\s+\.markdown-body[\s\S]*?--color-prettylights-syntax-comment:\s*#8b949e/.test(css)
+        && requiredTokens.every((token) => {
+          const declarations = css.match(new RegExp(`--${token}\\s*:`, 'g')) || [];
+          return declarations.length === 2;
+        });
+    },
+  },
+  {
+    name: 'theme files and style helper do not duplicate markdown theme tokens',
+    pass: () => {
+      const privateOwners = [
+        read('assets/css/light-theme.css'),
+        read('assets/css/dark-theme.css'),
+        read('assets/js/markdown-styles.js'),
+      ].join('\n');
+      const oldDocumentToken = /--(?:preview-text-color|table-bg|table-row-alt|table-border|code-pre-bg|code-inline-bg|code-inline-color|code-inline-font-weight|code-header-bg|code-header-border|code-block-shadow|code-block-hover-shadow|copy-code-btn-hover-bg|copy-code-btn-active-bg|copy-code-btn-copied-bg|hljs-color|blockquote-color|blockquote-bold-color|list-marker-color|list-item-color|markdown-heading-color|markdown-bold-color|markdown-bold-weight|markdown-hr-color)\s*:/;
+
+      return !oldDocumentToken.test(privateOwners)
+        && !/--color-(?:prettylights|fg-|canvas-|border-|neutral-|accent-|attention-)/.test(privateOwners)
+        && !/function getThemeVariables\s*\(/.test(read('assets/js/markdown-styles.js'));
+    },
+  },
+  {
+    name: 'standalone documents select the shared palette through data-theme',
+    pass: () => {
+      const htmlExport = read('assets/js/import-export.js');
+      const pdfExport = read('assets/js/print-handler.js');
+      const styles = read('assets/js/markdown-styles.js');
+
+      return /<html lang="en" data-theme="\$\{currentTheme \|\| 'light'\}">/.test(htmlExport)
+        && /<html lang="en" data-theme="light">/.test(pdfExport)
+        && /background-color:\s*var\(--markdown-bg\)/.test(styles)
+        && /color:\s*var\(--markdown-text-color\)/.test(styles)
+        && !/settings\.theme/.test(styles);
+    },
+  },
+  {
+    name: 'preview does not load a dead external Mermaid stylesheet',
+    pass: () => !/<link[^>]+href=["']https?:\/\/[^"']*mermaid[^"']*\.css[^"']*["'][^>]*>/i.test(read('index.html')),
+  },
+  {
+    name: 'ThemeManager is the single owner of initial theme state',
+    pass: () => {
+      const index = read('index.html');
+      const core = read('assets/js/core.js');
+      const theme = read('assets/js/theme-manager.js');
+      const themeScripts = index.match(/<script[^>]+src=["']assets\/js\/theme-manager\.js[^"']*["'][^>]*><\/script>/g) || [];
+      const bootstrapCall = index.indexOf('window.MarkTideTheme.applyInitialRootTheme()');
+
+      return themeScripts.length === 1
+        && index.indexOf('assets/js/theme-manager.js') < bootstrapCall
+        && bootstrapCall > -1
+        && !/localStorage\.getItem\(['"]marktide-theme['"]\)/.test(index)
+        && !/prefers-color-scheme:\s*dark/.test(index)
+        && !/\b(?:applyInitialTheme|initializeTheme)\s*\(/.test(core)
+        && /resolveInitialTheme\s*\(\)/.test(theme)
+        && /applyInitialRootTheme\s*\(\)/.test(theme);
+    },
+  },
+  {
+    name: 'initial highlight stylesheet follows the shared root theme',
+    pass: () => {
+      const index = read('index.html');
+      return /const initialTheme\s*=\s*window\.MarkTideTheme\.applyInitialRootTheme\(\)/.test(index)
+        && /getThemeUrl\(initialTheme\s*===\s*['"]dark['"]\)/.test(index)
+        && !/getThemeUrl\(false\)/.test(index);
+    },
+  },
+  {
+    name: 'local CSS and JavaScript assets share one cache version',
+    pass: () => {
+      const index = read('index.html');
+      const assetUrls = Array.from(
+        index.matchAll(/(?:href|src)=["'](assets\/(?:css|js)\/[^"']+)["']/g),
+        (match) => match[1]
+      );
+      const versions = assetUrls.map((url) => {
+        const match = url.match(/[?&]v=([^&]+)/);
+        return match ? match[1] : '';
+      });
+
+      return assetUrls.length > 0
+        && versions.every(Boolean)
+        && new Set(versions).size === 1;
+    },
+  },
+  {
+    name: 'preview code-copy instance is private',
+    pass: () => {
+      const source = read('assets/js/code-copy-handler.js');
+      return /const codeCopyHandler\s*=\s*new CodeCopyHandler\(\)/.test(source)
+        && !/window\.MarkTideCodeCopy/.test(source);
+    },
+  },
+  {
+    name: 'What\'s New dialog keeps scrolling without a visible scrollbar',
+    pass: () => {
+      const css = read('assets/css/base.css');
+      return /\.whats-new-dialog\s*\{[\s\S]*?overflow-y:\s*auto/.test(css)
+        && /\.whats-new-dialog\s*\{[\s\S]*?scrollbar-width:\s*none/.test(css)
+        && /\.whats-new-dialog\s*\{[\s\S]*?-ms-overflow-style:\s*none/.test(css)
+        && /\.whats-new-dialog::-webkit-scrollbar\s*\{[\s\S]*?display:\s*none/.test(css);
+    },
+  },
+  {
+    name: 'Mermaid image export preserves wrapped HTML label lines',
+    pass: () => {
+      const source = read('assets/js/mermaid-shared.js');
+      return /function getForeignObjectLabelLines\s*\(/.test(source)
+        && /querySelectorAll\(['"]br['"]\)/.test(source)
+        && /doc\.createElementNS\(svgNamespace, ['"]tspan['"]\)/.test(source)
+        && /textElement\.appendChild\(tspan\)/.test(source)
+        && /const labelLines\s*=\s*getForeignObjectLabelLines\(foreignObject\)/.test(source)
+        && !/const text = \(foreignObject\.textContent \|\| ['"]{2}\)\.replace\(\/\\s\+\/g, ['"] ['"]\)\.trim\(\)/.test(source);
+    },
+  },
+  {
+    name: 'shared Mermaid edge-label detection includes class cardinalities',
+    pass: () => {
+      const source = read('assets/js/mermaid-shared.js');
+      return /function isEdgeLabelForeignObject\s*\(/.test(source)
+        && /foreignObject\.closest\(['"]g\.edgeLabel['"]\)/.test(source)
+        && /foreignObject\.querySelector\(['"]\.edgeLabel['"]\)/.test(source)
+        && /if\s*\(!isEdgeLabelForeignObject\(foreignObject\)\)\s*return/.test(source)
+        && /const isEdgeLabel\s*=\s*isEdgeLabelForeignObject\(foreignObject\)/.test(source);
     },
   },
 ];

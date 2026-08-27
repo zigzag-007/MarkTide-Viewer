@@ -17,10 +17,6 @@
   };
 
   const scripts = {
-    highlightCore: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js',
-    highlightDos: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js',
-    highlightDockerfile: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js',
-    highlightPowershell: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js',
     mermaid: 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js',
     mathJax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js'
   };
@@ -51,15 +47,6 @@
     return linksOut.join('\n');
   }
 
-  function getHighlightScriptTags() {
-    return [
-      scriptTag(scripts.highlightCore),
-      scriptTag(scripts.highlightDos),
-      scriptTag(scripts.highlightDockerfile),
-      scriptTag(scripts.highlightPowershell)
-    ].join('\n');
-  }
-
   function getMermaidScriptTag() {
     return scriptTag(scripts.mermaid);
   }
@@ -69,11 +56,8 @@
   }
 
   window.MarkTideExportAssets = {
-    links,
-    scripts,
     getFontLinks,
     getCommonStylesheetLinks,
-    getHighlightScriptTags,
     getMermaidScriptTag,
     getMathJaxScriptTag,
   };
