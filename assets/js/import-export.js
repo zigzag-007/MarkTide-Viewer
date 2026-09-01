@@ -684,17 +684,20 @@ class ImportExportManager {
       throw new Error('Shared highlight theme helper is required for HTML export.');
     }
 
-    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(isDarkMode);
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(isDarkMode, { mode: 'html' });
     
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
     const minifiedStyles = this.minifyCSS(themeStyles);
     const exportAssetLinks = marktideRequireExportAssets();
-    const fontLinks = exportAssetLinks.getFontLinks();
-    const commonStylesheetLinks = exportAssetLinks.getCommonStylesheetLinks({ includeBootstrapIcons: true });
-    const mermaidScript = exportAssetLinks.getMermaidScriptTag();
-    const mathJaxScript = exportAssetLinks.getMathJaxScriptTag();
+    const fontLinks = exportAssetLinks.getFontLinks({ mode: 'html' });
+    const commonStylesheetLinks = exportAssetLinks.getCommonStylesheetLinks({
+      mode: 'html',
+      includeBootstrapIcons: true
+    });
+    const mermaidScript = exportAssetLinks.getMermaidScriptTag({ mode: 'html' });
+    const mathJaxScript = exportAssetLinks.getMathJaxScriptTag({ mode: 'html' });
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en" data-theme="${currentTheme || 'light'}">

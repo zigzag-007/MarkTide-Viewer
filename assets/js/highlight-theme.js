@@ -1,11 +1,18 @@
 // Shared highlight.js theme URLs and print token styles.
 (function (window) {
   const MarktideHighlightTheme = {
-    lightUrl: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css',
-    darkUrl: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css',
+    localLightUrl: 'assets/vendor/highlight/styles/github.min.css',
+    localDarkUrl: 'assets/vendor/highlight/styles/monokai-sublime.min.css',
+    htmlLightUrl: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css',
+    htmlDarkUrl: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css',
 
-    getThemeUrl(isDarkMode = false) {
-      return isDarkMode ? this.darkUrl : this.lightUrl;
+    getThemeUrl(isDarkMode = false, options = {}) {
+      if (options.mode === 'html') {
+        return isDarkMode ? this.htmlDarkUrl : this.htmlLightUrl;
+      }
+
+      const localUrl = isDarkMode ? this.localDarkUrl : this.localLightUrl;
+      return new URL(localUrl, window.location.href).href;
     },
 
     getPrintTokenCss() {

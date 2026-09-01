@@ -218,7 +218,7 @@ class PrintHandler {
       throw new Error('Shared highlight theme helper is required for PDF export.');
     }
 
-    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false);
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false, { mode: 'pdf' });
     const printHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
     const markdownPrintStyles = this.getMarkdownStyles().getStandaloneStyles({
       mode: 'pdf'
@@ -228,10 +228,13 @@ class PrintHandler {
       markdownPrintStyles
     });
     const exportAssets = this.getExportAssets();
-    const fontLinks = exportAssets.getFontLinks();
-    const stylesheetLinks = exportAssets.getCommonStylesheetLinks({ includeBootstrapIcons: false });
-    const mermaidScriptTag = exportAssets.getMermaidScriptTag();
-    const mathJaxScriptTag = exportAssets.getMathJaxScriptTag();
+    const fontLinks = exportAssets.getFontLinks({ mode: 'pdf' });
+    const stylesheetLinks = exportAssets.getCommonStylesheetLinks({
+      mode: 'pdf',
+      includeBootstrapIcons: false
+    });
+    const mermaidScriptTag = exportAssets.getMermaidScriptTag({ mode: 'pdf' });
+    const mathJaxScriptTag = exportAssets.getMathJaxScriptTag({ mode: 'pdf' });
     const mermaidFactoryScript = this.getMermaidFactory().toString();
     const mathJaxConfigScript = this.getMathJaxConfig().getConfigScript();
 
