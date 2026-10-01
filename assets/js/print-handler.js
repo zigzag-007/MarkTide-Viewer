@@ -95,6 +95,56 @@ class PrintHandler {
 
       if (columnCount >= 5) {
         table.classList.add('marktide-print-wide-table');
+        // Leave authored column groups and spanning grids to the browser.
+        if (!table.querySelector('colgroup, col')
+          && logicalCells.some(({ cell }) => {
+            const text = (cell.textContent || '').trim();
+            return text.length >= 80 && text.split(/\s+/).length >= 10;
+          })
+          && logicalCells.every((entry) => entry.columnSpan === 1 && entry.rowSpan === 1)) {
+          const lengths = Array(columnCount).fill(0);
+          const minimums = Array(columnCount).fill(9.5);
+          logicalCells.forEach(({ cell, columnIndex }) => {
+            lengths[columnIndex] = Math.max(lengths[columnIndex],
+              (cell.textContent || '').trim().length);
+            const headerWord = cell.tagName === 'TH'
+              ? Math.max(...(cell.textContent || '').split(/\s+/).map((word) => word.length)) : 0;
+            const codeWord = Math.max(0, ...Array.from(cell.querySelectorAll('code'))
+              .map((code) => Math.min(16, (code.textContent || '').length)));
+            minimums[columnIndex] = Math.max(minimums[columnIndex],
+              2.2 + Math.max(Math.min(8, headerWord) * 1.2, codeWord));
+          });
+          const weights = lengths.map((length) => Math.sqrt(Math.max(1, length)));
+          const minimumTotal = minimums.reduce((total, share) => total + share, 0);
+          if (minimumTotal < 100) {
+            // Reserve readable short columns, then share the rest by content.
+            const shares = Array(columnCount).fill(0);
+            let remaining = 100;
+            let pending = weights.map((weight, index) => index);
+            while (pending.length) {
+              const totalWeight = pending.reduce((total, index) => total + weights[index], 0);
+              const constrained = pending.filter((index) =>
+                remaining * weights[index] / totalWeight < minimums[index]);
+              if (!constrained.length) {
+                pending.forEach((index) => { shares[index] = remaining * weights[index] / totalWeight; });
+                break;
+              }
+              constrained.forEach((index) => {
+                shares[index] = minimums[index];
+                remaining -= shares[index];
+              });
+              pending = pending.filter((index) => !constrained.includes(index));
+            }
+            const colgroup = document.createElement('colgroup');
+            shares.forEach((share) => {
+              const column = document.createElement('col');
+              column.style.setProperty('width', `${share}%`, 'important');
+              colgroup.appendChild(column);
+            });
+            table.insertBefore(colgroup, table.firstChild);
+            table.classList.add('marktide-print-content-table');
+          }
+        }
       }
 
       if (hasLongValue) {
@@ -143,6 +193,17 @@ class PrintHandler {
     } finally {
       cleanup();
     }
+  }
+
+  preparePrintTablePagination() {
+    document.querySelectorAll('table.marktide-print-content-table').forEach((table) => {
+      // Keep moderate rows together, not rows that could waste most of a page.
+      Array.from(table.tBodies).forEach((body) => {
+        Array.from(body.rows).forEach((row) => {
+          row.classList.toggle('marktide-print-keep-row', row.getBoundingClientRect().height <= 240);
+        });
+      });
+    });
   }
 
   getMermaidFactory() {
@@ -274,6 +335,9 @@ class PrintHandler {
   </script>
   <script>
     ${mathJaxConfigScript}
+  </script>
+  <script>
+    window.addEventListener('beforeprint', function ${this.preparePrintTablePagination.toString()});
   </script>
   ${mathJaxScriptTag}
 </body>

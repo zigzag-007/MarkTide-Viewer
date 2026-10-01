@@ -25,7 +25,7 @@
       }
 
       /* Override any fixed widths that might cause overflow */
-      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
+      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *):not(.marktide-print-content-table) {
         width: auto !important;
         min-width: 0 !important;
         flex-shrink: 1 !important;
@@ -273,6 +273,29 @@
       .markdown-body table.marktide-print-wide-table th,
       .markdown-body table.marktide-print-wide-table td {
         padding: 5px 7px !important;
+      }
+
+      /* Only wide, simple grids get content based column allocation. */
+      .markdown-body table.marktide-print-content-table {
+        display: table !important;
+        font-size: 83% !important;
+      }
+
+      .markdown-body table.marktide-print-content-table th,
+      .markdown-body table.marktide-print-content-table td {
+        padding: 3px 4px !important;
+      }
+
+      .markdown-body table.marktide-print-content-table th:first-child,
+      .markdown-body table.marktide-print-content-table td:first-child,
+      .markdown-body table.marktide-print-content-table td:first-child code {
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+      }
+
+      .markdown-body table.marktide-print-content-table tbody tr.marktide-print-keep-row {
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       }
     `;
