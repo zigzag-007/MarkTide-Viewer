@@ -673,6 +673,8 @@
   }
 
   .markdown-body code:not(pre code) {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
     font-weight: var(--markdown-code-inline-font-weight, 600);
   }
 
