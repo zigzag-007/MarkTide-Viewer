@@ -755,7 +755,7 @@ function testHtmlExportEnhancesValidMermaidAfterBatchFailure() {
 function testSharedRenderedHtmlPipelineSanitizesBeforeEmojis() {
   const { context, renderer } = loadMarkdownRendererHarness();
   const calls = [];
-  const wrapper = { innerHTML: '' };
+  const wrapper = { innerHTML: '', querySelectorAll: () => [] };
   context.document = {
     createElement() {
       return wrapper;

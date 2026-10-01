@@ -824,6 +824,32 @@ const checks = [
     },
   },
   {
+    name: 'document line spacing and heading divider spacing stay shared',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const article = css.match(/\.markdown-body\s*\{([\s\S]*?)\}/)[1];
+      const fullPreview = css.match(/body\.preview-only-active \.markdown-body\s*\{([\s\S]*?)\}/)[1];
+      const print = read('assets/js/print-styles.js');
+      const printLineHeights = [...print.matchAll(/line-height:\s*([^;]+);/g)];
+      return /line-height:\s*1\.4;/.test(article)
+        && !/line-height:/.test(fullPreview)
+        && /\.markdown-body h1,\s*\.markdown-body h2\s*\{\s*padding-bottom:\s*0\.2em;/.test(css)
+        && printLineHeights.length === 2
+        && printLineHeights.every((match) => /^1\.4(?: !important)?$/.test(match[1]));
+    },
+  },
+  {
+    name: 'standalone image defaults belong to shared Markdown styles',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const print = read('assets/js/print-styles.js');
+      return /img\.marktide-default-image\s*\{\s*max-width:\s*80%;/.test(css)
+        && /img\.marktide-content-image\s*\{[^}]*margin-left:\s*auto;[^}]*margin-right:\s*auto;/.test(css)
+        && !/img\s*\{[^}]*max-width:\s*100%\s*!important/.test(print)
+        && !/marktide-default-image/.test(print);
+    },
+  },
+  {
     name: 'shared CSS owns light and dark markdown theme tokens',
     pass: () => {
       const css = read('assets/css/markdown-content.css');

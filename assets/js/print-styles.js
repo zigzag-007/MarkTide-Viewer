@@ -15,7 +15,7 @@
       }
 
       /* Force all text to wrap and prevent overflow */
-      *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
+      *:not(img):not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
         white-space: normal !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
@@ -25,7 +25,7 @@
       }
 
       /* Override any fixed widths that might cause overflow */
-      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *):not(.marktide-print-content-table) {
+      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *):not(.marktide-print-content-table):not(img) {
         width: auto !important;
         min-width: 0 !important;
         flex-shrink: 1 !important;
@@ -71,7 +71,7 @@
         overflow: visible !important;
         background: var(--markdown-bg) !important;
         color: var(--markdown-text-color) !important;
-        line-height: 1.6 !important;
+        line-height: 1.4 !important;
         font-size: 14px !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
@@ -95,7 +95,7 @@
       padding: 0;
       background-color: var(--markdown-bg) !important;
       color: var(--markdown-text-color) !important;
-      line-height: 1.6;
+      line-height: 1.4;
       overflow-x: hidden;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -156,8 +156,7 @@
 
     /* Images */
     .markdown-body img {
-      max-width: 100% !important;
-      height: auto !important;
+      max-width: 100%;
       page-break-inside: avoid !important;
       background-color: transparent !important;
     }
@@ -184,7 +183,7 @@
       }
 
       /* Ensure content uses full width but prevent overflow */
-      .markdown-body > * {
+      .markdown-body > *:not(img) {
         max-width: 100% !important;
         width: auto !important;
         word-wrap: break-word !important;

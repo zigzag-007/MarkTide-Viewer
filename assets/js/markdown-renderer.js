@@ -474,6 +474,21 @@ class MarkdownRenderer {
       window.MarkTideUtils.processEmojis(wrapper);
     }
 
+    // Keep badges and inline images in place. Only resize standalone images.
+    wrapper.querySelectorAll('img').forEach((image) => {
+      if ((image.getAttribute('src') || '').includes('img.shields.io')) return;
+      const parent = image.parentElement;
+      const standalone = parent === wrapper || (parent.tagName === 'P'
+        && Array.from(parent.childNodes).every((node) => node === image
+          || (node.nodeType === 3 && !node.textContent.trim())));
+      if (!standalone) return;
+
+      image.classList.add('marktide-content-image');
+      const authoredSize = image.hasAttribute('width') || image.hasAttribute('height')
+        || Array.from(image.style).some((property) => /^(?:(?:min|max)-)?(?:width|height)$/.test(property));
+      if (!authoredSize) image.classList.add('marktide-default-image');
+    });
+
     return wrapper.innerHTML;
   }
 

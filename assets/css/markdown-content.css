@@ -79,7 +79,7 @@
     padding: 45px;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     font-size: 1.05rem;
-    line-height: 1.7;
+    line-height: 1.4;
     overflow-x: hidden;
     --color-prettylights-syntax-comment: #6a737d;
     --color-prettylights-syntax-constant: #005cc5;
@@ -186,7 +186,6 @@
   body.preview-only-active .markdown-body {
     max-width: 920px;
     font-size: 1.05rem;
-    line-height: 1.7;
   }
 
   body.preview-only-active .markdown-body h1 { font-size: 2.1em; }
@@ -195,6 +194,24 @@
   
   .markdown-body img {
     background-color: transparent !important;
+  }
+
+  /* Standalone images share one size and alignment in every output. */
+  .markdown-body img.marktide-content-image {
+    display: block;
+    box-sizing: border-box;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .markdown-body img.marktide-content-image:not([height]) {
+    height: auto;
+  }
+
+  .markdown-body img.marktide-default-image {
+    max-width: 80%;
+    height: auto;
   }
 
   .markdown-body img[src*="img.shields.io"] {
@@ -391,7 +408,7 @@
 
   .markdown-body h1,
   .markdown-body h2 {
-    padding-bottom: 0.3em;
+    padding-bottom: 0.2em;
     border-bottom: 1px solid color-mix(in srgb, var(--markdown-text-color) 24%, transparent);
   }
 
