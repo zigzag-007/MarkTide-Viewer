@@ -839,6 +839,60 @@ const checks = [
     },
   },
   {
+    name: 'screen typography uses shared reading width rules without print overrides',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const responsive = read('assets/css/responsive.css');
+      const styles = read('assets/js/markdown-styles.js');
+      return /@media screen\s*\{[\s\S]*container:\s*marktide-document \/ inline-size;/.test(css)
+        && /@container marktide-document \(max-width: 600px\)/.test(css)
+        && /body\.marktide-html-document/.test(css)
+        && /<body class="marktide-html-document">/.test(read('assets/js/import-export.js'))
+        && !/\.markdown-body\s*\{/.test(responsive)
+        && !/bodyPadding/.test(styles);
+    },
+  },
+  {
+    name: 'screen tables share sanitized preparation without print sizing changes',
+    pass: () => {
+      const renderer = read('assets/js/markdown-renderer.js');
+      const css = read('assets/css/markdown-content.css');
+      return /options\.mode !== 'pdf'\) this\.prepareScreenTables\(wrapper\)/.test(renderer)
+        && /!hasSpans && !hasAuthoredWidths && !hasMedia/.test(renderer)
+        && /@media screen\s*\{[\s\S]*\.markdown-body \.marktide-table-scroll/.test(css)
+        && /\.marktide-table-scroll:focus-visible/.test(css)
+        && /overscroll-behavior-x:\s*contain;/.test(css)
+        && !/marktide-screen-|marktide-table-scroll/.test(read('assets/js/print-styles.js'))
+        && !/prepareScreenTables|marktide-screen-/.test(read('assets/js/import-export.js'));
+    },
+  },
+  {
+    name: 'mobile table and code density have shared screen owners',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const renderer = read('assets/js/markdown-renderer.js');
+      return /@container marktide-document \(max-width: 600px\)\s*\{\s*\.markdown-body table\.marktide-screen-compact-table/.test(css)
+        && /font-size:\s*87\.5%;/.test(css)
+        && /marktide-screen-short-value/.test(renderer)
+        && /code-block-header-actions button:focus-visible/.test(css)
+        && /@media screen and \(hover: none\) and \(pointer: coarse\)/.test(css)
+        && /<pre tabindex="0" role="region"/.test(read('assets/js/code-block-renderer.js'))
+        && !/marktide-screen-compact|font-size:\s*13px/.test(read('assets/js/print-styles.js'));
+    },
+  },
+  {
+    name: 'table scroll hints serialize one shared screen controller',
+    pass: () => {
+      const controller = read('assets/js/table-scroll-handler.js');
+      return /MarkTideCreateTableScrollController/.test(controller)
+        && /MutationObserver/.test(controller)
+        && /ResizeObserver/.test(controller)
+        && /assets\/js\/table-scroll-handler\.js/.test(read('index.html'))
+        && /MarkTideCreateTableScrollController\.toString\(\)/.test(read('assets/js/import-export.js'))
+        && !/TableScrollController/.test(read('assets/js/print-handler.js'));
+    },
+  },
+  {
     name: 'standalone image defaults belong to shared Markdown styles',
     pass: () => {
       const css = read('assets/css/markdown-content.css');

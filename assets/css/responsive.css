@@ -198,12 +198,6 @@
     width: calc(100% - 1.6rem) !important;
   }
   
-  /* Ensure preview content is properly centered on small mobile screens */
-  .markdown-body {
-    max-width: 98% !important;
-    margin: 0 auto !important;
-    padding: 20px !important;
-  }
 }
 
 @media (max-width: 420px) {
@@ -339,11 +333,6 @@
     height: 100%; /* Remove toolbar height offset on mobile */
   }
   
-  /* Ensure preview content stays centered on mobile */
-  .markdown-body {
-    max-width: 95% !important;
-    margin: 0 auto !important;
-  }
   
 
 }

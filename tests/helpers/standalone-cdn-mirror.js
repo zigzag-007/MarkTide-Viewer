@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('node:fs');
 
 const root = path.resolve(__dirname, '..', '..');
 const file = (relativePath) => path.join(root, relativePath);
@@ -28,7 +29,20 @@ async function installStandaloneCdnMirror(context) {
     const normalized = normalizedUrl(requestUrl);
 
     if (requestUrl.startsWith('https://fonts.googleapis.com/css2?')) {
-      await route.fulfill({ body: '', contentType: 'text/css; charset=utf-8' });
+      const family = new URL(requestUrl).searchParams.get('family') || '';
+      const stylesheet = family.startsWith('Inter:') ? 'inter.css'
+        : family.startsWith('JetBrains Mono:') ? 'jetbrains-mono.css'
+          : family.startsWith('Fira Code:') ? 'fira-code.css' : null;
+      if (!stylesheet) throw new Error(`Unexpected export font family: ${family}`);
+      const body = fs.readFileSync(file(`assets/vendor/fonts/${stylesheet}`), 'utf8')
+        .replace(/url\(([^)]+)\)/g, (match, url) =>
+          `url(https://fonts.gstatic.com/marktide-test/${path.basename(url.replace(/["']/g, ''))})`);
+      await route.fulfill({ body, contentType: 'text/css; charset=utf-8' });
+      return;
+    }
+
+    if (normalized.startsWith('https://fonts.gstatic.com/marktide-test/')) {
+      await route.fulfill({ path: file(`assets/vendor/fonts/files/${path.basename(normalized)}`) });
       return;
     }
 

@@ -521,6 +521,121 @@ class MarkdownRenderer {
     });
   }
 
+  prepareScreenTables(wrapper) {
+    wrapper.querySelectorAll('table').forEach((table) => {
+      const existingScroll = table.parentElement.classList.contains('marktide-table-scroll')
+        ? table.parentElement : null;
+      table.querySelector(':scope > .marktide-screen-columns')?.remove();
+      table.classList.remove('marktide-screen-balanced-table');
+      table.classList.remove('marktide-screen-mobile-balanced-table');
+      table.style.removeProperty('--marktide-table-min-width');
+      table.style.removeProperty('--marktide-table-mobile-min-width');
+      const rows = Array.from(table.rows);
+      const cells = rows.flatMap((row) => Array.from(row.cells));
+      const hasSpans = cells.some((cell) => cell.colSpan !== 1 || cell.rowSpan !== 1);
+      const columns = Math.max(0, ...rows.map((row) => row.cells.length));
+      const hasAuthoredWidths = table.querySelector('colgroup, col')
+        || [table, ...cells].some((element) => element.hasAttribute('width')
+          || ['width', 'min-width', 'max-width', 'table-layout'].some((property) =>
+            element.style.getPropertyValue(property)));
+      const textOf = (cell) => (cell.textContent || '').replace(/\s+/g, ' ').trim();
+      const hasProse = cells.some((cell) => textOf(cell).length >= 80
+        && textOf(cell).split(/\s+/).length >= 10);
+      const hasCrowdedText = cells.some((cell) => textOf(cell).length >= 40
+        && textOf(cell).split(/\s+/).length >= 6);
+      const hasMedia = table.querySelector('img, svg, pre, mjx-container, table');
+      table.classList.toggle('marktide-screen-media-table', Boolean(hasMedia));
+      table.classList.toggle('marktide-screen-compact-table',
+        (columns >= 5 || (columns === 4 && cells.some((cell) => textOf(cell).length >= 16))
+          || (columns === 3 && cells.some((cell) => textOf(cell).length >= 24)))
+          && !hasSpans && !hasAuthoredWidths && !hasMedia);
+      const authoredWidth = table.getAttribute('width') || '';
+      const widthLimit = authoredWidth.endsWith('%') ? 1000 : 8192;
+      if (!table.style.width && /^\d+(?:\.\d+)?%?$/.test(authoredWidth)
+        && Number.parseFloat(authoredWidth) <= widthLimit) {
+        table.style.width = authoredWidth.endsWith('%') ? authoredWidth : `${authoredWidth}px`;
+      }
+
+      // Spans and authored widths keep the browser's own column sizing.
+      if (columns >= 3 && hasCrowdedText && !hasSpans && !hasAuthoredWidths && !hasMedia
+        && rows.every((row) => row.cells.length === columns)) {
+        const desktopBalanced = columns >= 5 && hasProse;
+        const minimums = Array(columns).fill(3);
+        const mobileMinimums = Array(columns).fill(3);
+        const lengths = Array(columns).fill(1);
+        cells.forEach((cell) => {
+          const index = cell.cellIndex;
+          const text = textOf(cell);
+          const words = text.split(/\s+/);
+          lengths[index] = Math.max(lengths[index], text.length);
+          const prose = words.length >= 6 && text.length >= 40;
+          const wordLength = Math.max(0, ...words.map((word) => Math.min(18, word.length)));
+          const codeLength = Math.max(0, ...Array.from(cell.querySelectorAll('code'))
+            .map((code) => Math.min(18, (code.textContent || '').length)));
+          const shortLength = cell.tagName === 'TH' ? wordLength : Math.min(10, text.length);
+          const shortValue = cell.tagName === 'TD' && text.length <= 12
+            && words.length <= 2 && !cell.querySelector('br, code');
+          const proseWidth = text.length >= 120 ? 11 : text.length >= 80 ? 9 : 8;
+          minimums[index] = Math.max(minimums[index], prose ? proseWidth
+            : Math.min(9, 0.9 + Math.max(shortLength * 0.5, codeLength * 0.45)));
+          mobileMinimums[index] = Math.max(mobileMinimums[index], prose
+            ? Math.max(proseWidth, text.length >= 80 ? 12 : 9)
+            : Math.max(1.25 + (codeLength ? shortLength * 0.5
+              : (shortValue ? shortLength : wordLength) * 0.65),
+              1.9 + codeLength * 0.51));
+        });
+        const total = minimums.reduce((sum, width) => sum + width, 0);
+        const mobileTotal = mobileMinimums.reduce((sum, width) => sum + width, 0);
+        const weights = lengths.map((length) => Math.sqrt(length));
+        const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
+        const colgroup = document.createElement('colgroup');
+        colgroup.className = 'marktide-screen-columns';
+        minimums.forEach((width, index) => {
+          const column = document.createElement('col');
+          // Reserve readable columns, then give extra room to longer content.
+          const share = 0.85 * width / total + 0.15 * weights[index] / weightTotal;
+          if (desktopBalanced) column.style.width = `${share * 100}%`;
+          column.style.setProperty('--marktide-mobile-column-width',
+            `${mobileMinimums[index] / mobileTotal * 100}%`);
+          colgroup.appendChild(column);
+        });
+        table.insertBefore(colgroup, table.firstChild);
+        table.classList.add(desktopBalanced ? 'marktide-screen-balanced-table'
+          : 'marktide-screen-mobile-balanced-table');
+        table.style.setProperty('--marktide-table-min-width', `${Number(total.toFixed(2))}em`);
+        table.style.setProperty('--marktide-table-mobile-min-width', `${Number(mobileTotal.toFixed(2))}em`);
+      }
+
+      const shortColumns = Array.from({ length: columns }, (_, index) => {
+        const bodyCells = rows.filter((row) => row.parentElement.tagName !== 'THEAD')
+          .map((row) => row.cells[index]).filter((cell) => cell?.tagName === 'TD');
+        return !hasSpans && !hasAuthoredWidths && !hasMedia && bodyCells.length > 0
+          && bodyCells.every((cell) => textOf(cell).length <= 12
+            && textOf(cell).split(/\s+/).length <= 2 && !cell.querySelector('br, code'));
+      });
+      cells.forEach((cell) => {
+        cell.classList.toggle('marktide-screen-long-value', /\S{24,}/.test(textOf(cell)));
+        cell.classList.toggle('marktide-screen-short-value',
+          cell.tagName === 'TD' && shortColumns[cell.cellIndex]);
+        cell.querySelectorAll('code:not(pre code)').forEach((code) => {
+          const text = (code.textContent || '').trim();
+          code.classList.toggle('marktide-screen-short-code',
+            !hasSpans && !hasAuthoredWidths && !hasMedia && /^\S{1,18}$/.test(text));
+        });
+      });
+      const scroll = existingScroll || document.createElement('div');
+      scroll.className = 'marktide-table-scroll';
+      scroll.tabIndex = 0;
+      scroll.setAttribute('role', 'region');
+      const title = table.caption?.textContent || (existingScroll || table).previousElementSibling?.textContent || '';
+      scroll.setAttribute('aria-label', `${title.trim().slice(0, 100) || 'Document'} table. Scroll horizontally for more columns.`);
+      if (!existingScroll) {
+        table.replaceWith(scroll);
+        scroll.appendChild(table);
+      }
+    });
+  }
+
   prepareRenderedHtml(html, options = {}) {
     if (!window.MarkTideSanitizer) {
       throw new Error('Shared sanitizer is required for Markdown rendering.');
@@ -551,6 +666,7 @@ class MarkdownRenderer {
     });
 
     this.prepareImageCaptions(wrapper);
+    if (options.mode !== 'pdf') this.prepareScreenTables(wrapper);
 
     return wrapper.innerHTML;
   }

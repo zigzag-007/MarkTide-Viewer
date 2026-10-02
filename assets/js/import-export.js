@@ -110,6 +110,20 @@ function marktideRequireMathJax() {
   return window.MarkTideMathJax;
 }
 
+function marktideExportTableScrollScript() {
+  if (typeof window.MarkTideCreateTableScrollController !== 'function') {
+    throw new Error('Shared table scroll controller is required for HTML export.');
+  }
+
+  return `
+    window.MarkTideCreateTableScrollController = ${window.MarkTideCreateTableScrollController.toString()};
+    window.MarkTideTableScroll = window.MarkTideCreateTableScrollController(window, {
+      rootSelector: '.markdown-body'
+    });
+    window.MarkTideTableScroll.init();
+  `;
+}
+
 function marktideExportMathJaxConfigScript() {
   return marktideRequireMathJax().getConfigScript();
 }
@@ -711,7 +725,7 @@ class ImportExportManager {
     <link rel="stylesheet" href="${highlightTheme}">
     <style>${minifiedStyles}</style>
 </head>
-<body>
+<body class="marktide-html-document">
     <article class="markdown-body">
         ${renderedHtml}
     </article>
@@ -728,6 +742,7 @@ class ImportExportManager {
     ${mathJaxScript}
     <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
+    <script>${this.minifyJS(marktideExportTableScrollScript())}</script>
 </body>
 </html>`;
     

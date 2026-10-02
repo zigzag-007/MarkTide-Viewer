@@ -237,6 +237,7 @@ function createHtmlExportHarness() {
   };
   context.window.MarkTideCreateMermaidShared = function createMermaidShared() {};
   context.window.MarkTideCreateCodeWrapController = function createCodeWrapController() {};
+  context.window.MarkTideCreateTableScrollController = function createTableScrollController() {};
   context.window.MarkTideMathJax = {
     getConfigScript() {
       return 'window.MathJax = {};';

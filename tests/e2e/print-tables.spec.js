@@ -97,7 +97,9 @@ test('Appendix B gets readable columns and complete D3 rows in a searchable PDF'
       }
     });
     expect(wrapping[1].prose[2]).toBeLessThan(baselineWrapping[1].prose[2]);
-    await expect(page.locator('#markdown-preview colgroup')).toHaveCount(0);
+    await expect(page.locator('#markdown-preview colgroup:not(.marktide-screen-columns)')).toHaveCount(0);
+    await expect(page.locator('#markdown-preview .marktide-screen-columns')).toHaveCount(1);
+    await expect(printPage.locator('.marktide-screen-columns, .marktide-table-scroll')).toHaveCount(0);
     const pdf = await printPage.pdf({
       preferCSSPageSize: true,
       printBackground: true,

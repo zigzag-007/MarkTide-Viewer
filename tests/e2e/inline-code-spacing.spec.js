@@ -18,6 +18,12 @@ console.log(value);
 
 async function measure(page) {
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(async () => {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const animations = document.querySelector('.markdown-body').getAnimations({ subtree: true })
+      .filter(animation => Number.isFinite(animation.effect.getTiming().iterations));
+    await Promise.all(animations.map(animation => animation.finished.catch(() => {})));
+  });
   return page.locator('.markdown-body').evaluate(article => {
     const codes = [...article.querySelectorAll('code:not(pre code)')];
     const wrapped = codes[codes.length - 1];

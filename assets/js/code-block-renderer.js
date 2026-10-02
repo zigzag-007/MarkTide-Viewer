@@ -63,7 +63,7 @@
             </button>
           </div>
         </div>
-        <pre><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
+        <pre tabindex="0" role="region" aria-label="Code sample. Scroll horizontally for long lines."><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
       </div>
     `;
   }
