@@ -214,6 +214,21 @@
     height: auto;
   }
 
+  .markdown-body .marktide-image-figure {
+    margin: 0 0 16px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .markdown-body .marktide-image-caption {
+    margin-top: 0.5em;
+    color: var(--markdown-blockquote-color);
+    font-size: 0.9em;
+    font-style: italic;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   .markdown-body img[src*="img.shields.io"] {
     display: block;
     width: fit-content;

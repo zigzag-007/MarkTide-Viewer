@@ -460,6 +460,67 @@ class MarkdownRenderer {
     return this.applyMarkdownExtensions(html, extensionContext, options);
   }
 
+  prepareImageCaptions(wrapper) {
+    const normalizeText = (text) => String(text || '').replace(/\s+/g, ' ').trim();
+    const isVisible = (element) => {
+      if (!element) return false;
+      for (let current = element; current && current !== wrapper; current = current.parentElement) {
+        if (current.hidden || current.getAttribute('aria-hidden') === 'true'
+          || current.style.display === 'none' || current.style.opacity === '0') return false;
+      }
+      return true;
+    };
+
+    wrapper.querySelectorAll('img').forEach((image) => {
+      if ((image.getAttribute('src') || '').includes('img.shields.io')) return;
+      const alt = normalizeText(image.getAttribute('alt'));
+      if (!alt || /^(?:image|img|photo|picture|screenshot|diagram|figure|icon|logo)(?:[\s_-]*\d+)?[.!]?$/i.test(alt)) return;
+      if (!isVisible(image)) return;
+
+      const parent = image.parentElement;
+      const authoredFigure = image.closest('figure');
+      if (authoredFigure && Array.from(authoredFigure.querySelectorAll('figcaption')).some(isVisible)) return;
+      const imageOnly = Array.from(parent.childNodes).every((node) => node === image
+        || node.nodeType === 8 || (node.nodeType === 3 && !node.textContent.trim()));
+      if (parent !== wrapper && !(['P', 'DIV', 'FIGURE'].includes(parent.tagName) && imageOnly)) return;
+
+      // Keep nearby authored captions. A blockquote is always separate content.
+      const block = parent === wrapper ? image : parent;
+      const hasCaption = (neighbor) => {
+        if (!isVisible(neighbor) || neighbor.tagName === 'BLOCKQUOTE') return false;
+        const text = normalizeText(neighbor.textContent);
+        if (!text) return false;
+        const figureLabel = alt.match(/^(?:figure|fig\.?)\s+\d+(?:[.\-]\d+)*/i);
+        const labelledCaption = figureLabel && text.toLowerCase().startsWith(figureLabel[0].toLowerCase())
+          && /^(?:\s*[.:\-]|\s*$)/.test(text.slice(figureLabel[0].length));
+        const italicCaption = neighbor === block.nextElementSibling && neighbor.tagName === 'P'
+          && neighbor.children.length === 1 && ['EM', 'I'].includes(neighbor.firstElementChild.tagName)
+          && normalizeText(neighbor.firstElementChild.textContent) === text;
+        return neighbor.matches('figcaption, .caption, .image-caption, .marktide-image-caption')
+          || (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(neighbor.tagName)
+            && (text === alt || labelledCaption || italicCaption));
+      };
+      if (hasCaption(block.previousElementSibling) || hasCaption(block.nextElementSibling)) return;
+
+      const figure = parent.tagName === 'FIGURE' ? parent : document.createElement('figure');
+      if (figure !== parent) {
+        if (parent !== wrapper) {
+          Array.from(parent.attributes).forEach((attribute) => {
+            figure.setAttribute(attribute.name, attribute.value);
+          });
+        }
+        block.replaceWith(figure);
+        figure.appendChild(image);
+      }
+      figure.classList.add('marktide-image-figure');
+      const caption = document.createElement('figcaption');
+      caption.className = 'marktide-image-caption';
+      // Alt text stays text, never markup, even after sanitizing the image.
+      caption.textContent = alt;
+      figure.appendChild(caption);
+    });
+  }
+
   prepareRenderedHtml(html, options = {}) {
     if (!window.MarkTideSanitizer) {
       throw new Error('Shared sanitizer is required for Markdown rendering.');
@@ -488,6 +549,8 @@ class MarkdownRenderer {
         || Array.from(image.style).some((property) => /^(?:(?:min|max)-)?(?:width|height)$/.test(property));
       if (!authoredSize) image.classList.add('marktide-default-image');
     });
+
+    this.prepareImageCaptions(wrapper);
 
     return wrapper.innerHTML;
   }

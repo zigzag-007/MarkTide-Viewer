@@ -850,6 +850,20 @@ const checks = [
     },
   },
   {
+    name: 'image captions use the shared sanitized pipeline and stylesheet',
+    pass: () => {
+      const renderer = read('assets/js/markdown-renderer.js');
+      const css = read('assets/css/markdown-content.css');
+      const privateOwners = read('assets/js/import-export.js') + read('assets/js/print-handler.js')
+        + read('assets/js/print-styles.js');
+      return /this\.prepareImageCaptions\(wrapper\)/.test(renderer)
+        && /caption\.textContent = alt;/.test(renderer)
+        && !/caption\.innerHTML/.test(renderer)
+        && /\.markdown-body \.marktide-image-caption\s*\{[^}]*font-style:\s*italic;[^}]*text-align:\s*center;/.test(css)
+        && !/marktide-image-caption/.test(privateOwners);
+    },
+  },
+  {
     name: 'shared CSS owns light and dark markdown theme tokens',
     pass: () => {
       const css = read('assets/css/markdown-content.css');
