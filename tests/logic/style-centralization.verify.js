@@ -843,7 +843,7 @@ const checks = [
     pass: () => {
       const css = read('assets/css/markdown-content.css');
       const print = read('assets/js/print-styles.js');
-      return /img\.marktide-default-image\s*\{\s*max-width:\s*80%;/.test(css)
+      return /img\.marktide-default-image\s*\{\s*max-width:\s*85%;/.test(css)
         && /img\.marktide-content-image\s*\{[^}]*margin-left:\s*auto;[^}]*margin-right:\s*auto;/.test(css)
         && !/img\s*\{[^}]*max-width:\s*100%\s*!important/.test(print)
         && !/marktide-default-image/.test(print);

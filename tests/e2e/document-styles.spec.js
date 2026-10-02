@@ -114,7 +114,7 @@ function assertStyles(metrics, print = false) {
   for (const alt of ['Default screenshot', 'Styled default']) {
     const image = metrics.images[alt];
     expect(image.defaultSize).toBe(true);
-    expect(image.width).toBeCloseTo(metrics.contentWidth * 0.8, 0);
+    expect(image.width).toBeCloseTo(metrics.contentWidth * 0.85, 0);
     expect(image.contentRatio).toBeCloseTo(image.naturalRatio, 2);
     expect(image.centerError).toBeLessThan(1);
   }
@@ -172,33 +172,36 @@ for (const theme of ['light', 'dark']) {
   });
 }
 
-test('PDF uses shared image sizing and spacing with searchable text', async ({ page, context, baseURL }, testInfo) => {
-  await installImages(context);
-  await page.goto('/index.html');
-  await waitForMarkTide(page);
-  await renderMarkdown(page, markdown);
-  const prepared = await capturePdfPreparation(page, 'Document styles', { includeDocumentHtml: true });
-  const printPage = await context.newPage();
-  try {
-    await printPage.setViewportSize({ width: 709, height: 1018 });
-    await printPage.emulateMedia({ media: 'print' });
-    await printPage.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
-    const metrics = await metricsFor(printPage);
-    assertStyles(metrics, true);
-    expect(metrics.paragraph.fontSize).toBe('14.7px');
-    expect(metrics.tablePadding).toBe('6px 12px');
-    const pdf = await printPage.pdf({ preferCSSPageSize: true, printBackground: true,
-      path: process.env.MARKTIDE_STYLES_REVIEW_PDF || undefined });
-    await testInfo.attach('document-styles.pdf', { body: pdf, contentType: 'application/pdf' });
-    const probe = spawnSync('pdftotext', ['-v']);
-    if (probe.error?.code !== 'ENOENT') {
-      expect(probe.status).toBe(0);
-      const text = spawnSync('pdftotext', ['-', '-'], { input: pdf, encoding: 'utf8' });
-      expect(text.status).toBe(0);
-      expect(text.stdout).toContain('Document style regression');
-      expect(text.stdout).toContain('Body text remains searchable with the same paragraph spacing.');
+for (const previewWidth of [1280, 390]) {
+  test(`PDF uses shared image sizing and spacing with searchable text from ${previewWidth}px Preview`, async ({ page, context, baseURL }, testInfo) => {
+    await page.setViewportSize({ width: previewWidth, height: 844 });
+    await installImages(context);
+    await page.goto('/index.html');
+    await waitForMarkTide(page);
+    await renderMarkdown(page, markdown);
+    const prepared = await capturePdfPreparation(page, 'Document styles', { includeDocumentHtml: true });
+    const printPage = await context.newPage();
+    try {
+      await printPage.setViewportSize({ width: 709, height: 1018 });
+      await printPage.emulateMedia({ media: 'print' });
+      await printPage.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
+      const metrics = await metricsFor(printPage);
+      assertStyles(metrics, true);
+      expect(metrics.paragraph.fontSize).toBe('14.7px');
+      expect(metrics.tablePadding).toBe('6px 12px');
+      const pdf = await printPage.pdf({ preferCSSPageSize: true, printBackground: true,
+        path: process.env.MARKTIDE_STYLES_REVIEW_PDF || undefined });
+      await testInfo.attach('document-styles.pdf', { body: pdf, contentType: 'application/pdf' });
+      const probe = spawnSync('pdftotext', ['-v']);
+      if (probe.error?.code !== 'ENOENT') {
+        expect(probe.status).toBe(0);
+        const text = spawnSync('pdftotext', ['-', '-'], { input: pdf, encoding: 'utf8' });
+        expect(text.status).toBe(0);
+        expect(text.stdout).toContain('Document style regression');
+        expect(text.stdout).toContain('Body text remains searchable with the same paragraph spacing.');
+      }
+    } finally {
+      await printPage.close();
     }
-  } finally {
-    await printPage.close();
-  }
-});
+  });
+}
