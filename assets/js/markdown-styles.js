@@ -2,6 +2,7 @@
 (function (window) {
   const MARKDOWN_CONTENT_HREF = 'assets/css/markdown-content.css';
   const MERMAID_TOOLBAR_HREF = 'assets/css/mermaid-toolbar.css';
+  const READING_CONTROLS_HREF = 'assets/css/reading-controls.css';
 
   function normalizeHref(value) {
     return (value || '').replace(/\\/g, '/').split('?')[0].split('#')[0];
@@ -73,6 +74,7 @@
     const articlePadding = mode === 'html' ? '' : 'padding: 20px !important;';
     const contentStyles = getContentStyles();
     const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
+    const readingControlStyles = mode === 'html' ? getStylesheet(READING_CONTROLS_HREF) : '';
 
     return `
       html,
@@ -94,6 +96,8 @@
       ${contentStyles}
 
       ${mermaidToolbarStyles}
+
+      ${readingControlStyles}
 
       .markdown-body {
         max-width: ${maxWidth} !important;

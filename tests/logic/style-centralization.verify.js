@@ -846,7 +846,7 @@ const checks = [
       const styles = read('assets/js/markdown-styles.js');
       return /@media screen\s*\{[\s\S]*container:\s*marktide-document \/ inline-size;/.test(css)
         && /@container marktide-document \(max-width: 600px\)/.test(css)
-        && /body\.marktide-html-document/.test(css)
+        && /\.marktide-html-reading-area/.test(css)
         && /<body class="marktide-html-document">/.test(read('assets/js/import-export.js'))
         && !/\.markdown-body\s*\{/.test(responsive)
         && !/bodyPadding/.test(styles);
@@ -890,6 +890,23 @@ const checks = [
         && /assets\/js\/table-scroll-handler\.js/.test(read('index.html'))
         && /MarkTideCreateTableScrollController\.toString\(\)/.test(read('assets/js/import-export.js'))
         && !/TableScrollController/.test(read('assets/js/print-handler.js'));
+    },
+  },
+  {
+    name: 'reading controls share external styling and serialized runtime without PDF',
+    pass: () => {
+      const helper = read('assets/js/markdown-styles.js');
+      const controller = read('assets/js/back-to-top.js');
+      const css = read('assets/css/reading-controls.css');
+      return /assets\/css\/reading-controls\.css/.test(read('index.html'))
+        && /assets\/js\/back-to-top\.js/.test(read('index.html'))
+        && /mode === 'html' \? getStylesheet\(READING_CONTROLS_HREF\) : ''/.test(helper)
+        && /MarkTideCreateBackToTopController\.toString\(\)/.test(read('assets/js/import-export.js'))
+        && /doc\.body\.appendChild\(button\)/.test(controller)
+        && /prefers-reduced-motion: reduce/.test(controller)
+        && /@media print[\s\S]*display: none !important/.test(css)
+        && !/BackToTop|back-to-top|reading-controls/.test(read('assets/js/print-handler.js'))
+        && !/back-to-top/.test(read('assets/css/markdown-content.css'));
     },
   },
   {

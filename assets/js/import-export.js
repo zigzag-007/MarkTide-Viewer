@@ -124,6 +124,21 @@ function marktideExportTableScrollScript() {
   `;
 }
 
+function marktideExportBackToTopScript() {
+  if (typeof window.MarkTideCreateBackToTopController !== 'function') {
+    throw new Error('Shared Back to top controller is required for HTML export.');
+  }
+
+  return `
+    window.MarkTideCreateBackToTopController = ${window.MarkTideCreateBackToTopController.toString()};
+    window.MarkTideBackToTop = window.MarkTideCreateBackToTopController(window, {
+      rootSelector: '.markdown-body',
+      pageScroll: true
+    });
+    window.MarkTideBackToTop.init();
+  `;
+}
+
 function marktideExportMathJaxConfigScript() {
   return marktideRequireMathJax().getConfigScript();
 }
@@ -726,9 +741,11 @@ class ImportExportManager {
     <style>${minifiedStyles}</style>
 </head>
 <body class="marktide-html-document">
+    <main class="marktide-html-reading-area">
     <article class="markdown-body">
         ${renderedHtml}
     </article>
+    </main>
     
     ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>
@@ -743,6 +760,7 @@ class ImportExportManager {
     <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
     <script>${this.minifyJS(marktideExportTableScrollScript())}</script>
+    <script>${this.minifyJS(marktideExportBackToTopScript())}</script>
 </body>
 </html>`;
     

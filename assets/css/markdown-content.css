@@ -190,7 +190,7 @@
   /* Screen documents respond to their reading area, including split Preview. */
   @media screen {
     .preview-pane,
-    body.marktide-html-document {
+    .marktide-html-reading-area {
       container: marktide-document / inline-size;
     }
 
