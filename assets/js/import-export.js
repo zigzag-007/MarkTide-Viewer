@@ -345,7 +345,10 @@ class ImportExportManager {
     if (exportHtml) {
       exportHtml.addEventListener("click", () => {
         this.closeMobileMenu();
-        this.exportAsHTML();
+        this.exportAsHTML().catch(error => {
+          console.error('HTML export failed:', error);
+          window.MarkTideSoftBreaks?.showNotification('HTML export failed. Please reload and try again.');
+        });
       });
     }
     if (exportTxt) {
@@ -371,7 +374,10 @@ class ImportExportManager {
     if (mobileExportHtml) {
       mobileExportHtml.addEventListener("click", () => {
         this.closeMobileMenu();
-        this.exportAsHTML();
+        this.exportAsHTML().catch(error => {
+          console.error('HTML export failed:', error);
+          window.MarkTideSoftBreaks?.showNotification('HTML export failed. Please reload and try again.');
+        });
       });
     }
     if (mobileExportTxt) {
@@ -684,8 +690,9 @@ class ImportExportManager {
     URL.revokeObjectURL(url);
   }
 
-  exportAsHTML() {
-    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+  async exportAsHTML() {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer
+      || !window.MarkTideImageViewerAssets) {
       throw new Error('Shared Markdown rendering pipeline is required for HTML export.');
     }
 
@@ -699,6 +706,7 @@ class ImportExportManager {
     // Use the enhanced renderer for HTML export
     const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer });
     const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'html' });
+    const images = await window.MarkTideImageViewerAssets.prepareExport(renderedHtml);
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -743,9 +751,10 @@ class ImportExportManager {
 <body class="marktide-html-document">
     <main class="marktide-html-reading-area">
     <article class="markdown-body">
-        ${renderedHtml}
+        ${images.html}
     </article>
     </main>
+    ${images.script}
     
     ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>

@@ -75,6 +75,8 @@
     const contentStyles = getContentStyles();
     const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
     const readingControlStyles = mode === 'html' ? getStylesheet(READING_CONTROLS_HREF) : '';
+    const imageViewerStyles = mode === 'html'
+      ? getStylesheet('assets/vendor/photoswipe/photoswipe.css') + '\n' + getStylesheet('assets/css/image-viewer.css') : '';
 
     return `
       html,
@@ -98,6 +100,8 @@
       ${mermaidToolbarStyles}
 
       ${readingControlStyles}
+
+      ${imageViewerStyles}
 
       .markdown-body {
         max-width: ${maxWidth} !important;
