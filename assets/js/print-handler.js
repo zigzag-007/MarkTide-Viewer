@@ -204,6 +204,21 @@ class PrintHandler {
         });
       });
     });
+    document.querySelectorAll('table.marktide-print-content-table').forEach((table) => {
+      const oldEdge = table.querySelector('tfoot.marktide-print-fragment-edge');
+      if (oldEdge) oldEdge.remove();
+      // A repeating empty footer closes split edges without moving body rows.
+      const hasTallRow = Array.from(table.tBodies).some((body) =>
+        Array.from(body.rows).some((row) => row.getBoundingClientRect().height > 240));
+      const columns = Array.from(table.classList)
+        .map((name) => name.match(/^marktide-print-cols-(\d+)$/))
+        .find(Boolean);
+      if (!hasTallRow || table.tFoot || !columns) return;
+      const edge = table.createTFoot();
+      edge.className = 'marktide-print-fragment-edge';
+      edge.setAttribute('aria-hidden', 'true');
+      edge.insertRow().insertCell().colSpan = Number(columns[1]);
+    });
   }
 
   getMermaidFactory() {

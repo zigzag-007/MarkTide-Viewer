@@ -296,6 +296,19 @@
         break-inside: avoid;
         page-break-inside: avoid;
       }
+
+      /* Close each tall table fragment, leaving row splitting unchanged. */
+      .markdown-body table tfoot.marktide-print-fragment-edge {
+        display: table-footer-group;
+        break-inside: avoid;
+      }
+
+      .markdown-body table tfoot.marktide-print-fragment-edge td {
+        padding: 0 !important;
+        height: 0;
+        border: 0;
+        border-top: 1px solid var(--markdown-table-border, var(--markdown-border-color));
+      }
       }
     `;
   }
