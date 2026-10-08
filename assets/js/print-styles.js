@@ -332,17 +332,29 @@
         page-break-inside: avoid;
       }
 
-      /* Close each tall table fragment, leaving row splitting unchanged. */
-      .markdown-body table tfoot.marktide-print-fragment-edge {
-        display: table-footer-group;
-        break-inside: avoid;
+      /* Reserve cut space without adding padding inside ordinary cells. */
+      .markdown-body .marktide-print-fragment-edge {
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        padding-bottom: 7px;
       }
 
-      .markdown-body table tfoot.marktide-print-fragment-edge td {
-        padding: 0 !important;
-        height: 0;
-        border: 0;
-        border-top: 1px solid var(--markdown-table-border, var(--markdown-border-color));
+      .markdown-body .marktide-print-fragment-edge > table {
+        margin-bottom: -7px !important;
+      }
+
+      .markdown-body .marktide-print-fragment-edge > table > tbody {
+        /* Row groups end at their content, unlike a page filling outer frame. */
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        outline: 1px solid var(--marktide-print-fragment-border, var(--markdown-table-border, var(--markdown-border-color)));
+        outline-offset: -1px;
+      }
+
+      /* Allow a partial row when the cut has room for one readable line. */
+      .markdown-body .marktide-print-fragment-edge > table > tbody > tr > :is(td, th) {
+        orphans: 1;
+        widows: 1;
       }
       }
     `;

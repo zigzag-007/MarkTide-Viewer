@@ -204,20 +204,27 @@ class PrintHandler {
         });
       });
     });
-    document.querySelectorAll('table.marktide-print-content-table').forEach((table) => {
-      const oldEdge = table.querySelector('tfoot.marktide-print-fragment-edge');
-      if (oldEdge) oldEdge.remove();
-      // A repeating empty footer closes split edges without moving body rows.
-      const hasTallRow = Array.from(table.tBodies).some((body) =>
-        Array.from(body.rows).some((row) => row.getBoundingClientRect().height > 240));
-      const columns = Array.from(table.classList)
-        .map((name) => name.match(/^marktide-print-cols-(\d+)$/))
-        .find(Boolean);
-      if (!hasTallRow || table.tFoot || !columns) return;
-      const edge = table.createTFoot();
+    document.querySelectorAll('.markdown-body table').forEach((table) => {
+      // Border painting must not depend on column sizing or row height.
+      if (table.parentElement.classList.contains('marktide-print-fragment-edge')) return;
+      let borderColor = null;
+      Array.from(table.rows).some((row) => Array.from(row.cells).some((cell) => {
+        const style = getComputedStyle(cell);
+        return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+          const color = style[`border${side}Color`];
+          if (parseFloat(style[`border${side}Width`]) <= 0
+            || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return false;
+          borderColor = color;
+          return true;
+        });
+      }));
+      if (!borderColor) return;
+      const edge = document.createElement('div');
       edge.className = 'marktide-print-fragment-edge';
-      edge.setAttribute('aria-hidden', 'true');
-      edge.insertRow().insertCell().colSpan = Number(columns[1]);
+      edge.style.marginBottom = getComputedStyle(table).marginBottom;
+      edge.style.setProperty('--marktide-print-fragment-border', borderColor);
+      table.before(edge);
+      edge.appendChild(table);
     });
   }
 
