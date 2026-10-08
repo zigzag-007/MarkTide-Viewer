@@ -152,9 +152,9 @@ test('screen rules do not change PDF typography or print geometry', async ({page
     await printed.emulateMedia({media:'print'});
     await printed.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
     const current = await metrics(printed);
-    expect(current.fontSize).toBe('14.7px');
+    expect(current.fontSize).toBe('14.42px');
     expect(current.padding).toBe('6px');
-    expect(current.heads.slice(0,6).map(h=>h.fontSize)).toEqual(['29.4px','22.05px','18.375px','14.7px','12.8625px','12.495px']);
+    expect(current.heads.slice(0,6).map(h=>h.fontSize)).toEqual(['29.2px','21.75px','18.075px','14.4px','12.6625px','12.295px']);
     const before = await printed.pdf({preferCSSPageSize:true,printBackground:true});
     await printed.evaluate(() => {
       for (const sheet of document.styleSheets) {

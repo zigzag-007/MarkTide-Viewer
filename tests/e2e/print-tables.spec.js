@@ -65,7 +65,10 @@ test('Appendix B gets readable columns and complete D3 rows in a searchable PDF'
     });
     const wrapping = await printPage.locator('tbody tr').evaluateAll(measureWrapping);
     const previousStyle = await printPage.addStyleTag({ content: `
-      .markdown-body table.marktide-print-content-table { font-size: 85% !important; }
+      .markdown-body table.marktide-print-content-table {
+        --marktide-print-reference-font-size: 0.8925rem;
+        font-size: 0.8925rem !important;
+      }
       .markdown-body table.marktide-print-content-table th,
       .markdown-body table.marktide-print-content-table td { padding: 3px !important; }
     ` });
@@ -79,7 +82,10 @@ test('Appendix B gets readable columns and complete D3 rows in a searchable PDF'
       }
     });
     const baselineStyle = await printPage.addStyleTag({ content: `
-      .markdown-body table.marktide-print-content-table { font-size: 85% !important; }
+      .markdown-body table.marktide-print-content-table {
+        --marktide-print-reference-font-size: 0.8925rem;
+        font-size: 0.8925rem !important;
+      }
       .markdown-body table.marktide-print-content-table th,
       .markdown-body table.marktide-print-content-table td { padding: 4px 5px !important; }
     ` });

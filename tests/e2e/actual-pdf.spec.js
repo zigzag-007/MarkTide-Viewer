@@ -38,8 +38,7 @@ async function generatePreparedPdf({ page, context, baseURL }) {
     await pdfPage.setContent(`<!DOCTYPE html>${documentHtml}`, { waitUntil: 'load' });
     await pdfPage.evaluate(() => document.fonts.ready);
     const pdf = await pdfPage.pdf({
-      format: 'A4',
-      margin: { bottom: '0.38in', left: '0.38in', right: '0.38in', top: '0.55in' },
+      preferCSSPageSize: true,
       printBackground: true,
     });
 

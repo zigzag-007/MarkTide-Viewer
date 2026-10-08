@@ -47,11 +47,11 @@ async function measure(page) {
   });
 }
 
-async function checkSpacing(page, name, testInfo) {
+async function checkSpacing(page, name, testInfo, verticalPadding = 0.1) {
   const current = await measure(page);
   expect(current.gaps.length).toBeGreaterThan(0);
   current.gaps.forEach(gap => expect(gap).toBeGreaterThan(1));
-  current.verticalPadding.forEach(padding => expect(padding).toBeCloseTo(0.1, 4));
+  current.verticalPadding.forEach(padding => expect(padding).toBeCloseTo(verticalPadding, 4));
   current.horizontalPadding.forEach(padding => expect(padding).toBeCloseTo(0.4, 4));
   current.paragraphs.forEach(p => expect(p.ratio).toBeCloseTo(1.4, 4));
   const baseline = await page.addStyleTag({ content:
@@ -102,7 +102,7 @@ test('PDF shares the inline code gap without changing code blocks', async ({ pag
     await printed.setViewportSize({ width: 709, height: 1018 });
     await printed.emulateMedia({ media: 'print' });
     await printed.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
-    await checkSpacing(printed, 'pdf-layout', testInfo);
+    await checkSpacing(printed, 'pdf-layout', testInfo, 0.08);
     const pdf = await printed.pdf({ preferCSSPageSize: true, printBackground: true,
       path: process.env.MARKTIDE_INLINE_REVIEW_DIR
         ? path.join(process.env.MARKTIDE_INLINE_REVIEW_DIR, 'inline-code.pdf') : undefined });

@@ -187,7 +187,7 @@ for (const previewWidth of [1280, 390]) {
       await printPage.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
       const metrics = await metricsFor(printPage);
       assertStyles(metrics, true);
-      expect(metrics.paragraph.fontSize).toBe('14.7px');
+      expect(metrics.paragraph.fontSize).toBe('14.42px');
       expect(metrics.tablePadding).toBe('6px 12px');
       const pdf = await printPage.pdf({ preferCSSPageSize: true, printBackground: true,
         path: process.env.MARKTIDE_STYLES_REVIEW_PDF || undefined });

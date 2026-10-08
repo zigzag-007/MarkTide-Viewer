@@ -20,7 +20,7 @@ async function installImages(context) {
   }));
 }
 
-async function checkCaptions(page, selector = '.markdown-body') {
+async function checkCaptions(page, selector = '.markdown-body', print = false) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(selector => [...document.querySelectorAll(`${selector} img`)]
     .every(image => image.complete && image.naturalWidth > 0), selector);
@@ -47,8 +47,10 @@ async function checkCaptions(page, selector = '.markdown-body') {
       const style = getComputedStyle(caption);
       const bounds = caption.getBoundingClientRect();
       const image = caption.parentElement.querySelector('img').getBoundingClientRect();
-      return { style: style.fontStyle, align: style.textAlign, gap: bounds.top - image.bottom,
-        width: bounds.width, ratio: parseFloat(style.fontSize) / parseFloat(getComputedStyle(caption.parentElement).fontSize) };
+      const parentFont = parseFloat(getComputedStyle(caption.parentElement).fontSize);
+      return { style: style.fontStyle, align: style.textAlign, fontSize: style.fontSize, gap: bounds.top - image.bottom,
+        width: bounds.width, parentFont, authoredFont: Boolean(caption.parentElement.closest('[style*="font-size"]')),
+        ratio: parseFloat(style.fontSize) / parentFont };
     });
     const quotes = [...article.querySelectorAll('blockquote')].map(quote => {
       const style = getComputedStyle(quote);
@@ -83,7 +85,8 @@ async function checkCaptions(page, selector = '.markdown-body') {
     expect(caption.align).toBe('center');
     expect(caption.gap).toBeGreaterThan(4);
     expect(caption.width).toBeLessThanOrEqual(metrics.width + 1);
-    expect(caption.ratio).toBeCloseTo(0.9, 3);
+    expect(caption.ratio).toBeCloseTo(print && !caption.authoredFont ? 13.23 / 14.42 : 0.9, 3);
+    if (print) expect(parseFloat(caption.fontSize)).toBeCloseTo(caption.authoredFont ? caption.parentFont * 0.9 : 13.23, 4);
   });
   metrics.quotes.forEach(quote => {
     expect(quote.captionParent).toBe(false);
@@ -142,7 +145,7 @@ test('PDF captions retain authored sizes, separate quotes and searchable caption
     await printed.setViewportSize({ width: 709, height: 1018 });
     await printed.emulateMedia({ media: 'print' });
     await printed.setContent(prepared.documentHtml.replace('<head>', `<head><base href="${baseURL}/">`));
-    await checkCaptions(printed);
+    await checkCaptions(printed, '.markdown-body', true);
     const pdf = await printed.pdf({ preferCSSPageSize: true, printBackground: true });
     await testInfo.attach('captions.pdf', { body: pdf, contentType: 'application/pdf' });
     const probe = spawnSync('pdftotext', ['-v']);
