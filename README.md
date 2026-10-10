@@ -1,14 +1,16 @@
 # MarkTide
 
-## The Ultimate Free Online Markdown Editor & Converter
+## Markdown editor and converter
+
+v1.8.1 is part of a progressive release rollout of previously completed work. Release history and publication dates belong in [GitHub Releases](https://github.com/zigzag-007/MarkTide-Viewer/releases).
 
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-Visit%20Site-4CAF50?style=for-the-badge)](https://marktide.netlify.app/)
 [![GitHub Stars](https://img.shields.io/github/stars/zigzag-007/MarkTide-Viewer?style=for-the-badge&logo=github&color=yellow)](https://github.com/zigzag-007/MarkTide-Viewer/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](https://github.com/zigzag-007/MarkTide-Viewer/blob/main/LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
 [![No Registration](https://img.shields.io/badge/No%20Registration-Required-orange?style=for-the-badge)](https://marktide.netlify.app/)
 [![Free Forever](https://img.shields.io/badge/Free-Forever-brightgreen?style=for-the-badge)](https://marktide.netlify.app/)
 
-**Write. Preview. Export. All in your browser. No login. No cost. No limits.**
+**Write. Preview. Export. All in your browser. No login. No cost.**
 
 [🚀 Launch MarkTide](https://marktide.netlify.app/) | [🐛 Report Bug](https://github.com/zigzag-007/MarkTide-Viewer/issues) | [💡 Request Feature](https://github.com/zigzag-007/MarkTide-Viewer/issues)
 
@@ -24,7 +26,7 @@
 
 ## ✨ What is MarkTide?
 
-MarkTide is a **powerful, privacy-first Markdown editor** that runs entirely in your browser. No downloads, no accounts, no tracking. Whether you're a developer writing docs, a student drafting notes, or a writer crafting content, MarkTide gives you a clean, fast, and beautiful editing experience with one-click export to PDF, HTML, or plain text.
+MarkTide is a Markdown editor that processes documents in your browser, without an account or a hosted document conversion service. Write Markdown, see a live preview, and export to PDF, HTML, or plain text. The main app loads pinned libraries and fonts from CDNs. Remote document images and some resources in exported HTML can still make network requests.
 
 ---
 
@@ -42,22 +44,22 @@ MarkTide is a **powerful, privacy-first Markdown editor** that runs entirely in 
 
 - **Monaco-powered** editor (same engine as VS Code)
 - Real-time live preview with scroll sync
-- Syntax highlighting for **190+ languages**
+- Syntax highlighting with Highlight.js and included language modules
 - Drag & drop `.md` file support
 - Formatting toolbar: bold, italic, code, lists, and more
 
 ### 🔄 Export & Conversion
 
-- **Markdown to PDF** - clean, print-ready output
+- **Markdown to PDF** - browser print dialog with Save as PDF
 - **Markdown to HTML** - web-ready with styles
 - **Markdown to Plain Text** - stripped for any use
-- Full **GitHub Flavored Markdown (GFM)** support
+- GitHub Flavored Markdown tables, task lists, and fenced code, plus selected extensions
 
 ### 🎨 Experience & Design
 
 - Beautiful **dark & light themes** with smooth radial transitions
 - **Split-screen** editor and preview layout
-- Fully **responsive** - works on mobile, tablet, and desktop
+- Responsive editor layout for narrow and wide screens
 - Keyboard shortcuts for power users
 
 ### 🚀 Advanced Capabilities
@@ -67,6 +69,15 @@ MarkTide is a **powerful, privacy-first Markdown editor** that runs entirely in 
 - ✅ Task lists, tables, and fenced code blocks
 - 😊 Emoji support
 - 🖨️ Print-friendly layouts
+- Highlighted text (`==text==`) and abbreviation definitions
+
+### Export behaviour and limits
+
+PDF export prepares a separate print document and opens the browser print dialog. Choose Save as PDF there. It prepares document and diagram styles plus print rules for wrapping and pagination. The suggested filename comes from the document title; the browser controls the final save name. Page breaks can change with fonts, content, and print settings. Fully dark PDF pages are not an accepted feature.
+
+HTML export includes document styles and code/diagram controls. Fonts, MathJax, Mermaid and some other resources still use pinned CDN links, so exported HTML is not fully offline. Remote document images may need a network connection. Hard reload before creating a fresh export after JavaScript changes; existing exports retain their original code.
+
+Known issue: an unclosed raw HTML `<Title>` placeholder in a heading can consume the following document content. This was reproduced in Preview, and a fresh HTML export contained the later markup inside a body `title` element. Its handling remains under review; PDF behaviour has not been checked for this reproduction.
 
 ---
 
@@ -84,22 +95,6 @@ https://marktide.netlify.app/
 
 ---
 
-## 🏆 How MarkTide Compares
-
-| Feature                       | MarkTide |      Other Tools       |
-| :---------------------------- | :------: | :--------------------: |
-| Free Forever                  |    ✅    |     ❌ Most charge     |
-| No Registration               |    ✅    | ❌ Most require signup |
-| Privacy Focused (no tracking) |    ✅    |  ❌ Most track users   |
-| Open Source                   |    ✅    |   ❌ Most are closed   |
-| PDF Export                    |    ✅    |        ✅ Some         |
-| Real-time Preview             |    ✅    |        ✅ Some         |
-| Mobile Friendly               |    ✅    | ❌ Mostly desktop only |
-| Mermaid Diagrams              |    ✅    |       ❌ Rarely        |
-| LaTeX Math Support            |    ✅    |       ❌ Rarely        |
-
----
-
 ## 🛠️ Technology Stack
 
 | Layer               | Technology                                                  |
@@ -108,7 +103,7 @@ https://marktide.netlify.app/
 | Editor Engine       | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
 | Markdown Processing | [Marked.js](https://marked.js.org/)                         |
 | Syntax Highlighting | [Highlight.js](https://highlightjs.org/)                    |
-| PDF Generation      | [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/)     |
+| PDF Export          | Browser printing through `PrintHandler.printPreview()`   |
 | Math Rendering      | [MathJax](https://www.mathjax.org/)                         |
 | Diagrams            | [Mermaid.js](https://mermaid.js.org/)                       |
 | Theme Transitions   | View Transitions API + ripple fallback                      |
@@ -124,19 +119,19 @@ git clone https://github.com/zigzag-007/MarkTide-Viewer.git
 # 2. Navigate to the project folder
 cd MarkTide-Viewer
 
-# 3. Open in browser (or use a live server extension)
-open index.html
+# 3. Serve the static project, no build step needed
+python3 -m http.server 5173
 ```
 
-> 💡 **Tip:** For the best development experience, use the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code.
+Open `http://localhost:5173/` in your browser. A static server is recommended instead of opening `index.html` as a local file.
+
+Application code lives in `index.html`, `assets/js` and `assets/css`. This stage uses pinned CDN libraries. PDF document preparation and print styles live in `assets/js/print-handler.js`.
 
 ---
 
 ## 📱 Browser Support
 
-|     Chrome     | Firefox | Safari | Edge | Mobile |
-| :------------: | :-----: | :----: | :--: | :----: |
-| ✅ Recommended |   ✅    |   ✅   |  ✅  |   ✅   |
+Candidate browser checks target Chromium. Firefox, Safari, Edge, and actual mobile device behaviour need separate verification; this README does not claim a tested browser matrix.
 
 ---
 
@@ -147,16 +142,18 @@ Contributions, bug reports, and feature requests are all welcome!
 1. **Fork** the repository
 2. **Create** a feature branch → `git checkout -b feature/YourFeature`
 3. **Commit** your changes → `git commit -m 'Add YourFeature'`
-4. **Push** to the branch → `git push origin feature/YourFeature`
+4. **Push to your fork** → `git push origin feature/YourFeature`
 5. **Open** a Pull Request
 
 Please check the [open issues](https://github.com/zigzag-007/MarkTide-Viewer/issues) before submitting new ones.
+
+For work in the maintainer checkout, follow its local project rules: use `dev` for implementation unless another branch is requested, keep feature branches local, and commit or push only when approved. The upstream remote is kept to `main` and `dev`. Release history belongs in Git tags and GitHub Releases, not a separate changelog file.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](https://github.com/zigzag-007/MarkTide-Viewer/blob/main/LICENSE) file for details.
+This project is licensed under **Apache License 2.0**. See [LICENSE](LICENSE) for the terms. Third party dependencies retain their separate licenses.
 
 ---
 

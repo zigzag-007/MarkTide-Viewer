@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.0';
+  const CURRENT_VERSION = 'v1.8.1';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'Cleaner PDF tables with smarter wrapping and spacing.',
-    headline: 'Better PDF table exports',
+    tagline: 'A progressive rollout of completed improvements, validated for this release.',
+    headline: 'More reliable Markdown and diagrams',
     highlights: [
       {
-        icon: 'bi-table',
-        title: 'Readable table columns',
-        text: 'PDF export now protects short table columns from being crushed when another column contains long descriptive text.'
+        icon: 'bi-currency-dollar',
+        title: 'Readable currency and text',
+        text: 'Financial prose stays readable, with highlights and abbreviation definitions supported.'
       },
       {
-        icon: 'bi-link-45deg',
-        title: 'Long values wrap cleanly',
-        text: 'URLs, file paths, hashes, and long tokens now gain safe wrap points so tables can stay readable without manual line breaks.'
+        icon: 'bi-code-slash',
+        title: 'Better code exports',
+        text: 'Code syntax colours are preserved and long code blocks can continue across PDF pages.'
+      },
+      {
+        icon: 'bi-diagram-3',
+        title: 'Useful diagram controls',
+        text: 'Mermaid diagrams have shared preview, copy and image download controls.'
       },
       {
         icon: 'bi-file-earmark-pdf',
-        title: 'Smoother PDF pagination',
-        text: 'Large tables can now continue across PDF pages without creating unnecessary blank sheets.'
-      },
-      {
-        icon: 'bi-arrows-angle-contract',
-        title: 'Tighter page margins',
-        text: 'PDF exports use slightly smaller page margins to give documents more usable space while keeping a clean printable layout.'
+        title: 'Clearer diagram labels',
+        text: 'PDF diagrams preserve readable edge label backgrounds and safer rendering.'
       }
     ]
   };
