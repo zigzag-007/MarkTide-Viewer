@@ -239,6 +239,7 @@ function createHtmlExportHarness() {
   context.window.MarkTideCreateCodeWrapController = function createCodeWrapController() {};
   context.window.MarkTideCreateTableScrollController = function createTableScrollController() {};
   context.window.MarkTideCreateBackToTopController = function createBackToTopController() {};
+  context.window.MarkTideCreateOutlineController = function createOutlineController() {};
   context.window.MarkTideImageViewerAssets = {
     async prepareExport(html) { return { html, script: '' }; },
   };

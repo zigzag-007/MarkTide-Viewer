@@ -166,6 +166,13 @@ test('report prose columns stay readable without changing small tables', async (
       for (const surface of [page, exported]) {
         await surface.setViewportSize({ width, height: 900 });
         await surface.evaluate(() => document.fonts.ready);
+        await surface.evaluate(async () => {
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          await Promise.all(document.getAnimations()
+            .filter(animation => Number.isFinite(animation.effect.getTiming().iterations))
+            .map(animation => animation.finished.catch(() => {})));
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        });
         const sizes = await surface.locator('.marktide-table-scroll').evaluateAll(wrappers =>
           wrappers.map(wrapper => {
             const table = wrapper.querySelector('table');

@@ -714,6 +714,7 @@ class MarkdownRenderer {
         if (window.MarkTideCodeWrap) {
           window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
         }
+        if (window.MarkTideOutline) window.MarkTideOutline.refresh();
         return true;
       });
 

@@ -75,6 +75,7 @@
     const contentStyles = getContentStyles();
     const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
     const readingControlStyles = mode === 'html' ? getStylesheet(READING_CONTROLS_HREF) : '';
+    const outlineStyles = mode === 'html' ? getStylesheet('assets/css/document-outline.css') : '';
     const imageViewerStyles = mode === 'html'
       ? getStylesheet('assets/vendor/photoswipe/photoswipe.css') + '\n' + getStylesheet('assets/css/image-viewer.css') : '';
 
@@ -100,6 +101,7 @@
       ${mermaidToolbarStyles}
 
       ${readingControlStyles}
+      ${outlineStyles}
 
       ${imageViewerStyles}
 

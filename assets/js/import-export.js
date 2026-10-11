@@ -143,6 +143,19 @@ function marktideExportMathJaxConfigScript() {
   return marktideRequireMathJax().getConfigScript();
 }
 
+function marktideExportOutlineScript() {
+  if (typeof window.MarkTideCreateOutlineController !== 'function') {
+    throw new Error('Shared heading navigation is required for HTML export.');
+  }
+  return `
+    window.MarkTideCreateOutlineController = ${window.MarkTideCreateOutlineController.toString()};
+    window.MarkTideOutline = window.MarkTideCreateOutlineController(window, {
+      rootSelector: '.markdown-body', pageScroll: true
+    });
+    window.MarkTideOutline.init();
+  `;
+}
+
 class ImportExportManager {
   constructor() {
     this.fileInput = null;
@@ -160,7 +173,7 @@ class ImportExportManager {
       // Remove excess whitespace and newlines
       .replace(/\s+/g, ' ')
       // Remove spaces around certain characters
-      .replace(/\s*([{}:;,>+~])\s*/g, '$1')
+      .replace(/\s*([{}:;,>~])\s*/g, '$1')
       // Remove trailing semicolons before closing braces
       .replace(/;}/g, '}')
       // Remove leading/trailing whitespace
@@ -770,6 +783,7 @@ class ImportExportManager {
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
     <script>${this.minifyJS(marktideExportTableScrollScript())}</script>
     <script>${this.minifyJS(marktideExportBackToTopScript())}</script>
+    <script>${this.minifyJS(marktideExportOutlineScript())}</script>
 </body>
 </html>`;
     
