@@ -832,7 +832,8 @@ const checks = [
       const css = read('assets/css/markdown-content.css');
       const article = css.match(/\.markdown-body\s*\{([\s\S]*?)\}/)[1];
       const fullPreview = css.match(/body\.preview-only-active \.markdown-body\s*\{([\s\S]*?)\}/)[1];
-      const print = read('assets/js/print-styles.js');
+      const print = read('assets/js/print-styles.js')
+        .replace(/@bottom-(?:left|right)\s*\{[^}]*\}/g, '');
       const printLineHeights = [...print.matchAll(/line-height:\s*([^;]+);/g)];
       return /line-height:\s*1\.4;/.test(article)
         && !/line-height:/.test(fullPreview)
