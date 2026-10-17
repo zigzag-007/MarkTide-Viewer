@@ -12,6 +12,8 @@
     "test:logic": "node --test logic/*.test.js",
     "test:browser": "playwright test",
     "test:preview": "playwright test e2e/preview.spec.js",
+    "test:corpus": "node run-playwright.js e2e/fixture-preview.spec.js",
+    "test:reports": "node run-playwright.js e2e/reported-bugs.spec.js",
     "test:exports": "playwright test e2e/html-export.spec.js e2e/pdf-export.spec.js e2e/actual-pdf.spec.js e2e/mermaid-png.spec.js e2e/mermaid-exports.spec.js",
     "test:full": "npm run test:logic && playwright test",
     "test:cdn": "node run-playwright.js --cdn e2e/cdn-health.spec.js",

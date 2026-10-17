@@ -3,17 +3,18 @@ const { defineConfig, devices } = require('playwright/test');
 
 const port = Number(process.env.MARKTIDE_TEST_PORT || 4173);
 const browserExecutable = process.env.MARKTIDE_BROWSER_EXECUTABLE;
+const artifactRoot = process.env.MARKTIDE_TEST_ARTIFACT_DIR || __dirname;
 
 module.exports = defineConfig({
   testDir: path.resolve(__dirname, 'e2e'),
-  outputDir: path.resolve(__dirname, 'test-results'),
+  outputDir: path.resolve(artifactRoot, 'test-results'),
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ['list'],
-    ['html', { open: 'never', outputFolder: path.resolve(__dirname, 'playwright-report') }],
+    ['html', { open: 'never', outputFolder: path.resolve(artifactRoot, 'playwright-report') }],
   ],
   use: {
     baseURL: `http://127.0.0.1:${port}`,
@@ -24,7 +25,7 @@ module.exports = defineConfig({
         {
           origin: `http://127.0.0.1:${port}`,
           localStorage: [
-            { name: 'marktide-whats-new-dismissed', value: 'v1.8.0' },
+            { name: 'marktide-whats-new-dismissed', value: 'v1.8.2' },
           ],
         },
       ],

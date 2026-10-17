@@ -63,7 +63,12 @@ test('PNG conversion works for every Mermaid engine in the fixture', async ({ pa
       const svg = diagrams[diagramIndex];
       const clone = toolbar.prepareSvgClone(svg);
       const viewBox = clone.getAttribute('viewBox').split(/\s+/).map(Number);
-      const blob = await toolbar.svgToPngBlob(svg);
+      let blob;
+      try {
+        blob = await toolbar.svgToPngBlob(svg);
+      } catch (error) {
+        throw new Error(`PNG conversion failed for fixture diagram ${diagramIndex + 1}: ${error.message}`);
+      }
       await toolbar.ensurePngBlob(blob);
       const bitmap = await createImageBitmap(blob);
       outputs.push({

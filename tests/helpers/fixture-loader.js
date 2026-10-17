@@ -1,7 +1,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const fixturesDirectory = path.resolve(__dirname, '..', 'fixtures');
+const fixturesDirectory = process.env.MARKTIDE_FIXTURE_DIR
+  ? path.resolve(process.env.MARKTIDE_FIXTURE_DIR)
+  : path.resolve(__dirname, '..', 'fixtures');
 
 function loadFixture(filename) {
   return fs.readFileSync(path.join(fixturesDirectory, filename), 'utf8');

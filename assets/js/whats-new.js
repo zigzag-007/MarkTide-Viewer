@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.1';
+  const CURRENT_VERSION = 'v1.8.2';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'A progressive rollout of completed improvements, validated for this release.',
-    headline: 'More reliable Markdown and diagrams',
+    tagline: 'More consistent documents, clearer footnotes, and stronger exports.',
+    headline: 'Consistent reading and stronger exports',
     highlights: [
       {
-        icon: 'bi-currency-dollar',
-        title: 'Readable currency and text',
-        text: 'Financial prose stays readable, with highlights and abbreviation definitions supported.'
+        icon: 'bi-file-text',
+        title: 'Shared document rendering',
+        text: 'Preview, HTML and PDF use shared styles and rendering helpers.'
       },
       {
-        icon: 'bi-code-slash',
-        title: 'Better code exports',
-        text: 'Code syntax colours are preserved and long code blocks can continue across PDF pages.'
+        icon: 'bi-superscript',
+        title: 'Math and footnotes',
+        text: 'Math edge cases and footnotes render more consistently across outputs.'
       },
       {
-        icon: 'bi-diagram-3',
-        title: 'Useful diagram controls',
-        text: 'Mermaid diagrams have shared preview, copy and image download controls.'
+        icon: 'bi-box-seam',
+        title: 'Bundled app libraries',
+        text: 'The main app uses bundled libraries and fonts. Exported HTML still needs some CDN resources.'
       },
       {
-        icon: 'bi-file-earmark-pdf',
-        title: 'Clearer diagram labels',
-        text: 'PDF diagrams preserve readable edge label backgrounds and safer rendering.'
+        icon: 'bi-table',
+        title: 'More readable PDF tables',
+        text: 'Crowded PDF tables balance columns and page breaks while keeping text searchable.'
       }
     ]
   };
