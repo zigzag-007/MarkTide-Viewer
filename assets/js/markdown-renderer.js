@@ -1,26 +1,5 @@
 // Markdown rendering and processing functionality
 
-/** Grok-style wrap (left staggered) / unwrap (centered staggered) icons for code block header */
-function marktideWrapButtonHtml() {
-  const wrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  const unwrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  return (
-    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines" data-marktide-tip="Wrap long lines">' +
-    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
-    wrapSvg +
-    "</span>" +
-    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
-    unwrapSvg +
-    "</span></button>"
-  );
-}
-
-function marktideEncodeMermaidSource(source) {
-  return encodeURIComponent(source || '');
-}
-
 class MarkdownRenderer {
   constructor() {
     this.markdownRenderTimeout = null;
@@ -30,6 +9,8 @@ class MarkdownRenderer {
     this.markdownPreview = null;
     this.renderer = null;
     this.initialized = false;
+    this.renderPipeline = Promise.resolve();
+    this.renderVersion = 0;
   }
 
   init() {
@@ -41,6 +22,10 @@ class MarkdownRenderer {
   }
 
   setupMarked() {
+    if (!window.MarkTideCodeBlockRenderer) {
+      throw new Error('Shared code block renderer is required for Markdown preview.');
+    }
+
     // Check if soft line breaks are enabled (default: true for user-friendliness)
     const softLineBreaks = localStorage.getItem('marktide-soft-breaks') !== 'false';
     
@@ -55,77 +40,49 @@ class MarkdownRenderer {
       mangle: false,
     };
 
-    this.renderer = new marked.Renderer();
-    this.renderer.code = function (code, language) {
-      if (language === 'mermaid') {
-        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container" data-mermaid-source="${marktideEncodeMermaidSource(code)}"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
-      }
-      
-      const displayLanguage = language || "text"; // Keep user's original language label
-      const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        const highlighted = window.MarktideCodeHighlight
-          ? window.MarktideCodeHighlight.highlight(code, language)
-          : {
-              language: hljs.getLanguage(language) ? language : "plaintext",
-              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
-            };
-        
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
-          </div>
-        `;
-      } catch (e) {
-        // Fallback to plain text if highlighting fails
-        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
-          </div>
-        `;
-      }
-    };
+    this.renderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: true,
+      includeMermaidSource: true,
+    });
 
     marked.setOptions({
       ...markedOptions,
       renderer: this.renderer,
-      highlight: function (code, language) {
-        if (language === 'mermaid') return code;
-
-        try {
-          return window.MarktideCodeHighlight
-            ? window.MarktideCodeHighlight.highlight(code, language).value
-            : hljs.highlight(code, {
-                language: hljs.getLanguage(language) ? language : "plaintext",
-                ignoreIllegals: true  // Prevent HTML injection
-              }).value;
-        } catch (e) {
-          // Fallback to escaped plain text
-          return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-      },
     });
+  }
+
+  createFenceState() {
+    return {
+      character: '',
+      length: 0,
+    };
+  }
+
+  consumeFencedLine(line, state) {
+    const openingMatch = String(line).match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+
+    if (!state.character) {
+      if (!openingMatch) return false;
+
+      const marker = openingMatch[1];
+      const info = openingMatch[2] || '';
+      if (marker[0] === '`' && info.includes('`')) return false;
+
+      state.character = marker[0];
+      state.length = marker.length;
+      return true;
+    }
+
+    const closingMatch = String(line).match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+    if (closingMatch) {
+      const marker = closingMatch[1];
+      if (marker[0] === state.character && marker.length >= state.length) {
+        state.character = '';
+        state.length = 0;
+      }
+    }
+
+    return true;
   }
 
   // Normalize Word-style list syntax to Markdown-compatible nested lists.
@@ -140,17 +97,10 @@ class MarkdownRenderer {
     const LIST_INDENT_SIZE = LIST_INDENT.length;
     const lines = markdownText.split('\n');
     const normalized = [];
-    let inFence = false;
+    const fenceState = this.createFenceState();
 
     for (let rawLine of lines) {
-      const fenceMatch = rawLine.match(/^\s*(```|~~~)/);
-      if (fenceMatch) {
-        inFence = !inFence;
-        normalized.push(rawLine);
-        continue;
-      }
-
-      if (inFence) {
+      if (this.consumeFencedLine(rawLine, fenceState)) {
         normalized.push(rawLine);
         continue;
       }
@@ -197,23 +147,120 @@ class MarkdownRenderer {
 
   prepareMarkdownExtensions(markdownText) {
     const abbreviations = [];
+    const footnotes = [];
+    const footnotePlaceholders = [];
     const markPlaceholders = [];
+    const displayMathPlaceholders = [];
     const mathPlaceholders = [];
     const lines = String(markdownText || '').split('\n');
     const output = [];
-    let inFence = false;
+    const fenceState = this.createFenceState();
+    let displayMathBlock = null;
+    let currentFootnote = null;
     const looksLikeInlineMath = (content) => {
-      return /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
+      return /^[A-Za-z]$/.test(content) || /\\[A-Za-z]+|[\^_{}=<>+\-*/()]|\b(?:O|Theta|Omega)\s*\(/.test(content);
+    };
+    const finishFootnote = () => {
+      if (!currentFootnote) return;
+
+      while (currentFootnote.lines.length && currentFootnote.lines[currentFootnote.lines.length - 1] === '') {
+        currentFootnote.lines.pop();
+      }
+
+      footnotes.push(currentFootnote);
+      currentFootnote = null;
+    };
+    const normalizeFootnoteContinuation = (line) => {
+      if (line.startsWith('    ')) return line.slice(4);
+      if (line.startsWith('\t')) return line.slice(1);
+      return line;
     };
 
     lines.forEach((line) => {
-      if (/^\s*(```|~~~)/.test(line)) {
-        inFence = !inFence;
+      if (currentFootnote) {
+        const nextFootnoteMatch = line.match(/^\[\^([^\]\s]+)\]:\s*(.*)$/);
+        if (nextFootnoteMatch) {
+          finishFootnote();
+          currentFootnote = {
+            label: nextFootnoteMatch[1],
+            lines: [nextFootnoteMatch[2] || '']
+          };
+          return;
+        }
+
+        if (/^(?: {4}|\t)/.test(line)) {
+          currentFootnote.lines.push(normalizeFootnoteContinuation(line));
+          return;
+        }
+
+        if (/^\s*$/.test(line)) {
+          currentFootnote.lines.push('');
+          return;
+        }
+
+        finishFootnote();
+      }
+
+      if (this.consumeFencedLine(line, fenceState)) {
         output.push(line);
         return;
       }
 
-      if (!inFence) {
+      if (!fenceState.character) {
+        if (displayMathBlock) {
+          displayMathBlock.lines.push(line);
+
+          if (line.trim() === displayMathBlock.close) {
+            const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+            displayMathPlaceholders.push(displayMathBlock.lines.join('\n'));
+            output.push(token);
+            displayMathBlock = null;
+          }
+
+          return;
+        }
+
+        const displayMathOpen = line.trim();
+        if (
+          displayMathOpen.length > 4 &&
+          displayMathOpen.startsWith('$$') &&
+          displayMathOpen.endsWith('$$')
+        ) {
+          const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+          displayMathPlaceholders.push(line);
+          output.push(token);
+          return;
+        }
+
+        if (
+          displayMathOpen.length > 4 &&
+          displayMathOpen.startsWith('\\[') &&
+          displayMathOpen.endsWith('\\]')
+        ) {
+          const token = `@@MARKTIDE_DISPLAY_MATH_${displayMathPlaceholders.length}@@`;
+          displayMathPlaceholders.push(line);
+          output.push(token);
+          return;
+        }
+
+        if (displayMathOpen === '$$' || displayMathOpen === '\\[') {
+          displayMathBlock = {
+            close: displayMathOpen === '$$' ? '$$' : '\\]',
+            lines: [line]
+          };
+          return;
+        }
+
+        const footnoteDefinitionMatch = line.match(/^\[\^([^\]\s]+)\]:\s*(.*)$/);
+        if (footnoteDefinitionMatch) {
+          finishFootnote();
+          currentFootnote = {
+            label: footnoteDefinitionMatch[1],
+            lines: [footnoteDefinitionMatch[2] || '']
+          };
+          return;
+        }
+
         const abbreviationMatch = line.match(/^\s*\*\[([^\]]+)\]:\s+(.+?)\s*$/);
         if (abbreviationMatch) {
           abbreviations.push({
@@ -229,7 +276,13 @@ class MarkdownRenderer {
           return `${prefix}${token}`;
         });
 
-        line = line.replace(/(^|[^\w\\])\$([^\s$][^$\n]*?[^\s$])\$(?![\w])/g, (match, prefix, content) => {
+        line = line.replace(/(^|[^\\])\[\^([^\]\s]+)\]/g, (match, prefix, label) => {
+          const token = `@@MARKTIDE_FOOTNOTE_REF_${footnotePlaceholders.length}@@`;
+          footnotePlaceholders.push(label);
+          return `${prefix}${token}`;
+        });
+
+        line = line.replace(/(^|[^\w\\])\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?![\w])/g, (match, prefix, content) => {
           if (!looksLikeInlineMath(content)) return match;
 
           const token = `@@MARKTIDE_MATH_${mathPlaceholders.length}@@`;
@@ -241,22 +294,101 @@ class MarkdownRenderer {
       output.push(line);
     });
 
+    finishFootnote();
+
+    if (displayMathBlock) {
+      output.push(...displayMathBlock.lines);
+    }
+
     return {
       markdown: output.join('\n'),
       abbreviations,
+      footnotes,
+      footnotePlaceholders,
       markPlaceholders,
+      displayMathPlaceholders,
       mathPlaceholders
     };
   }
 
-  applyMarkdownExtensions(html, context) {
+  slugifyFootnoteLabel(label) {
+    return String(label || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'note';
+  }
+
+  renderFootnoteReference(label, number, duplicateIndex) {
+    const slug = this.slugifyFootnoteLabel(label);
+    const suffix = duplicateIndex > 1 ? `-${duplicateIndex}` : '';
+
+    return `<sup class="footnote-ref" id="fnref-${slug}${suffix}"><a href="#fn-${slug}" aria-label="Footnote ${number}">[${number}]</a></sup>`;
+  }
+
+  renderFootnotes(context, options = {}) {
+    if (!context.footnotes.length) return '';
+
+    const referencedLabels = context.footnotePlaceholders.filter((label, index, labels) => {
+      return labels.indexOf(label) === index;
+    });
+    const orderedFootnotes = referencedLabels
+      .map((label) => context.footnotes.find((footnote) => footnote.label === label))
+      .filter(Boolean);
+    const unreferencedFootnotes = context.footnotes.filter((footnote) => {
+      return !referencedLabels.includes(footnote.label);
+    });
+    const footnotes = orderedFootnotes.concat(unreferencedFootnotes);
+
+    if (!footnotes.length) return '';
+
+    const items = footnotes.map((footnote) => {
+      const slug = this.slugifyFootnoteLabel(footnote.label);
+      const markdown = footnote.lines.join('\n').trim();
+      const html = this.parseMarkdown(markdown || ' ', options);
+      const backref = ` <a href="#fnref-${slug}" class="footnote-backref" aria-label="Back to reference"><span aria-hidden="true">&#8617;</span></a>`;
+      const body = html.replace(/<\/p>\s*$/, `${backref}</p>`);
+      return `<li id="fn-${slug}">${body}</li>`;
+    }).join('\n');
+
+    return `\n<section class="footnotes">\n<hr>\n<ol>\n${items}\n</ol>\n</section>`;
+  }
+
+  applyMarkdownExtensions(html, context, options = {}) {
     let output = context.markPlaceholders.reduce((result, markup, index) => {
-      return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), markup);
+      return result.replace(new RegExp(`@@MARKTIDE_MARK_${index}@@`, 'g'), () => markup);
     }, html);
 
     output = context.mathPlaceholders.reduce((result, math, index) => {
-      return result.replace(new RegExp(`@@MARKTIDE_MATH_${index}@@`, 'g'), math);
+      return result.replace(new RegExp(`@@MARKTIDE_MATH_${index}@@`, 'g'), () => math);
     }, output);
+
+    output = context.displayMathPlaceholders.reduce((result, math, index) => {
+      const escapedMath = this.escapeHtml(math);
+      const token = `@@MARKTIDE_DISPLAY_MATH_${index}@@`;
+      const paragraphPattern = new RegExp(`<p>\\s*${token}\\s*</p>`, 'g');
+      return result
+        .replace(paragraphPattern, () => escapedMath)
+        .replace(new RegExp(token, 'g'), () => escapedMath);
+    }, output);
+
+    const referencedLabels = context.footnotePlaceholders.filter((label, index, labels) => {
+      return labels.indexOf(label) === index;
+    });
+    const footnoteNumbers = referencedLabels.reduce((map, label, index) => {
+      map[label] = index + 1;
+      return map;
+    }, {});
+    const seenReferences = {};
+
+    output = context.footnotePlaceholders.reduce((result, label, index) => {
+      seenReferences[label] = (seenReferences[label] || 0) + 1;
+      const number = footnoteNumbers[label] || referencedLabels.length + 1;
+      const reference = this.renderFootnoteReference(label, number, seenReferences[label]);
+      return result.replace(new RegExp(`@@MARKTIDE_FOOTNOTE_REF_${index}@@`, 'g'), () => reference);
+    }, output);
+
+    output += this.renderFootnotes(context, options);
 
     const abbreviations = context.abbreviations
       .filter((item) => item.key && item.title)
@@ -325,7 +457,73 @@ class MarkdownRenderer {
     const normalizedMarkdown = this.normalizeListSyntax(markdownText || '');
     const extensionContext = this.prepareMarkdownExtensions(normalizedMarkdown);
     const html = marked.parse(extensionContext.markdown, options);
-    return this.applyMarkdownExtensions(html, extensionContext);
+    return this.applyMarkdownExtensions(html, extensionContext, options);
+  }
+
+  prepareRenderedHtml(html, options = {}) {
+    if (!window.MarkTideSanitizer) {
+      throw new Error('Shared sanitizer is required for Markdown rendering.');
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = window.MarkTideSanitizer.sanitize(html, {
+      mode: options.mode || 'preview'
+    });
+
+    if (window.MarkTideUtils && window.MarkTideUtils.processEmojis) {
+      window.MarkTideUtils.processEmojis(wrapper);
+    }
+
+    return wrapper.innerHTML;
+  }
+
+  queuePreviewRender(renderedHtml, shouldEnhance) {
+    const renderVersion = ++this.renderVersion;
+
+    this.renderPipeline = this.renderPipeline
+      .catch(() => false)
+      .then(async () => {
+        if (renderVersion !== this.renderVersion) return false;
+
+        const updateContent = () => {
+          this.markdownPreview.innerHTML = renderedHtml;
+        };
+        if (window.MarkTideMathJax && typeof window.MarkTideMathJax.updateContent === 'function') {
+          await window.MarkTideMathJax.updateContent(this.markdownPreview, updateContent);
+        } else {
+          updateContent();
+        }
+
+        if (renderVersion !== this.renderVersion || !shouldEnhance) return true;
+
+        if (window.MarkTideMermaid) {
+          try {
+            await window.MarkTideMermaid.renderDiagrams(this.markdownPreview);
+          } catch (error) {
+            console.warn('Mermaid rendering failed:', error);
+          }
+        }
+
+        if (renderVersion !== this.renderVersion) return false;
+        if (window.MarkTideMermaidToolbar) {
+          window.MarkTideMermaidToolbar.enhance(this.markdownPreview);
+        }
+
+        if (window.MarkTideMathJax) {
+          try {
+            await window.MarkTideMathJax.typeset(this.markdownPreview);
+          } catch (error) {
+            console.warn('MathJax typesetting failed:', error);
+          }
+        }
+
+        if (window.MarkTideCodeWrap) {
+          window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
+        }
+        return true;
+      });
+
+    return this.renderPipeline;
   }
 
   renderMarkdown() {
@@ -336,114 +534,22 @@ class MarkdownRenderer {
     try {
       const markdown = this.markdownEditor.value;
       const html = this.parseMarkdown(markdown);
-      const sanitizedHtml = DOMPurify.sanitize(html, {
-        ADD_TAGS: [
-          "mjx-container",
-          "svg",
-          "line",
-          "path",
-          "g",
-          "circle",
-          "rect",
-          "mark",
-          "abbr",
-        ],
-        ADD_ATTR: [
-          "id",
-          "class",
-          "style",
-          "viewBox",
-          "xmlns",
-          "width",
-          "height",
-          "stroke",
-          "stroke-width",
-          "stroke-linecap",
-          "fill",
-          "x1",
-          "y1",
-          "x2",
-          "y2",
-          "d",
-          "aria-hidden",
-          "focusable",
-          "aria-pressed",
-          "aria-label",
-          "title",
-          "tabindex",
-          "role",
-          "type",
-          "data-marktide-tip",
-          "data-mermaid-source",
-        ],
-      });
-      this.markdownPreview.innerHTML = sanitizedHtml;
-
-      this.markdownPreview.querySelectorAll("pre code").forEach((block) => {
-        try {
-          if (!block.classList.contains('mermaid')) {
-            // Sanitize content before highlighting to prevent HTML injection
-            const content = block.textContent || block.innerText || '';
-            block.textContent = content; // This removes any HTML
-            hljs.highlightElement(block);
-          }
-        } catch (e) {
-          console.warn("Syntax highlighting failed for a code block:", e);
-          // Fallback: ensure content is escaped
-          const content = block.textContent || block.innerText || '';
-          block.textContent = content;
-        }
-      });
-
-      if (window.MarkTideUtils && window.MarkTideUtils.processEmojis) {
-        window.MarkTideUtils.processEmojis(this.markdownPreview);
-      }
-      
-      // Render mermaid diagrams with the current theme.
-      if (window.MarkTideMermaid) {
-        window.MarkTideMermaid.renderDiagrams(this.markdownPreview).then(() => {
-          if (window.MarkTideMermaidToolbar) {
-            window.MarkTideMermaidToolbar.enhance(this.markdownPreview);
-          }
-        });
-      }
-      
-      if (window.MathJax) {
-        try {
-          const mjPromise = MathJax.typesetPromise([this.markdownPreview]);
-          if (mjPromise && typeof mjPromise.then === "function") {
-            mjPromise
-              .then(() => {
-                if (window.MarkTideCodeWrap) {
-                  window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
-                }
-              })
-              .catch((err) => {
-                console.warn("MathJax typesetting failed:", err);
-              });
-          }
-        } catch (e) {
-          console.warn("MathJax rendering failed:", e);
-        }
-      }
+      const renderedHtml = this.prepareRenderedHtml(html, { mode: 'preview' });
+      const renderPromise = this.queuePreviewRender(renderedHtml, true);
 
       if (window.MarkTideUtils && window.MarkTideUtils.updateDocumentStats) {
         window.MarkTideUtils.updateDocumentStats();
       }
 
-      if (window.MarkTideCodeWrap) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.MarkTideCodeWrap.scheduleRefresh(this.markdownPreview);
-          });
-        });
-      }
+      return renderPromise;
     } catch (e) {
       console.error("Markdown rendering failed:", e);
-      this.markdownPreview.innerHTML = `<div class="alert alert-danger">
-              <strong>Error rendering markdown:</strong> ${e.message}
+      const errorMessage = this.escapeHtml(e && e.message ? e.message : 'Unknown error');
+      const markdownSource = this.escapeHtml(this.markdownEditor.value);
+      return this.queuePreviewRender(`<div class="alert alert-danger">
+              <strong>Error rendering markdown:</strong> ${errorMessage}
           </div>
-          <pre>${this.markdownEditor.value}</pre>`;
+          <pre>${markdownSource}</pre>`, false);
     }
   }
 

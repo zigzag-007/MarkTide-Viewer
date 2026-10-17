@@ -64,82 +64,53 @@
     <!-- Favicon -->
     <link href="assets/img/icon.jpg" rel="icon" type="image/jpg">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Local fonts -->
+    <link href="assets/vendor/fonts/inter.css" rel="stylesheet">
+    <link href="assets/vendor/fonts/fira-code.css" rel="stylesheet">
+    <link href="assets/vendor/fonts/jetbrains-mono.css" rel="stylesheet">
 
-    <!-- External CSS libraries -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+    <!-- Local CSS libraries -->
+    <link rel="stylesheet" href="assets/vendor/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendor/github-markdown/github-markdown.min.css">
     <!-- highlight.js theme (dynamically switched by theme-manager.js) -->
-    <link rel="stylesheet" id="highlight-theme" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.2.1/hamburgers.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/extras/css/joypixels.min.css">
+    <script src="assets/js/highlight-theme.js?v=release-v1.8.1"></script>
+    <script src="assets/js/theme-manager.js?v=release-v1.8.1"></script>
+    <link rel="stylesheet" id="highlight-theme">
+    <script>
+      (function () {
+        const initialTheme = window.MarkTideTheme.applyInitialRootTheme();
+        document.getElementById('highlight-theme').href =
+          window.MarktideHighlightTheme.getThemeUrl(initialTheme === 'dark');
+      })();
+    </script>
+    <link rel="stylesheet" href="assets/vendor/hamburgers/hamburgers.min.css">
+    <link rel="stylesheet" href="assets/vendor/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="assets/vendor/emoji-toolkit/joypixels.min.css">
     
     <!-- Custom stylesheet -->
-    <!-- <link rel="stylesheet" href="assets/css/styles.css"> -->
     <link rel="stylesheet" href="assets/css/base.css?v=release-v1.8.1">
+    <link rel="stylesheet" href="assets/css/markdown-content.css?v=release-v1.8.1">
+    <link rel="stylesheet" href="assets/css/mermaid-toolbar.css?v=release-v1.8.1">
     <link rel="stylesheet" href="assets/css/responsive.css?v=release-v1.8.1">
     <link rel="stylesheet" href="assets/css/keyframes.css?v=release-v1.8.1">
     <link rel="stylesheet" href="assets/css/light-theme.css?v=release-v1.8.1">
     <link rel="stylesheet" href="assets/css/dark-theme.css?v=release-v1.8.1">
-    <!-- Mermaid diagram specific CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.css">
     
-    <!-- External JavaScript libraries (order can be important for dependencies) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Immediate theme application to prevent flash -->
-    <script>
-      // Apply theme immediately to prevent flash
-      (function() {
-        let savedTheme = localStorage.getItem('marktide-theme');
-        if (!savedTheme) {
-          // Detect system theme
-          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          savedTheme = prefersDark ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-        document.documentElement.classList.toggle('light', savedTheme === 'light');
-      })();
-    </script>
+    <!-- Local JavaScript libraries (order can be important for dependencies) -->
+    <script src="assets/vendor/marked/marked.min.js"></script>
+    <script src="assets/vendor/highlight/highlight.min.js"></script>
+    <script src="assets/vendor/highlight/languages/dos.min.js"></script>
+    <script src="assets/vendor/highlight/languages/dockerfile.min.js"></script>
+    <script src="assets/vendor/highlight/languages/powershell.min.js"></script>
+    <script src="assets/vendor/dompurify/purify.min.js"></script>
     
     <!-- MathJax configuration -->
-    <script>
-      window.MathJax = {
-        tex: {
-          inlineMath: [['\\(', '\\)']],
-          displayMath: [['$$', '$$'], ['\\[', '\\]']],
-          processEscapes: true,
-          processEnvironments: true
-        },
-        options: {
-          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-          ignoreHtmlClass: 'tex2jax_ignore',
-          processHtmlClass: 'tex2jax_process'
-        }
-      };
-    </script>
+    <script src="assets/js/mathjax-config.js?v=release-v1.8.1"></script>
     <!-- More JavaScript libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/lib/js/joypixels.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <script src="assets/vendor/mathjax/tex-mml-chtml.min.js"></script>
+    <script src="assets/vendor/mermaid/mermaid.min.js"></script>
+    <script src="assets/vendor/emoji-toolkit/joypixels.min.js"></script>
+    <script defer src="assets/vendor/alpine/cdn.min.js"></script>
 
 
     
@@ -152,11 +123,6 @@
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://marktide.netlify.app/">
-    
-    <!-- Performance optimizations -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     
     <!-- PWA Support -->
     <!-- theme-color is set dynamically in ThemeManager to avoid static unsupported meta warning -->
@@ -547,8 +513,8 @@
     </footer>
 
     <!-- Core JavaScript libraries (Bootstrap bundle and custom script) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
+    <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/monaco/vs/loader.min.js"></script>
     <!-- MarkTide Code Editor & Viewer Modular JavaScript Files -->
     <!-- Load in dependency order: utilities first, then core modules, then initialization -->
     <script src="assets/js/monaco-bridge.js?v=release-v1.8.1"></script>
@@ -558,17 +524,20 @@
     <script src="assets/js/mermaid-shared.js?v=release-v1.8.1"></script>
     <script src="assets/js/mermaid-handler.js?v=release-v1.8.1"></script>
     <script src="assets/js/mermaid-toolbar.js?v=release-v1.8.1"></script>
-    <script src="assets/js/theme-manager.js?v=release-v1.8.1"></script>
     <script src="assets/js/editor.js?v=release-v1.8.1"></script>
     <script src="assets/js/code-wrap-handler.js?v=release-v1.8.1"></script>
+    <script src="assets/js/markdown-styles.js?v=release-v1.8.1"></script>
+    <script src="assets/js/code-block-renderer.js?v=release-v1.8.1"></script>
+    <script src="assets/js/sanitizer-config.js?v=release-v1.8.1"></script>
     <script src="assets/js/markdown-renderer.js?v=release-v1.8.1"></script>
     <script src="assets/js/code-copy-handler.js?v=release-v1.8.1"></script>
     <script src="assets/js/soft-breaks-manager.js?v=release-v1.8.1"></script>
     <script src="assets/js/scroll-sync.js?v=release-v1.8.1"></script>
     <script src="assets/js/view-manager.js?v=release-v1.8.1"></script>
+    <script src="assets/js/export-assets.js?v=release-v1.8.1"></script>
     <script src="assets/js/import-export.js?v=release-v1.8.1"></script>
+    <script src="assets/js/print-styles.js?v=release-v1.8.1"></script>
     <script src="assets/js/print-handler.js?v=release-v1.8.1"></script>
-    <script src="assets/js/mobile-menu.js?v=release-v1.8.1"></script>
     <script src="assets/js/keyboard-shortcuts.js?v=release-v1.8.1"></script>
     <script src="assets/js/beautify.js?v=release-v1.8.1"></script>
     <script src="assets/js/core.js?v=release-v1.8.1"></script>

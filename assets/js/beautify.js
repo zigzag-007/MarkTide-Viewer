@@ -38,10 +38,11 @@ class BeautifyManager {
     }
     this.loading = true;
     try {
-      // Lazy-load Prettier standalone and markdown plugin from CDN
+      // Lazy load the local Prettier standalone and Markdown plugin.
+      const prettierBaseUrl = new URL('assets/vendor/prettier/', document.baseURI);
       const [{ default: prettier }, { default: markdownPlugin }] = await Promise.all([
-        import('https://unpkg.com/prettier@3.2.5/standalone.mjs'),
-        import('https://unpkg.com/prettier@3.2.5/plugins/markdown.mjs')
+        import(new URL('standalone.mjs', prettierBaseUrl).href),
+        import(new URL('plugins/markdown.mjs', prettierBaseUrl).href)
       ]);
       this.prettier = prettier;
       this.markdownPlugin = markdownPlugin;

@@ -12,19 +12,33 @@ class ThemeManager {
     this.highlightThemeDarkLink = null;
   }
 
+  resolveInitialTheme() {
+    const savedTheme = localStorage.getItem('marktide-theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      return savedTheme;
+    }
+
+    const prefersDark = window.matchMedia
+      && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'light';
+  }
+
+  applyInitialRootTheme() {
+    const theme = this.resolveInitialTheme();
+    this.applyRootThemeState(theme);
+    this.currentTheme = theme;
+    return theme;
+  }
+
   init() {
     this.themeToggle = document.getElementById("theme-toggle");
     this.mobileThemeToggle = document.getElementById("mobile-theme-toggle");
     this.initializeHighlightThemeLinks();
-    
-    // Load saved theme or detect system theme
-    let savedTheme = localStorage.getItem('marktide-theme');
-    if (!savedTheme) {
-      // Detect system theme
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      savedTheme = prefersDark ? 'dark' : 'light';
-    }
-    this.currentTheme = savedTheme;
+
+    const rootTheme = document.documentElement.getAttribute("data-theme");
+    this.currentTheme = rootTheme === 'dark' || rootTheme === 'light'
+      ? rootTheme
+      : this.applyInitialRootTheme();
     
     // Apply initial theme
     this.applyTheme(this.currentTheme);
@@ -69,17 +83,20 @@ class ThemeManager {
   }
 
   initializeHighlightThemeLinks() {
+    if (!window.MarktideHighlightTheme) return;
+
     const primaryLink = document.getElementById("highlight-theme");
     if (!primaryLink) return;
 
     this.highlightThemeLink = primaryLink;
+    this.highlightThemeLink.href = window.MarktideHighlightTheme.getThemeUrl(false);
 
     let darkLink = document.getElementById("highlight-theme-dark");
     if (!darkLink) {
       darkLink = document.createElement("link");
       darkLink.id = "highlight-theme-dark";
       darkLink.rel = "stylesheet";
-      darkLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css";
+      darkLink.href = window.MarktideHighlightTheme.getThemeUrl(true);
       darkLink.disabled = true;
       primaryLink.insertAdjacentElement("afterend", darkLink);
     }
@@ -121,19 +138,6 @@ class ThemeManager {
     );
   }
 
-  getFallbackRippleColors(nextTheme) {
-    if (nextTheme === "dark") {
-      return {
-        fill: "rgba(0, 0, 0, 0.18)",
-        ring: "rgba(255, 255, 255, 0.34)"
-      };
-    }
-    return {
-      fill: "rgba(255, 255, 255, 0.14)",
-      ring: "rgba(0, 0, 0, 0.28)"
-    };
-  }
-
   renderPreviewForTheme() {
     if (window.MarkTideRenderer && window.MarkTideRenderer.debouncedRender) {
       window.MarkTideRenderer.debouncedRender();
@@ -149,14 +153,11 @@ class ThemeManager {
     document.querySelectorAll(".theme-ripple-fallback").forEach((el) => el.remove());
 
     const ripple = document.createElement("div");
-    ripple.className = "theme-ripple-fallback";
+    ripple.className = `theme-ripple-fallback theme-ripple-fallback--${nextTheme}`;
     ripple.style.left = `${x - endRadius}px`;
     ripple.style.top = `${y - endRadius}px`;
     ripple.style.width = `${endRadius * 2}px`;
     ripple.style.height = `${endRadius * 2}px`;
-    const colors = this.getFallbackRippleColors(nextTheme);
-    ripple.style.backgroundColor = colors.fill;
-    ripple.style.border = `1.5px solid ${colors.ring}`;
     document.body.appendChild(ripple);
 
     const animation = ripple.animate(
@@ -267,6 +268,8 @@ class ThemeManager {
   }
 
   updateHighlightTheme() {
+    if (!window.MarktideHighlightTheme) return;
+
     // Switch highlight.js theme by toggling pre-mounted links to reduce flash.
     const lightLink = this.highlightThemeLink || document.getElementById("highlight-theme");
     const darkLink = this.highlightThemeDarkLink || document.getElementById("highlight-theme-dark");
@@ -281,11 +284,7 @@ class ThemeManager {
     // Fallback path (in case links are unavailable)
     const fallbackLink = document.getElementById("highlight-theme");
     if (!fallbackLink) return;
-    if (this.currentTheme === "dark") {
-      fallbackLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css";
-    } else {
-      fallbackLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
-    }
+    fallbackLink.href = window.MarktideHighlightTheme.getThemeUrl(this.currentTheme === "dark");
   }
 
   updateThemeColorMeta() {
@@ -295,9 +294,12 @@ class ThemeManager {
       meta.setAttribute('name', 'theme-color');
       document.head.appendChild(meta);
     }
-    // Match colors similar to app backgrounds in both modes
-    const color = this.currentTheme === 'dark' ? '#000000' : '#ffffff';
-    meta.setAttribute('content', color);
+    const color = getComputedStyle(document.documentElement)
+      .getPropertyValue('--bg-color')
+      .trim();
+    if (color) {
+      meta.setAttribute('content', color);
+    }
   }
 }
 

@@ -54,7 +54,7 @@
         securityLevel: 'strict',
         htmlLabels: htmlLabels,
         flowchart: {
-          useMaxWidth: mode !== 'export',
+          useMaxWidth: mode !== 'html',
           htmlLabels: htmlLabels,
           curve: 'basis',
           nodeSpacing: 60,
@@ -62,6 +62,13 @@
         },
         fontSize: 16
       };
+    }
+
+    function isMermaidErrorSvg(svg) {
+      if (!svg || typeof svg.getAttribute !== 'function') return false;
+
+      const roleDescription = String(svg.getAttribute('aria-roledescription') || '').toLowerCase();
+      return roleDescription === 'error';
     }
 
     function getReadableTextColor(fill) {
@@ -209,6 +216,13 @@
       normalizeForeignObjectBox(foreignObject, 'edge', 4, 2);
     }
 
+    function isEdgeLabelForeignObject(foreignObject) {
+      return Boolean(
+        foreignObject.closest('g.edgeLabel')
+        || foreignObject.querySelector('.edgeLabel')
+      );
+    }
+
     function styleEdgeLabelPart(labelPart) {
       setImportantStyle(labelPart, 'display', 'inline-block');
       setImportantStyle(labelPart, 'padding', '0 2px');
@@ -276,7 +290,14 @@
 
     function stabilizeEdgeLabels(root) {
       root.querySelectorAll('.mermaid svg').forEach((svg) => {
-        svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
+        svg.querySelectorAll('foreignObject').forEach((foreignObject) => {
+          if (!isEdgeLabelForeignObject(foreignObject)) return;
+
+          normalizeEdgeLabelForeignObject(foreignObject);
+          foreignObject.querySelectorAll('div, span, p').forEach(styleEdgeLabelPart);
+        });
+
+        svg.querySelectorAll('g.edgeLabel').forEach((edgeLabel) => {
           const labelText = (edgeLabel.textContent || '').trim();
           if (!labelText) return;
 
@@ -286,8 +307,6 @@
           setImportantStyle(edgeLabel, 'font-weight', constants.labelFontWeight);
 
           removeDefaultEdgeLabelBackgrounds(edgeLabel);
-          edgeLabel.querySelectorAll('foreignObject').forEach(normalizeEdgeLabelForeignObject);
-          edgeLabel.querySelectorAll('foreignObject div, foreignObject span, foreignObject p').forEach(styleEdgeLabelPart);
           edgeLabel.querySelectorAll('.marktide-edge-label-bg').forEach((rect) => {
             setSolidEdgeLabelBackground(rect, true);
           });
@@ -330,6 +349,38 @@
       }
     }
 
+    async function renderDiagrams(root, options) {
+      const opts = options || {};
+      const container = root || doc;
+      const mermaidApi = win.mermaid;
+      if (!mermaidApi || typeof mermaidApi.initialize !== 'function') {
+        throw new Error('Mermaid is required for diagram rendering.');
+      }
+
+      const nodes = Array.from(opts.nodes || container.querySelectorAll('.mermaid'));
+      if (!nodes.length) return nodes;
+
+      mermaidApi.initialize(getMermaidConfig({
+        mode: opts.mode || 'preview',
+        theme: opts.theme,
+      }));
+
+      const renderResult = typeof mermaidApi.run === 'function'
+        ? mermaidApi.run({ nodes })
+        : mermaidApi.init(undefined, nodes);
+      if (renderResult && typeof renderResult.then === 'function') {
+        await renderResult;
+      }
+
+      stabilizeMermaidDiagrams(container, {
+        stabilizeDimensions: opts.stabilizeDimensions === true,
+      });
+      if ((opts.mode || 'preview') === 'pdf') {
+        container.querySelectorAll('.mermaid svg').forEach(prepareSvgForPrint);
+      }
+      return nodes;
+    }
+
     function inlineComputedStyles(sourceRoot, cloneRoot) {
       const sourceElements = [sourceRoot, ...sourceRoot.querySelectorAll('*')];
       const cloneElements = [cloneRoot, ...cloneRoot.querySelectorAll('*')];
@@ -365,10 +416,63 @@
       });
     }
 
-    function replaceForeignObjectLabels(svg) {
+    function getRenderedLabelLines(labelElement) {
+      if (!doc.createRange || !doc.createTreeWalker) return [];
+
+      const lines = [];
+      const walker = doc.createTreeWalker(labelElement, 4);
+      let textNode = walker.nextNode();
+
+      while (textNode) {
+        const text = textNode.nodeValue || '';
+        for (let index = 0; index < text.length; index += 1) {
+          const range = doc.createRange();
+          range.setStart(textNode, index);
+          range.setEnd(textNode, index + 1);
+          const bounds = range.getBoundingClientRect();
+          range.detach();
+
+          if (!bounds || (!bounds.width && !bounds.height)) continue;
+          let line = lines.find((entry) => Math.abs(entry.top - bounds.top) < 2);
+          if (!line) {
+            line = { text: '', top: bounds.top };
+            lines.push(line);
+          }
+          line.text += text[index];
+        }
+        textNode = walker.nextNode();
+      }
+
+      return lines
+        .sort((first, second) => first.top - second.top)
+        .map((line) => line.text.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+    }
+
+    function getForeignObjectLabelLines(foreignObject) {
+      const labelElement = foreignObject.querySelector('p, span, div') || foreignObject;
+      const renderedLines = getRenderedLabelLines(labelElement);
+      if (renderedLines.length) return renderedLines;
+
+      const labelClone = labelElement.cloneNode(true);
+
+      labelClone.querySelectorAll('br').forEach((lineBreak) => {
+        lineBreak.replaceWith(doc.createTextNode('\n'));
+      });
+
+      return (labelClone.textContent || '')
+        .split(/\r?\n/)
+        .map((line) => line.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+    }
+
+    function replaceForeignObjectLabels(svg, options) {
+      const opts = options || {};
+      const fontWeight = opts.fontWeight || constants.exportLabelFontWeight;
+
       svg.querySelectorAll('foreignObject').forEach((foreignObject) => {
-        const text = (foreignObject.textContent || '').replace(/\s+/g, ' ').trim();
-        if (!text) {
+        const labelLines = getForeignObjectLabelLines(foreignObject);
+        if (!labelLines.length) {
           foreignObject.remove();
           return;
         }
@@ -377,11 +481,10 @@
         const height = parseSvgNumber(foreignObject.getAttribute('height'));
         const x = parseSvgNumber(foreignObject.getAttribute('x')) + width / 2;
         const y = parseSvgNumber(foreignObject.getAttribute('y')) + height / 2;
-        const isEdgeLabel = Boolean(foreignObject.closest('.edgeLabel'));
+        const isEdgeLabel = isEdgeLabelForeignObject(foreignObject);
         const labelElement = foreignObject.querySelector('p, span, div') || foreignObject;
         const fontFamily = getStyleValue(labelElement, 'font-family') || constants.fontFamily;
         const fontSize = getStyleValue(labelElement, 'font-size') || constants.fontSize;
-        const fontWeight = constants.exportLabelFontWeight;
         const textColor = getStyleValue(labelElement, 'fill')
           || getStyleValue(labelElement, 'color')
           || labelElement.getAttribute('fill')
@@ -389,17 +492,27 @@
           || constants.edgeLabelTextColor;
         const labelGroup = doc.createElementNS(svgNamespace, 'g');
         const textElement = doc.createElementNS(svgNamespace, 'text');
+        const fontSizeValue = parseSvgNumber(fontSize) || parseSvgNumber(constants.fontSize);
+        const lineHeight = fontSizeValue * 1.25;
+        const firstLineOffset = -((labelLines.length - 1) * lineHeight) / 2;
 
         textElement.setAttribute('x', String(x));
         textElement.setAttribute('y', String(y));
         textElement.setAttribute('text-anchor', 'middle');
         textElement.setAttribute('dominant-baseline', 'middle');
         textElement.setAttribute('fill', textColor);
-        textElement.textContent = text;
         textElement.style.setProperty('font-family', fontFamily);
         textElement.style.setProperty('font-size', fontSize);
         textElement.style.setProperty('font-weight', fontWeight);
         textElement.style.setProperty('fill', textColor);
+
+        labelLines.forEach((line, index) => {
+          const tspan = doc.createElementNS(svgNamespace, 'tspan');
+          tspan.setAttribute('x', String(x));
+          tspan.setAttribute('dy', String(index === 0 ? firstLineOffset : lineHeight));
+          tspan.textContent = line;
+          textElement.appendChild(tspan);
+        });
 
         if (isEdgeLabel) {
           const backgroundPaddingX = 4;
@@ -448,7 +561,10 @@
       });
     }
 
-    function prepareEdgeLabelsForExport(svg) {
+    function prepareEdgeLabelsForExport(svg, options) {
+      const opts = options || {};
+      const fontWeight = opts.fontWeight || constants.exportLabelFontWeight;
+
       svg.querySelectorAll('.edgeLabel').forEach((edgeLabel) => {
         const labelText = (edgeLabel.textContent || '').trim();
         if (!labelText) return;
@@ -456,22 +572,31 @@
         setImportantStyle(edgeLabel, 'color', constants.edgeLabelTextColor);
         setImportantStyle(edgeLabel, 'fill', constants.edgeLabelTextColor);
         setImportantStyle(edgeLabel, 'font-family', constants.fontFamily);
-        setImportantStyle(edgeLabel, 'font-weight', constants.exportLabelFontWeight);
+        setImportantStyle(edgeLabel, 'font-weight', fontWeight);
 
         removeDefaultEdgeLabelBackgrounds(edgeLabel);
         edgeLabel.querySelectorAll('.marktide-edge-label-bg').forEach((rect) => {
           setSolidEdgeLabelBackground(rect, true);
         });
         edgeLabel.querySelectorAll('text, tspan').forEach((textPart) => {
-          styleEdgeSvgTextPartWithWeight(textPart, constants.exportLabelFontWeight);
+          styleEdgeSvgTextPartWithWeight(textPart, fontWeight);
         });
 
-        addSvgEdgeTextBackground(edgeLabel, { fontWeight: constants.exportLabelFontWeight });
+        addSvgEdgeTextBackground(edgeLabel, { fontWeight });
 
         if (edgeLabel.parentNode) {
           edgeLabel.parentNode.appendChild(edgeLabel);
         }
       });
+    }
+
+    function prepareSvgForPrint(svg) {
+      inlineComputedStyles(svg, svg);
+      replaceForeignObjectLabels(svg, { fontWeight: constants.labelFontWeight });
+      sanitizeSvgInteractions(svg);
+      prepareEdgeLabelsForExport(svg, { fontWeight: constants.labelFontWeight });
+      stabilizeSvgDimensions(svg);
+      return svg;
     }
 
     function padSvgForExport(svg, width, height) {
@@ -532,9 +657,11 @@
       }
 
       inlineComputedStyles(svg, clone);
-      replaceForeignObjectLabels(clone);
-      sanitizeSvgInteractions(clone);
-      measureExportClone(clone, () => prepareEdgeLabelsForExport(clone));
+      measureExportClone(clone, () => {
+        replaceForeignObjectLabels(clone);
+        sanitizeSvgInteractions(clone);
+        prepareEdgeLabelsForExport(clone);
+      });
       padSvgForExport(clone, width, height);
 
       const background = doc.createElementNS(svgNamespace, 'rect');
@@ -553,18 +680,13 @@
     }
 
     return {
-      constants,
-      getDiagramFontFamily,
-      getThemeVariables,
       getMermaidConfig,
-      getReadableTextColor,
-      setSolidEdgeLabelBackground,
+      isMermaidErrorSvg,
+      renderDiagrams,
       stabilizeMermaidDiagrams,
+      prepareSvgForPrint,
       prepareSvgClone,
-      replaceForeignObjectLabels,
-      sanitizeSvgInteractions,
-      inlineComputedStyles,
-      parseSvgNumber
+      sanitizeSvgInteractions
     };
   }
 

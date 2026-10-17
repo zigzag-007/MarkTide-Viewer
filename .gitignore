@@ -1,2 +1,8 @@
 .cursor/
 CHAT_CONTEXT.md
+
+# Local Playwright dependencies and generated test output
+tests/node_modules/
+tests/playwright-report/
+tests/test-results/
+tests/.cache/

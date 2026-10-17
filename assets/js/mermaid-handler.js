@@ -2,55 +2,18 @@
 
 class MermaidHandler {
   constructor() {
-    this.initialized = false;
     this.renderToken = 0;
     this.renderChain = Promise.resolve();
-    this.currentTheme = null;
   }
 
-  getDiagramFontFamily() {
-    return window.MarkTideMermaidShared
-      ? window.MarkTideMermaidShared.getDiagramFontFamily()
-      : '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-  }
-
-  getThemeName(theme, mode = 'preview') {
-    if (mode === 'pdf') {
-      return 'neutral';
+  getSharedHelper() {
+    const helper = window.MarkTideMermaidShared;
+    if (!helper
+      || typeof helper.renderDiagrams !== 'function') {
+      throw new Error('Shared Mermaid helper is required for preview rendering.');
     }
 
-    return 'default';
-  }
-
-  getThemeVariables() {
-    return window.MarkTideMermaidShared
-      ? window.MarkTideMermaidShared.getThemeVariables()
-      : { fontFamily: this.getDiagramFontFamily() };
-  }
-
-  getMermaidConfig(options = {}) {
-    if (window.MarkTideMermaidShared) {
-      return window.MarkTideMermaidShared.getMermaidConfig(options);
-    }
-
-    const mode = options.mode || 'preview';
-    const htmlLabels = mode !== 'pdf';
-
-    return {
-      startOnLoad: false,
-      theme: this.getThemeName(options.theme, mode),
-      themeVariables: this.getThemeVariables(),
-      securityLevel: 'strict',
-      htmlLabels: htmlLabels,
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: htmlLabels,
-        curve: 'basis',
-        nodeSpacing: 60,
-        rankSpacing: 70
-      },
-      fontSize: 16
-    };
+    return helper;
   }
 
   markDiagramTypes(container) {
@@ -82,21 +45,6 @@ class MermaidHandler {
     }
   }
 
-  initMermaid() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    if (this.initialized && this.currentTheme === currentTheme) {
-      return;
-    }
-
-    mermaid.initialize(this.getMermaidConfig({
-      mode: 'preview',
-      theme: currentTheme
-    }));
-
-    this.currentTheme = currentTheme;
-    this.initialized = true;
-  }
-
   async renderDiagrams(container) {
     const renderToken = ++this.renderToken;
     const diagrams = Array.from(container.querySelectorAll('.mermaid'));
@@ -107,21 +55,17 @@ class MermaidHandler {
         return;
       }
 
-      this.initMermaid();
-
       const currentDiagrams = diagrams.filter((diagram) => {
         return diagram.isConnected && container.contains(diagram) && !diagram.querySelector('svg');
       });
 
       if (!currentDiagrams.length) return;
 
-      const renderResult = mermaid.run
-        ? mermaid.run({ nodes: currentDiagrams })
-        : mermaid.init(undefined, currentDiagrams);
-
-      if (renderResult && typeof renderResult.then === 'function') {
-        await renderResult;
-      }
+      await this.getSharedHelper().renderDiagrams(container, {
+        mode: 'preview',
+        theme: document.documentElement.getAttribute('data-theme'),
+        nodes: currentDiagrams,
+      });
     };
 
     try {
@@ -139,7 +83,6 @@ class MermaidHandler {
         return;
       }
 
-      this.afterRender(container);
     } catch (e) {
       if (renderToken !== this.renderToken) {
         return;
@@ -148,23 +91,6 @@ class MermaidHandler {
     }
   }
 
-  afterRender(container) {
-    if (window.MarkTideMermaidShared) {
-      window.MarkTideMermaidShared.stabilizeMermaidDiagrams(container);
-    }
-  }
-
-  // Get theme variables for print mode (always light)
-  getPrintThemeVariables() {
-    return this.getThemeVariables('light', 'pdf');
-  }
-
-  initForPrint(printWindow) {
-    printWindow.mermaid.initialize(this.getMermaidConfig({
-      mode: 'pdf',
-      theme: 'light'
-    }));
-  }
 }
 
 // Create global instance

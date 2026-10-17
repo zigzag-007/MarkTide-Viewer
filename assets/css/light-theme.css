@@ -17,7 +17,6 @@
   --text-color: #000000;
   --border-color: #e0e0e0;
   --accent-color: #4fc3f7; /* Light blue accent */
-  --accent-color-rgb: 79, 195, 247;
 
   /* Header colors */
   --header-bg: #ffffff;
@@ -29,19 +28,10 @@
   --button-hover: rgba(79, 195, 247, 0.1); /* Light blue with transparency */
   --button-active: #e9ecef;
   
-  /* Stats background */
-  --stats-bg: rgba(255, 255, 255, 0.9);
-  
   /* Editor and preview colors - Different for visual separation */
   --editor-bg: #f8f9fa; /* Light gray for editor */
   --editor-bg-rgb: 248, 249, 250; /* RGB values for frosted glass */
   --preview-bg: #ffffff; /* Pure white for preview */
-  --preview-text-color: #24292e;
-  
-  /* Table colors */
-  --table-bg: #ffffff;
-  --table-row-alt: #f8f9fa;
-  --table-border: #e0e0e0;
   
   /* Scrollbar colors */
   --scrollbar-track-light: rgba(0, 0, 0, 0.1);
@@ -55,12 +45,7 @@
   --dropzone-active-bg: rgba(0, 0, 0, 0.05);
   --dropzone-hover-border: rgba(0, 0, 0, 0.5);
   --dropzone-hover-bg: rgba(0, 0, 0, 0.03);
-  
-  /* Code highlighting */
-  --code-bg: #f8f9fa;
-  --code-pre-bg: #f6f8fa;
-  --code-inline-bg: #FFF8EC;
-  --code-inline-color: #8B4500;
+  --dropzone-text-color: #666666;
   
   /* Loading screen colors - light theme (high contrast on bright bg) */
   --loading-bg-start: #ffffff; /* neutral */
@@ -88,8 +73,6 @@
   --view-border: rgba(0, 0, 0, 0.2);
   --button-border: rgba(0, 0, 0, 0.2);
   --separator-color: rgba(0, 0, 0, 0.3);
-  --blockquote-color: #666666;
-  --hr-color: #e0e0e0;
   --logo-bg: rgba(0, 0, 0, 0.1);
   --logo-border: rgba(0, 0, 0, 0.3);
   --logo-text: #333333;
@@ -101,54 +84,6 @@
   
   /* Danger colors */
   --color-danger-fg: #dc3545;
-}
-
-/* ===== GITHUB MARKDOWN LIGHT THEME ===== */
-/* GitHub's official light mode syntax highlighting variables */
-.markdown-body {
-  color-scheme: light;
-  --color-prettylights-syntax-comment: #6a737d;
-  --color-prettylights-syntax-constant: #005cc5;
-  --color-prettylights-syntax-entity: #6f42c1;
-  --color-prettylights-syntax-storage-modifier-import: #24292e;
-  --color-prettylights-syntax-entity-tag: #22863a;
-  --color-prettylights-syntax-keyword: #d73a49;
-  --color-prettylights-syntax-string: #032f62;
-  --color-prettylights-syntax-variable: #e36209;
-  --color-prettylights-syntax-brackethighlighter-unmatched: #b31d28;
-  --color-prettylights-syntax-invalid-illegal-text: #fafbfc;
-  --color-prettylights-syntax-invalid-illegal-bg: #b31d28;
-  --color-prettylights-syntax-carriage-return-text: #fafbfc;
-  --color-prettylights-syntax-carriage-return-bg: #d73a49;
-  --color-prettylights-syntax-string-regexp: #22863a;
-  --color-prettylights-syntax-markup-list: #735c0f;
-  --color-prettylights-syntax-markup-heading: #005cc5;
-  --color-prettylights-syntax-markup-italic: #24292e;
-  --color-prettylights-syntax-markup-bold: #24292e;
-  --color-prettylights-syntax-markup-deleted-text: #b31d28;
-  --color-prettylights-syntax-markup-deleted-bg: #ffeef0;
-  --color-prettylights-syntax-markup-inserted-text: #22863a;
-  --color-prettylights-syntax-markup-inserted-bg: #f0fff4;
-  --color-prettylights-syntax-markup-changed-text: #e36209;
-  --color-prettylights-syntax-markup-changed-bg: #ffebda;
-  --color-prettylights-syntax-markup-ignored-text: #f6f8fa;
-  --color-prettylights-syntax-markup-ignored-bg: #005cc5;
-  --color-prettylights-syntax-meta-diff-range: #6f42c1;
-  --color-prettylights-syntax-brackethighlighter-angle: #586069;
-  --color-prettylights-syntax-sublimelinter-gutter-mark: #e1e4e8;
-  --color-prettylights-syntax-constant-other-reference-link: #032f62;
-  --color-fg-default: #24292e;
-  --color-fg-muted: #586069;
-  --color-fg-subtle: #6a737d;
-  --color-canvas-default: #ffffff;
-  --color-canvas-subtle: #f6f8fa;
-  --color-border-default: #e1e4e8;
-  --color-border-muted: #eaecef;
-  --color-neutral-muted: rgba(175,184,193,0.2);
-  --color-accent-fg: #0366d6;
-  --color-accent-emphasis: #0366d6;
-  --color-attention-subtle: #fff5b1;
-  --color-danger-fg: #d73a49;
 }
 
 /* ===== GROK LIGHT THEME FROSTED GLASS EFFECTS ===== */
@@ -211,102 +146,6 @@
 [data-theme="light"] .loading-screen {
   animation: loadingPulseLight 4s ease-in-out infinite;
 }
-/* Grok's signature frosted glass hover effect for light theme */
-button,
-.dropdown-item {
-  transition: all 0.2s ease;
-  -webkit-backdrop-filter: blur(0px);
-  backdrop-filter: blur(0px);
-}
-
-button:hover,
-.dropdown-item:hover {
-  background-color: var(--hover-accent) !important; /* Light blue with transparency */
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  border-radius: 4px;
-  box-shadow: 0 0 10px var(--hover-shadow);
-}
-
-/* ===== LIGHT MODE TABLE STYLING ===== */
-/* Table background and border colors (match HTML export) */
-.markdown-body table { background-color: var(--table-bg); border-color: var(--border-color); }
-.markdown-body table tr { background-color: var(--table-bg); border-top: 1px solid var(--border-color); }
-.markdown-body table tr:nth-child(2n) { background-color: var(--table-row-alt); }
-.markdown-body table th, .markdown-body table td { border: 1px solid var(--border-color); }
-
-/* ===== LIGHT MODE ENHANCED CODE BLOCK STYLING ===== */
-/* Enhanced code blocks in light mode */
-[data-theme="light"] .enhanced-code-block {
-  background-color: var(--code-pre-bg);
-  border-color: var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] .enhanced-code-block:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .code-block-header {
-  --code-header-bg: rgba(0, 0, 0, 0.03);
-  --code-header-border: rgba(0, 0, 0, 0.08);
-  background: var(--code-header-bg);
-  border-bottom: 1px solid var(--code-header-border);
-}
-
-[data-theme="light"] .code-language {
-  color: var(--text-color);
-}
-
-[data-theme="light"] .copy-code-btn {
-  background: transparent;
-  color: var(--text-color);
-  --text-color-rgb: 36, 41, 46;
-}
-
-[data-theme="light"] .enhanced-code-block .copy-code-btn:hover {
-  background: #e0e0e0 !important;
-  color: var(--text-color) !important;
-  border-radius: 50% !important;
-  opacity: 1 !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
-}
-
-[data-theme="light"] .enhanced-code-block .copy-code-btn:active {
-  background: #d0d0d0;
-}
-
-[data-theme="light"] .enhanced-code-block .copy-code-btn.copied {
-  background: #e0e0e0 !important;
-  color: var(--text-color) !important;
-}
-
-/* Legacy code blocks in light mode */
-[data-theme="light"] .markdown-body pre:not(.enhanced-code-block pre) {
-  background-color: var(--code-pre-bg);
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-/* Inline code styling */
-[data-theme="light"] .markdown-body code:not(pre code) {
-  background-color: var(--code-inline-bg);
-  color: var(--code-inline-color);
-  font-weight: 600;
-  border-radius: 3px;
-  padding: 0.2em 0.4em;
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-[data-theme="light"] .markdown-body pre code {
-  background: transparent;
-  font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
 /* ==============================================
    LIGHT THEME STYLES
    ============================================== */
@@ -314,20 +153,6 @@ button:hover,
 /* Light theme view controls with subtle border */
 [data-theme="light"] .view-controls {
   border: 1px solid var(--view-border); /* Semi-transparent black border */
-}
-
-/* Light theme view button hover effects for better contrast */
-[data-theme="light"] .view-btn:hover {
-  background: var(--button-hover); /* Use CSS custom property for consistency */
-  color: var(--text-color); /* Black text for maximum contrast in light mode */
-}
-
-/* Light theme active view button styling */
-[data-theme="light"] .view-btn.active {
-  background: var(--button-hover);
-  color: var(--text-color); /* Black text for better readability */
-  -webkit-backdrop-filter: blur(8px); /* Webkit prefix for Safari support */
-  backdrop-filter: blur(8px); /* Glass-morphism effect */
 }
 
 /* Light theme separator between view buttons */
@@ -347,30 +172,6 @@ button:hover,
   color: var(--text-color); /* Ensure high contrast text */
   border-color: var(--accent-color); /* Highlight border with accent color */
   box-shadow: 0 4px 12px var(--shadow-light); /* Soft shadow for depth */
-}
-
-/* Light theme blockquote styling for readability */
-[data-theme="light"] .markdown-body blockquote {
-  color: var(--blockquote-color); /* Medium gray for quoted content */
-}
-
-[data-theme="light"] .markdown-body blockquote p {
-  color: var(--blockquote-color); /* Consistent paragraph color within blockquotes */
-}
-
-/* Light theme quote marks styling */
-[data-theme="light"] .markdown-body blockquote::before,
-[data-theme="light"] .markdown-body blockquote::after {
-  color: var(--blockquote-color); /* Match the blockquote text color */
-}
-
-/* Light theme horizontal rules - clean separator lines */
-[data-theme="light"] .markdown-body hr {
-  background-color: #c9d1d9; /* Clear document separator */
-  border: none; /* Remove default styling */
-  height: 2px; /* Clear, readable separator */
-  margin: 30px 0; /* Match document-style separator spacing */
-  opacity: 1;
 }
 
 /* Light theme scrollbar styling for various panes */
@@ -418,7 +219,7 @@ button:hover,
 
 /* Light theme dropzone text styling */
 [data-theme="light"] .dropzone p {
-  color: var(--blockquote-color); /* Medium gray instructional text */
+  color: var(--dropzone-text-color); /* Medium gray instructional text */
 }
 
 /* Light theme dropzone hover effects */

@@ -1,44 +1,117 @@
 // Import and export functionality for markdown files
 
-/** Same markup as preview (markdown-renderer.js) for exported HTML code blocks */
-function marktideExportWrapButtonHtml() {
-  const wrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.5" y1="3.5" x2="14" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="12.5" x2="6" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  const unwrapSvg =
-    '<svg class="wrap-code-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="1.75" y1="3.5" x2="14.25" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4.25" y1="8" x2="11.75" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="5.75" y1="12.5" x2="10.25" y2="12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  return (
-    '<button type="button" class="wrap-code-btn" aria-hidden="true" tabindex="-1" aria-pressed="false" title="Wrap long lines" aria-label="Wrap long lines" data-marktide-tip="Wrap long lines">' +
-    '<span class="wrap-code-icon wrap-code-icon--wrap">' +
-    wrapSvg +
-    "</span>" +
-    '<span class="wrap-code-icon wrap-code-icon--unwrap">' +
-    unwrapSvg +
-    "</span></button>"
-  );
-}
+function marktideRequireMermaidToolbar() {
+  if (typeof MermaidToolbar !== 'function') {
+    throw new Error('Shared Mermaid toolbar is required for HTML export.');
+  }
 
-function marktideExportEncodeMermaidSource(source) {
-  return encodeURIComponent(source || '');
+  return MermaidToolbar;
 }
 
 function marktideExportMermaidToolbarScript() {
-  if (typeof MermaidToolbar !== 'function') return '';
+  const Toolbar = marktideRequireMermaidToolbar();
 
   return `
-    ${MermaidToolbar.toString()}
+    ${Toolbar.toString()}
     window.MarkTideMermaidToolbar = new MermaidToolbar();
     window.MarkTideMermaidToolbar.init();
-    window.MarkTideMermaidToolbar.enhance(document);
   `;
 }
 
+function marktideRequireMermaidFactory() {
+  if (typeof window.MarkTideCreateMermaidShared !== 'function') {
+    throw new Error('Shared Mermaid factory is required for HTML export.');
+  }
+
+  return window.MarkTideCreateMermaidShared;
+}
+
+function marktideRequireExportAssets() {
+  if (!window.MarkTideExportAssets) {
+    throw new Error('Shared export assets are required for document export.');
+  }
+
+  return window.MarkTideExportAssets;
+}
+
+function marktideRequireMarkdownStyles() {
+  if (!window.MarkTideMarkdownStyles
+    || typeof window.MarkTideMarkdownStyles.getStandaloneStyles !== 'function') {
+    throw new Error('Shared Markdown styles are required for HTML export.');
+  }
+
+  return window.MarkTideMarkdownStyles;
+}
+
 function marktideExportMermaidSharedScript() {
-  if (typeof window.MarkTideCreateMermaidShared !== 'function') return '';
+  const createMermaidShared = marktideRequireMermaidFactory();
 
   return `
-    window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()};
+    window.MarkTideCreateMermaidShared = ${createMermaidShared.toString()};
     window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);
   `;
+}
+
+function marktideExportCodeCopyScript() {
+  if (typeof CodeCopyHandler !== 'function') {
+    throw new Error('Shared code copy handler is required for HTML export.');
+  }
+
+  return `
+    ${CodeCopyHandler.toString()}
+    function bootCodeCopy() {
+      var copyHandler = new CodeCopyHandler();
+      copyHandler.init();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootCodeCopy);
+    } else {
+      bootCodeCopy();
+    }
+  `;
+}
+
+function marktideExportCodeWrapScript() {
+  if (typeof window.MarkTideCreateCodeWrapController !== 'function') {
+    throw new Error('Shared code wrap controller is required for HTML export.');
+  }
+
+  return `
+    window.MarkTideCreateCodeWrapController = ${window.MarkTideCreateCodeWrapController.toString()};
+    function bootCodeWrap() {
+      window.MarkTideCodeWrap = window.MarkTideCreateCodeWrapController(window, {
+        rootSelector: '.markdown-body'
+      });
+      window.MarkTideCodeWrap.init();
+      var mermaidReady = window.MarkTideMermaidRenderPromise || Promise.resolve();
+      Promise.resolve(mermaidReady).then(function () {
+        if (window.MarkTideMathJax && window.MarkTideMathJax.typeset) {
+          return window.MarkTideMathJax.typeset(document.body);
+        }
+        return false;
+      }).then(function () {
+        window.MarkTideCodeWrap.scheduleRefresh(document.querySelector('.markdown-body'));
+      }).catch(function () {});
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootCodeWrap);
+    } else {
+      bootCodeWrap();
+    }
+  `;
+}
+
+function marktideRequireMathJax() {
+  if (!window.MarkTideMathJax
+    || typeof window.MarkTideMathJax.getConfigScript !== 'function') {
+    throw new Error('Shared MathJax configuration is required for HTML export.');
+  }
+
+  return window.MarkTideMathJax;
+}
+
+function marktideExportMathJaxConfigScript() {
+  return marktideRequireMathJax().getConfigScript();
 }
 
 class ImportExportManager {
@@ -67,44 +140,6 @@ class ImportExportManager {
 
   minifyJS(js) {
     return js.trim();
-  }
-
-  getDecimalOutlineListStyles(textColor) {
-    return `
-        .markdown-body ol,
-        .markdown-body ol ol {
-            list-style: none !important;
-            padding-left: 2.2em !important;
-            margin-left: 0 !important;
-            counter-reset: item !important;
-        }
-
-        .markdown-body ol li {
-            list-style: none !important;
-            color: ${textColor} !important;
-        }
-
-        .markdown-body ol li::marker {
-            content: "" !important;
-        }
-
-        .markdown-body ol > li {
-            counter-increment: item !important;
-            position: relative !important;
-        }
-
-        .markdown-body ol > li::before {
-            content: counters(item, ".") ". " !important;
-            position: absolute !important;
-            left: -2.2em !important;
-            width: 2.2em !important;
-            padding-right: 0.2em !important;
-            box-sizing: border-box !important;
-            text-align: right !important;
-            font-weight: 600 !important;
-            color: ${textColor} !important;
-        }
-    `;
   }
 
   // SINGLE SOURCE OF TRUTH: plain text conversion used by both copy-as-text and export-as-txt
@@ -621,1039 +656,48 @@ class ImportExportManager {
   }
 
   exportAsHTML() {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+      throw new Error('Shared Markdown rendering pipeline is required for HTML export.');
+    }
+
     const markdown = this.markdownEditor.value;
     
-    // Create an enhanced renderer for HTML export (with copy buttons)
-    const exportRenderer = new marked.Renderer();
-    exportRenderer.code = function (code, language) {
-      if (language === 'mermaid') {
-        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container" data-mermaid-source="${marktideExportEncodeMermaidSource(code)}"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
-      }
-      
-      const displayLanguage = language || "text"; // Keep user's original language label
-      const uniqueId = 'code-block-' + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        const highlighted = window.MarktideCodeHighlight
-          ? window.MarktideCodeHighlight.highlight(code, language)
-          : {
-              language: hljs.getLanguage(language) ? language : "plaintext",
-              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
-            };
-        
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideExportWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs ${highlighted.language}" id="${uniqueId}">${highlighted.value}</code></pre>
-          </div>
-        `;
-      } catch (e) {
-        // Fallback to plain text if highlighting fails
-        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `
-          <div class="enhanced-code-block">
-            <div class="code-block-header">
-              <span class="code-language">${displayLanguage}</span>
-              <div class="code-block-header-actions">
-                ${marktideExportWrapButtonHtml()}
-                <button type="button" class="copy-code-btn" data-code-id="${uniqueId}" title="Copy code" aria-label="Copy code" data-marktide-tip="Copy code">
-                  <i class="bi bi-copy"></i>
-                </button>
-              </div>
-            </div>
-            <pre><code class="hljs plaintext" id="${uniqueId}">${escapedCode}</code></pre>
-          </div>
-        `;
-      }
-    };
+    const exportRenderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: true,
+      includeMermaidSource: true,
+    });
     
     // Use the enhanced renderer for HTML export
-    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
-      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer })
-      : marked.parse(markdown, { renderer: exportRenderer });
-    const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: [
-        'mjx-container',
-        'svg',
-        'line',
-        'path',
-        'g',
-        'circle',
-        'rect',
-        'marker',
-        'defs',
-        'pattern',
-        'clipPath',
-        'mark',
-        'abbr',
-      ],
-      ADD_ATTR: [
-        'id',
-        'class',
-        'style',
-        'viewBox',
-        'xmlns',
-        'width',
-        'height',
-        'stroke',
-        'stroke-width',
-        'stroke-linecap',
-        'fill',
-        'x1',
-        'y1',
-        'x2',
-        'y2',
-        'd',
-        'transform',
-        'marker-end',
-        'marker-start',
-        'aria-hidden',
-        'focusable',
-        'aria-pressed',
-        'aria-label',
-        'title',
-        'tabindex',
-        'role',
-        'type',
-        'data-marktide-tip',
-        'data-code-id',
-        'data-mermaid-source',
-      ],
-    });
+    const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer });
+    const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'html' });
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const isDarkMode = currentTheme === "dark";
     
-    // Theme-specific styles - Grok theme
-    const themeStyles = isDarkMode ? `
-        html,
-        body {
-            box-sizing: border-box;
-            background-color: #000000 !important;
-            color: #e6edf3 !important;
-            color-scheme: dark;
-            --text-color: #e6edf3;
-            --border-color: #1a1a1a;
-            --accent-color: #4fc3f7;
-            --button-bg: #1a1a1a;
-            --button-bg-rgb: 26, 26, 26;
-            --button-hover: rgba(79, 195, 247, 0.1);
-        }
-        body {
-            min-width: 200px;
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 45px;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-        .markdown-body {
-            background-color: #000000 !important;
-            color: #e6edf3 !important;
-            color-scheme: dark;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-            max-width: 920px !important;
-            font-size: 1.05rem !important;
-            line-height: 1.7 !important;
-            /* Inline code variables for dark theme */
-            --code-inline-bg: #29241E;
-            --code-inline-color: #FFD085;
-        }
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
-        .markdown-body h1 { font-size: 2.1em !important; }
-        .markdown-body h2 { font-size: 1.7em !important; }
-        .markdown-body h3 { font-size: 1.4em !important; }
-        .markdown-body mark { background-color: #fff3a3 !important; color: #24292e !important; padding: 0.08em 0.18em !important; border-radius: 3px !important; }
-        .markdown-body abbr[title] { text-decoration: underline dotted currentColor !important; text-underline-offset: 0.18em !important; cursor: help !important; }
-        
-        /* List styling - Grok-style solid bullets */
-        .markdown-body ul {
-            list-style-type: disc !important;
-            padding-left: 2.2em !important;
-        }
-        
-        .markdown-body ul li::marker {
-            color: #e6edf3 !important;
-        }
-        
-        ${this.getDecimalOutlineListStyles('#e6edf3')}
-        
-        .markdown-body li {
-            margin-bottom: 0.25em !important;
-        }
-        
-        .markdown-body li > p {
-            margin-top: 0.5em !important;
-            margin-bottom: 0.5em !important;
-        }
-        
-        /* Grok dark mode code highlighting */
-        .hljs {
-            background: #1a1a1a !important;
-            color: #e6edf3 !important;
-        }
-        
-        /* Grok dark mode table styles */
-        .markdown-body table { background-color: #0f1318 !important; border-color: #30363d !important; }
-        .markdown-body table tr { background-color: #0f1318 !important; border-top: 1px solid #30363d !important; }
-        .markdown-body table tr:nth-child(2n) { background-color: #141a22 !important; }
-        .markdown-body table th, .markdown-body table td { border: 1px solid #30363d !important; padding: 9px 20px !important; }
-        
-        /* Grok dark mode code blocks */
-        .markdown-body pre {
-            background-color: #242628 !important;
-            border-radius: 6px !important;
-            padding: 16px !important;
-            margin: 1.5em 0 !important;
-            overflow: auto !important;
-            font-size: 85% !important;
-            line-height: 1.45 !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
-        }
-        
-        .markdown-body code:not(pre code) {
-            background-color: #29241E;
-            color: #FFD085;
-            font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace;
-            font-feature-settings: "liga" 1, "calt" 1;
-        }
-        
-        .markdown-body pre code,
-        .markdown-body pre code.hljs {
-            background-color: #242628 !important;
-            color: #e6edf3 !important;
-            padding: 0 !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
-        }
-        
-        /* Grok dark mode horizontal rules */
-        .markdown-body hr {
-            background-color: #30363d !important;
-            border: none !important;
-            height: 2px !important;
-            margin: 30px 0 !important;
-            opacity: 1 !important;
-        }
-        
-        /* Grok dark mode blockquotes */
-        .markdown-body blockquote {
-            color: #cccccc !important;
-            border-left: 4px solid #4fc3f7 !important;
-            background: transparent !important;
-        }
-        
-        .markdown-body blockquote p {
-            color: #cccccc !important;
-        }
-        
-        .markdown-body blockquote::before,
-        .markdown-body blockquote::after {
-            color: #cccccc !important;
-        }
-        
-        /* Grok dark mode links */
-        .markdown-body a {
-            color: #4fc3f7 !important;
-        }
-        
-        /* Grok dark mode headings */
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, 
-        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-            color: #f0f3f6 !important;
-            border-bottom-color: #333333 !important;
-            font-weight: 900 !important;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-        .markdown-body h1 code, .markdown-body h2 code, .markdown-body h3 code,
-        .markdown-body h4 code, .markdown-body h5 code, .markdown-body h6 code {
-            font-weight: 900 !important;
-        }
-        
-        /* Bold text styling for Grok dark mode */
-        .markdown-body strong,
-        .markdown-body b {
-            font-weight: 700 !important;
-            color: #f0f3f6 !important;
-            font-style: normal !important;
-        }
-        
-        /* Handle nested formatting in Grok dark mode */
-        .markdown-body strong em,
-        .markdown-body strong i,
-        .markdown-body b em,
-        .markdown-body b i {
-            font-weight: 900 !important;
-            color: #f0f3f6 !important;
-        }
-        
-        /* Blockquote bold text should be less aggressive */
-        .markdown-body blockquote strong,
-        .markdown-body blockquote b {
-            font-weight: 700 !important;
-            color: #cccccc !important;
-        }
-        
-        /* Math expressions in Grok dark mode */
-        mjx-container {
-            color: #e6edf3 !important;
-        }
-        
-        mjx-math {
-            color: #e6edf3 !important;
-        }
-        
-        /* Fix for transparent images - override github-markdown-css background */
-        .markdown-body img {
-            background-color: transparent !important;
-        }
-
-        .markdown-body img[src*="img.shields.io"] {
-            display: block !important;
-            width: fit-content !important;
-            max-width: 100% !important;
-            height: auto !important;
-            border-radius: 6px !important;
-            image-rendering: auto !important;
-        }
-
-        .markdown-body p:has(img[src*="img.shields.io"]) {
-            margin: 12px 0 !important;
-            line-height: 0.75 !important;
-        }
-    ` : `
-        html,
-        body {
-            box-sizing: border-box;
-            background-color: #ffffff !important;
-            color: #24292e !important;
-            color-scheme: light;
-            --text-color: #000000;
-            --border-color: #e0e0e0;
-            --accent-color: #4fc3f7;
-            --button-bg: #f8f9fa;
-            --button-bg-rgb: 248, 249, 250;
-            --button-hover: rgba(79, 195, 247, 0.1);
-        }
-        body {
-            min-width: 200px;
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 45px;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-        .markdown-body {
-            background-color: #ffffff !important;
-            color: #24292e !important;
-            color-scheme: light;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-            max-width: 920px !important;
-            font-size: 1.05rem !important;
-            line-height: 1.7 !important;
-            /* Inline code variables for light theme */
-            --code-inline-bg: #FFF8EC;
-            --code-inline-color: #8B4500;
-        }
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; }
-        .markdown-body h1 { font-size: 2.1em !important; }
-        .markdown-body h2 { font-size: 1.7em !important; }
-        .markdown-body h3 { font-size: 1.4em !important; }
-        .markdown-body mark { background-color: #fff3a3 !important; color: #24292e !important; padding: 0.08em 0.18em !important; border-radius: 3px !important; }
-        .markdown-body abbr[title] { text-decoration: underline dotted currentColor !important; text-underline-offset: 0.18em !important; cursor: help !important; }
-        
-        /* List styling - Grok-style solid bullets */
-        .markdown-body ul {
-            list-style-type: disc !important;
-            padding-left: 2.2em !important;
-        }
-        
-        .markdown-body ul li::marker {
-            color: #24292e !important;
-        }
-        
-        ${this.getDecimalOutlineListStyles('#24292e')}
-        
-        .markdown-body li {
-            margin-bottom: 0.25em !important;
-        }
-        
-        .markdown-body li > p {
-            margin-top: 0.5em !important;
-            margin-bottom: 0.5em !important;
-        }
-        
-        /* Grok light mode code highlighting */
-        .hljs {
-            background: #f8f9fa !important;
-            color: #24292e !important;
-        }
-        
-        /* Grok light mode table styles */
-        .markdown-body table { background-color: #ffffff !important; border-color: #e0e0e0 !important; }
-        .markdown-body table tr { background-color: #ffffff !important; border-top: 1px solid #e0e0e0 !important; }
-        .markdown-body table tr:nth-child(2n) { background-color: #f8f9fa !important; }
-        .markdown-body table th, .markdown-body table td { border: 1px solid #e0e0e0 !important; padding: 9px 20px !important; }
-        
-        /* Grok light mode code blocks */
-        .markdown-body pre {
-            background-color: #f8f9fa !important;
-            border-radius: 6px !important;
-            padding: 16px !important;
-            margin: 1.5em 0 !important;
-            overflow: auto !important;
-            font-size: 85% !important;
-            line-height: 1.45 !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
-        }
-        
-        .markdown-body code:not(pre code) {
-            background-color: var(--code-inline-bg) !important;
-            color: var(--code-inline-color) !important;
-            font-weight: 600 !important;
-            border-radius: 3px !important;
-            padding: 0.2em 0.4em !important;
-            font-family: "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
-        }
-        
-        .markdown-body pre code,
-        .markdown-body pre code.hljs {
-            background-color: #f8f9fa !important;
-            color: #24292e !important;
-            padding: 0 !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace !important;
-            font-feature-settings: "liga" 1, "calt" 1 !important;
-        }
-        
-        /* Grok light mode horizontal rules */
-        .markdown-body hr {
-            background-color: #c9d1d9 !important;
-            border: none !important;
-            height: 2px !important;
-            margin: 30px 0 !important;
-            opacity: 1 !important;
-        }
-        
-        /* Grok light mode blockquotes */
-        .markdown-body blockquote {
-            color: #666666 !important;
-            border-left: 4px solid #4fc3f7 !important;
-            background: transparent !important;
-        }
-        
-        .markdown-body blockquote p {
-            color: #666666 !important;
-        }
-        
-        .markdown-body blockquote::before,
-        .markdown-body blockquote::after {
-            color: #666666 !important;
-        }
-        
-        /* Light mode links */
-        .markdown-body a {
-            color: #0366d6 !important;
-        }
-        
-        /* Light mode headings */
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, 
-        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-            color: #24292e !important;
-            border-bottom-color: #e1e4e8 !important;
-            font-weight: 900 !important;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-        .markdown-body h1 code, .markdown-body h2 code, .markdown-body h3 code,
-        .markdown-body h4 code, .markdown-body h5 code, .markdown-body h6 code {
-            font-weight: 900 !important;
-        }
-        /* Bold text styling for light mode to match preview */
-        .markdown-body strong,
-        .markdown-body b {
-            font-weight: 700 !important;
-            color: #24292e !important;
-            font-style: normal !important;
-        }
-        
-        /* Math expressions in light mode */
-        mjx-container {
-            color: #24292e !important;
-        }
-        
-        mjx-math {
-            color: #24292e !important;
-        }
-        
-        /* Fix for transparent images - override github-markdown-css background */
-        .markdown-body img {
-            background-color: transparent !important;
-        }
-
-        .markdown-body img[src*="img.shields.io"] {
-            display: block !important;
-            width: fit-content !important;
-            max-width: 100% !important;
-            height: auto !important;
-            border-radius: 6px !important;
-            image-rendering: auto !important;
-        }
-
-        .markdown-body p:has(img[src*="img.shields.io"]) {
-            margin: 12px 0 !important;
-            line-height: 0.75 !important;
-        }
-    `;
-    
+    // Shared Markdown document styles used by preview, HTML export, and PDF export.
+    const themeStyles = marktideRequireMarkdownStyles().getStandaloneStyles({
+      mode: 'html'
+    });
     // Choose appropriate highlight.js theme
-    const highlightTheme = window.MarktideHighlightTheme
-        ? window.MarktideHighlightTheme.getThemeUrl(isDarkMode)
-        : (isDarkMode
-            ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css"
-            : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css");
-    const exportHighlightTokenStyles = window.MarktideHighlightTheme
-        ? window.MarktideHighlightTheme.getPrintTokenCss()
-        : '';
+    if (!window.MarktideHighlightTheme) {
+      throw new Error('Shared highlight theme helper is required for HTML export.');
+    }
+
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(isDarkMode, { mode: 'html' });
     
     const filename = this.generateSmartFilename(markdown, '.html');
     const documentTitle = this.generateSmartFilename(markdown, '');
     
-    // Enhanced code block styles with theme support
-    const enhancedCodeBlockStyles = isDarkMode ? `
-        /* Enhanced code block styles - Dark Mode */
-        .enhanced-code-block {
-            background-color: #242628 !important;
-            border-radius: 12px;
-            margin: 1.5em 0 !important;
-            overflow: hidden;
-            border: 1px solid #30363d !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .enhanced-code-block:hover {
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .code-block-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 16px;
-            background: rgba(255, 255, 255, 0.05) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .code-language {
-            color: #ffffff !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            text-transform: lowercase;
-            opacity: 0.8;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .code-block-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip] {
-            position: relative;
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
-            content: attr(data-marktide-tip);
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 50%;
-            z-index: 60;
-            padding: 0.32rem 0.55rem;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            line-height: 1.2;
-            letter-spacing: 0.01em;
-            white-space: nowrap;
-            color: #f3f4f8;
-            background: rgba(22, 24, 30, 0.96);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
-            pointer-events: none;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-50%) translateY(-3px);
-            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
-                opacity: 1;
-                visibility: visible;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .markdown-body .wrap-code-btn {
-            display: none;
-            background: transparent;
-            border: none;
-            border-radius: 50%;
-            color: #ffffff !important;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-            transition: opacity 0.15s ease, transform 0.1s ease;
-        }
-
-        .markdown-body .wrap-code-btn.wrap-code-btn--show {
-            display: flex;
-        }
-
-        .markdown-body .wrap-code-btn:hover {
-            opacity: 1;
-        }
-
-        .markdown-body .wrap-code-btn:active {
-            transform: scale(0.92);
-        }
-
-        .markdown-body .wrap-code-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 0;
-        }
-
-        .markdown-body .wrap-code-svg {
-            width: 16px;
-            height: 16px;
-            display: block;
-        }
-
-        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
-            display: none !important;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
-            display: none !important;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped > pre {
-            overflow-x: hidden;
-            white-space: pre-wrap;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
-            white-space: pre-wrap !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .enhanced-code-block .copy-code-btn {
-            background: transparent;
-            border: none;
-            border-radius: 50%;
-            color: #ffffff !important;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            font-size: 16px;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-        }
-
-        .enhanced-code-block .copy-code-btn:hover {
-            background: #3a3a3a !important;
-            opacity: 1;
-        }
-
-        .enhanced-code-block .copy-code-btn:active {
-            background: #4a4a4a !important;
-            transform: scale(0.9);
-            transition: transform 0.1s ease;
-        }
-
-        .enhanced-code-block .copy-code-btn.copied {
-            background: #3a3a3a !important;
-            opacity: 1;
-        }
-
-        .enhanced-code-block .copy-code-btn.error { background: rgba(244,67,54,.15) !important; color: #f44336 !important; }
-
-        .enhanced-code-block pre {
-            background: transparent !important;
-            border-radius: 0;
-            padding: 16px;
-            margin: 0;
-            overflow: auto;
-            font-size: 85%;
-            line-height: 1.45;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            font-feature-settings: "liga" 1, "calt" 1;
-        }
-        
-        .enhanced-code-block pre code,
-        .enhanced-code-block pre code.hljs {
-            background: transparent !important;
-            padding: 0;
-            border-radius: 0;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            font-feature-settings: "liga" 1, "calt" 1;
-        }
-
-        /* Override GitHub Markdown CSS margins for enhanced code blocks */
-        .markdown-body .enhanced-code-block {
-            margin: 1.5em 0 !important;
-        }
-
-        .markdown-body .enhanced-code-block pre {
-            margin: 0 !important;
-        }
-    ` : `
-        /* Enhanced code block styles - Light Mode */
-        .enhanced-code-block {
-            background-color: #f6f8fa !important;
-            border-radius: 12px;
-            margin: 1.5em 0 !important;
-            overflow: hidden;
-            border: 1px solid #e1e4e8 !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
-
-        .enhanced-code-block:hover {
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-            transform: translateY(-1px);
-        }
-
-        .code-block-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 16px;
-            background: rgba(0, 0, 0, 0.03) !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .code-language {
-            color: #24292e !important;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            text-transform: lowercase;
-            opacity: 0.8;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .code-block-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip] {
-            position: relative;
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip]::after {
-            content: attr(data-marktide-tip);
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 50%;
-            z-index: 60;
-            padding: 0.32rem 0.55rem;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            line-height: 1.2;
-            letter-spacing: 0.01em;
-            white-space: nowrap;
-            color: #f3f4f8;
-            background: rgba(22, 24, 30, 0.96);
-            border: 1px solid rgba(0, 0, 0, 0.12);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
-            pointer-events: none;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-50%) translateY(-3px);
-            transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .markdown-body .code-block-header-actions [data-marktide-tip]:hover::after {
-                opacity: 1;
-                visibility: visible;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        .markdown-body .code-block-header-actions [data-marktide-tip]:focus-visible::after {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .markdown-body .wrap-code-btn {
-            display: none;
-            background: transparent;
-            border: none;
-            border-radius: 50%;
-            color: #24292e !important;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-            transition: opacity 0.15s ease, transform 0.1s ease;
-        }
-
-        .markdown-body .wrap-code-btn.wrap-code-btn--show {
-            display: flex;
-        }
-
-        .markdown-body .wrap-code-btn:hover {
-            opacity: 1;
-        }
-
-        .markdown-body .wrap-code-btn:active {
-            transform: scale(0.92);
-        }
-
-        .markdown-body .wrap-code-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 0;
-        }
-
-        .markdown-body .wrap-code-svg {
-            width: 16px;
-            height: 16px;
-            display: block;
-        }
-
-        .markdown-body .enhanced-code-block:not(.is-wrapped) .wrap-code-icon--unwrap {
-            display: none !important;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped .wrap-code-icon--wrap {
-            display: none !important;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped > pre {
-            overflow-x: hidden;
-            white-space: pre-wrap;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .markdown-body .enhanced-code-block.is-wrapped > pre code.hljs {
-            white-space: pre-wrap !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .enhanced-code-block .copy-code-btn {
-            background: transparent;
-            border: none;
-            border-radius: 50%;
-            color: #24292e !important;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            font-size: 16px;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-        }
-
-        .enhanced-code-block .copy-code-btn:hover {
-            background: #e0e0e0 !important;
-            opacity: 1;
-        }
-
-        .enhanced-code-block .copy-code-btn:active {
-            background: #d0d0d0 !important;
-            transform: scale(0.9);
-            transition: transform 0.1s ease;
-        }
-
-        .enhanced-code-block .copy-code-btn.copied {
-            background: #e0e0e0 !important;
-            opacity: 1;
-        }
-
-        .enhanced-code-block .copy-code-btn.error { background: rgba(244,67,54,.15) !important; color: #f44336 !important; }
-
-        .enhanced-code-block pre {
-            background: transparent !important;
-            border-radius: 0;
-            padding: 16px;
-            margin: 0;
-            overflow: auto;
-            font-size: 85%;
-            line-height: 1.45;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            font-feature-settings: "liga" 1, "calt" 1;
-        }
-        
-        .enhanced-code-block pre code,
-        .enhanced-code-block pre code.hljs {
-            background: transparent !important;
-            padding: 0;
-            border-radius: 0;
-            font-family: "Fira Code", "JetBrains Mono", "Consolas", "Monaco", "Lucida Console", monospace;
-            font-feature-settings: "liga" 1, "calt" 1;
-        }
-
-        /* Override GitHub Markdown CSS margins for enhanced code blocks */
-        .markdown-body .enhanced-code-block {
-            margin: 1.5em 0 !important;
-        }
-
-        .markdown-body .enhanced-code-block pre {
-            margin: 0 !important;
-        }
-    `;
-
-    const codeBlockPreScrollbarStyles = `
-        /* hljs: pre>code uses overflow-x:auto — scroll on <pre> so scrollbar styling works */
-        .markdown-body pre code.hljs,
-        .enhanced-code-block pre code.hljs {
-            overflow-x: visible !important;
-            overflow-y: visible !important;
-        }
-        .markdown-body pre,
-        .enhanced-code-block > pre {
-            scrollbar-width: thin;
-            scrollbar-color: transparent transparent;
-            scrollbar-gutter: stable;
-            transition: scrollbar-color 0.2s ease;
-        }
-        .markdown-body pre:hover {
-            scrollbar-color: rgba(79, 195, 247, 0.55) transparent;
-        }
-        .markdown-body pre::-webkit-scrollbar,
-        .enhanced-code-block > pre::-webkit-scrollbar {
-            width: 4px !important;
-            height: 4px !important;
-            background: transparent !important;
-        }
-        .markdown-body pre::-webkit-scrollbar-button,
-        .enhanced-code-block > pre::-webkit-scrollbar-button {
-            display: none !important;
-            width: 0 !important;
-            height: 0 !important;
-        }
-        .markdown-body pre::-webkit-scrollbar-track,
-        .enhanced-code-block > pre::-webkit-scrollbar-track {
-            background: transparent !important;
-            border: 0 !important;
-        }
-        .markdown-body pre::-webkit-scrollbar-thumb,
-        .enhanced-code-block > pre::-webkit-scrollbar-thumb {
-            background: transparent !important;
-            border: 0 !important;
-            border-radius: 999px !important;
-            transition: background-color 0.2s ease;
-        }
-        .markdown-body pre:hover::-webkit-scrollbar-thumb {
-            background: rgba(79, 195, 247, 0.55) !important;
-        }
-        .markdown-body pre:hover::-webkit-scrollbar-thumb:hover {
-            background: rgba(79, 195, 247, 0.8) !important;
-        }
-        .markdown-body pre::-webkit-scrollbar-corner,
-        .enhanced-code-block > pre::-webkit-scrollbar-corner {
-            background: transparent !important;
-        }
-    `;
-
-    const mermaidStyles = `
-        /* Mermaid diagram styles */
-        .mermaid-container {
-            position: relative;
-            text-align: center;
-            margin: 1em 0;
-            overflow-x: auto;
-            overflow-y: visible;
-            max-width: 100%;
-            background: #ffffff;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            padding: 16px;
-        }
-
-        .mermaid {
-            text-align: center;
-            margin: 0;
-            overflow: visible;
-            max-width: 100%;
-        }
-        
-        .mermaid svg {
-            display: block;
-            max-width: none;
-            height: auto;
-            margin: 0 auto;
-            overflow: visible;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-        }
-
-        .mermaid .node rect,
-        .mermaid .node circle,
-        .mermaid .node ellipse,
-        .mermaid .node polygon {
-            stroke-width: 1px;
-        }
-
-        .mermaid .nodeLabel,
-        .mermaid .edgeLabel,
-        .mermaid .label,
-        .mermaid text {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        }
-
-    `;
-    
-    const minifiedStyles = this.minifyCSS(themeStyles + enhancedCodeBlockStyles + codeBlockPreScrollbarStyles + mermaidStyles + exportHighlightTokenStyles);
+    const minifiedStyles = this.minifyCSS(themeStyles);
+    const exportAssetLinks = marktideRequireExportAssets();
+    const fontLinks = exportAssetLinks.getFontLinks({ mode: 'html' });
+    const commonStylesheetLinks = exportAssetLinks.getCommonStylesheetLinks({
+      mode: 'html',
+      includeBootstrapIcons: true
+    });
+    const mermaidScript = exportAssetLinks.getMermaidScriptTag({ mode: 'html' });
+    const mathJaxScript = exportAssetLinks.getMathJaxScriptTag({ mode: 'html' });
 
     const fullHTML = `<!DOCTYPE html>
 <html lang="en" data-theme="${currentTheme || 'light'}">
@@ -1662,296 +706,28 @@ class ImportExportManager {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${documentTitle || 'Exported Markdown'}</title>
     <link rel="icon" href="https://raw.githubusercontent.com/zigzag-007/MarkTide-Viewer/main/assets/img/icon.jpg" type="image/jpeg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    ${fontLinks}
+    ${commonStylesheetLinks}
     <link rel="stylesheet" href="${highlightTheme}">
     <style>${minifiedStyles}</style>
 </head>
 <body>
     <article class="markdown-body">
-        ${sanitizedHtml}
+        ${renderedHtml}
     </article>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
+    ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>
     <script>${this.minifyJS(marktideExportMermaidToolbarScript())}</script>
     <script>${this.minifyJS(`
-        // Apply syntax highlighting to code blocks
-        document.querySelectorAll('pre code').forEach((block) => {
-            if (!block.classList.contains('mermaid') && !block.classList.contains('pseudocode')) {
-                hljs.highlightElement(block);
-            }
-        });
-        
-        // Initialize and render Mermaid diagrams
-        const mermaidConfig = window.MarkTideMermaidShared
-            ? window.MarkTideMermaidShared.getMermaidConfig({ mode: 'export' })
-            : {
-                startOnLoad: false,
-                theme: 'default',
-                themeVariables: {
-                    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-                },
-                securityLevel: 'strict',
-                htmlLabels: false,
-                flowchart: {
-                    useMaxWidth: false,
-                    htmlLabels: false,
-                    curve: 'basis',
-                    nodeSpacing: 60,
-                    rankSpacing: 70
-                },
-                fontSize: 16
-            };
-
-        mermaid.initialize(mermaidConfig);
-
-        function stabilizeMermaidDiagrams() {
-            if (window.MarkTideMermaidShared) {
-                window.MarkTideMermaidShared.stabilizeMermaidDiagrams(document);
-            }
-        }
-        
-        // Render all mermaid diagrams
-        try {
-            const mermaidResult = mermaid.run
-                ? mermaid.run({ nodes: document.querySelectorAll('.mermaid') })
-                : mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-
-            if (mermaidResult && typeof mermaidResult.then === 'function') {
-                mermaidResult.then(() => {
-                    stabilizeMermaidDiagrams();
-                    if (window.MarkTideMermaidToolbar) {
-                        window.MarkTideMermaidToolbar.enhance(document);
-                    }
-                }).catch((e) => console.warn("Mermaid rendering failed:", e));
-            } else {
-                stabilizeMermaidDiagrams();
-                if (window.MarkTideMermaidToolbar) {
-                    window.MarkTideMermaidToolbar.enhance(document);
-                }
-            }
-        } catch (e) {
-            console.warn("Mermaid rendering failed:", e);
-        }
+        window.MarkTideMermaidRenderPromise = window.MarkTideMermaidShared.renderDiagrams(document, { mode: 'html' })
+            .catch((e) => console.warn("Mermaid rendering failed:", e))
+            .finally(() => window.MarkTideMermaidToolbar.enhance(document));
     `)}</script>
-    <script>${this.minifyJS(`
-        window.MathJax = {
-            tex: {
-                inlineMath: [['\\\\(', '\\\\)']],
-                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
-                processEscapes: true,
-                processEnvironments: true
-            },
-            options: {
-                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                ignoreHtmlClass: 'tex2jax_ignore',
-                processHtmlClass: 'tex2jax_process'
-            }
-        };
-    `)}</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
-    <script>${this.minifyJS(`
-        class CodeCopyHandler {
-            constructor() {
-                this.initialized = false;
-            }
-
-            init() {
-                if (this.initialized) return;
-                document.addEventListener('click', this.handleCopyClick.bind(this));
-                this.initialized = true;
-            }
-
-            handleCopyClick(event) {
-                const copyBtn = event.target.closest('.copy-code-btn');
-                if (!copyBtn) return;
-                event.preventDefault();
-                event.stopPropagation();
-                const codeId = copyBtn.getAttribute('data-code-id');
-                const codeElement = document.getElementById(codeId);
-                if (!codeElement) {
-                    console.warn('Code element not found for ID:', codeId);
-                    return;
-                }
-                const codeText = codeElement.textContent || codeElement.innerText || '';
-                this.copyToClipboard(codeText, copyBtn);
-            }
-
-            async copyToClipboard(text, button) {
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(text);
-                        this.showCopySuccess(button);
-                    } else {
-                        this.fallbackCopyToClipboard(text, button);
-                    }
-                } catch (error) {
-                    console.error('Copy failed:', error);
-                    this.fallbackCopyToClipboard(text, button);
-                }
-            }
-
-            fallbackCopyToClipboard(text, button) {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                try {
-                    textArea.focus();
-                    textArea.select();
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        this.showCopySuccess(button);
-                    } else {
-                        this.showCopyError(button);
-                    }
-                } catch (error) {
-                    console.error('Fallback copy failed:', error);
-                    this.showCopyError(button);
-                } finally {
-                    document.body.removeChild(textArea);
-                }
-            }
-
-            showCopySuccess(button) {
-                const originalIcon = button.innerHTML;
-                button.classList.add('copied');
-                button.innerHTML = '<i class="bi bi-check2"></i>';
-                setTimeout(() => {
-                    button.classList.remove('copied');
-                    button.innerHTML = originalIcon;
-                }, 1500);
-            }
-
-            showCopyError(button) {
-                const originalIcon = button.innerHTML;
-                button.classList.add('error');
-                button.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
-                setTimeout(() => {
-                    button.classList.remove('error');
-                    button.innerHTML = originalIcon;
-                }, 2000);
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                const copyHandler = new CodeCopyHandler();
-                copyHandler.init();
-            });
-        } else {
-            const copyHandler = new CodeCopyHandler();
-            copyHandler.init();
-        }
-    `)}</script>
-    <script>${this.minifyJS(`
-(function () {
-  var ROOT_SELECTOR = ".markdown-body";
-  var DEBOUNCE_MS = 64;
-  var debounceId = null;
-  function preHasHorizontalOverflow(pre) {
-    return Math.ceil(pre.scrollWidth) > Math.floor(pre.clientWidth) + 1;
-  }
-  function updateBlock(block) {
-    var pre = block.querySelector(":scope > pre");
-    var btn = block.querySelector(".wrap-code-btn");
-    if (!pre || !btn) return;
-    var wrapped = block.classList.contains("is-wrapped");
-    var show = wrapped || preHasHorizontalOverflow(pre);
-    if (show) {
-      btn.classList.add("wrap-code-btn--show");
-      btn.setAttribute("aria-hidden", "false");
-      btn.removeAttribute("tabindex");
-    } else {
-      btn.classList.remove("wrap-code-btn--show");
-      btn.setAttribute("aria-hidden", "true");
-      btn.setAttribute("tabindex", "-1");
-    }
-    btn.setAttribute("aria-pressed", wrapped ? "true" : "false");
-    var unwrapLabel = "Unwrap lines";
-    var wrapLabel = "Wrap long lines";
-    var tip = wrapped ? unwrapLabel : wrapLabel;
-    btn.setAttribute("title", tip);
-    btn.setAttribute("aria-label", tip);
-    btn.setAttribute("data-marktide-tip", tip);
-  }
-  function refresh(root) {
-    if (!root || !root.nodeType) root = document.querySelector(ROOT_SELECTOR);
-    if (!root) return;
-    root.querySelectorAll(".enhanced-code-block").forEach(updateBlock);
-  }
-  function scheduleRefresh(root) {
-    if (debounceId) clearTimeout(debounceId);
-    debounceId = setTimeout(function () {
-      debounceId = null;
-      requestAnimationFrame(function () {
-        refresh(root);
-      });
-    }, DEBOUNCE_MS);
-  }
-  function onWrapClick(event) {
-    var btn = event.target.closest(".wrap-code-btn");
-    if (!btn) return;
-    var root = document.querySelector(ROOT_SELECTOR);
-    if (!root || !root.contains(btn)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    var block = btn.closest(".enhanced-code-block");
-    if (!block) return;
-    block.classList.toggle("is-wrapped");
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        refresh(root);
-      });
-    });
-  }
-  function boot() {
-    document.addEventListener("click", onWrapClick);
-    var root = document.querySelector(ROOT_SELECTOR);
-    if (root && typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(function () {
-        scheduleRefresh(root);
-      }).observe(root);
-    }
-    window.addEventListener("resize", function () {
-      scheduleRefresh(document.querySelector(ROOT_SELECTOR));
-    });
-    var r = document.querySelector(ROOT_SELECTOR);
-    if (r) {
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          refresh(r);
-        });
-      });
-    }
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      var p = window.MathJax.typesetPromise([document.body]);
-      if (p && typeof p.then === "function") {
-        p.then(function () {
-          scheduleRefresh(document.querySelector(ROOT_SELECTOR));
-        }).catch(function () {});
-      }
-    }
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
-})();
-    `)}</script>
+    <script>${this.minifyJS(marktideExportMathJaxConfigScript())}</script>
+    ${mathJaxScript}
+    <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
+    <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
 </body>
 </html>`;
     

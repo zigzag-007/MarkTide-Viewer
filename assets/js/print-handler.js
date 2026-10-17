@@ -1,16 +1,47 @@
 // Print handling functionality
 
 class PrintHandler {
-  constructor() {
-    this.printButton = null;
-    this.mobilePrintButton = null;
+  getLogicalTableCells(rows) {
+    const occupiedColumns = [];
+    const logicalCells = [];
+
+    Array.from(rows || []).forEach((row) => {
+      let columnIndex = 0;
+
+      Array.from(row.children || []).forEach((cell) => {
+        while (occupiedColumns[columnIndex] > 0) {
+          columnIndex += 1;
+        }
+
+        const columnSpan = Math.max(1, Number.parseInt(cell.colSpan, 10) || 1);
+        const rowSpan = Math.max(1, Number.parseInt(cell.rowSpan, 10) || 1);
+        logicalCells.push({
+          cell,
+          columnIndex,
+          columnSpan,
+          rowSpan,
+        });
+        for (let offset = 0; offset < columnSpan; offset += 1) {
+          occupiedColumns[columnIndex + offset] = Math.max(
+            occupiedColumns[columnIndex + offset] || 0,
+            rowSpan
+          );
+        }
+        columnIndex += columnSpan;
+      });
+
+      occupiedColumns.forEach((remainingRows, index) => {
+        occupiedColumns[index] = Math.max(0, remainingRows - 1);
+      });
+    });
+
+    return logicalCells;
   }
 
-  init() {
-    this.printButton = document.getElementById("print-button");
-    this.mobilePrintButton = document.getElementById("mobile-print-button");
-    
-    // removed old event listeners since we now use dropdown menu
+  getLogicalColumnCount(rows) {
+    return this.getLogicalTableCells(rows).reduce((widestRow, entry) => {
+      return Math.max(widestRow, entry.columnIndex + entry.columnSpan);
+    }, 0);
   }
 
   preparePrintTables(html) {
@@ -48,10 +79,15 @@ class PrintHandler {
     };
 
     wrapper.querySelectorAll('table').forEach((table) => {
-      const firstRow = table.querySelector('tr');
-      const columnCount = firstRow ? firstRow.children.length : 0;
-      const hasLongValue = Array.from(table.querySelectorAll('td:not(:first-child), th:not(:first-child)'))
-        .some((cell) => needsSoftWrap(cell.textContent || ''));
+      const rows = table.rows || table.querySelectorAll('tr');
+      const logicalCells = this.getLogicalTableCells(rows);
+      const valueCells = logicalCells
+        .filter((entry) => entry.columnIndex > 0)
+        .map((entry) => entry.cell);
+      const columnCount = logicalCells.reduce((widestRow, entry) => {
+        return Math.max(widestRow, entry.columnIndex + entry.columnSpan);
+      }, 0);
+      const hasLongValue = valueCells.some((cell) => needsSoftWrap(cell.textContent || ''));
 
       if (columnCount > 0) {
         table.classList.add(`marktide-print-cols-${columnCount}`);
@@ -59,57 +95,165 @@ class PrintHandler {
 
       if (columnCount >= 5) {
         table.classList.add('marktide-print-wide-table');
+        // Leave authored column groups and spanning grids to the browser.
+        if (!table.querySelector('colgroup, col')
+          && logicalCells.some(({ cell }) => {
+            const text = (cell.textContent || '').trim();
+            return text.length >= 80 && text.split(/\s+/).length >= 10;
+          })
+          && logicalCells.every((entry) => entry.columnSpan === 1 && entry.rowSpan === 1)) {
+          const lengths = Array(columnCount).fill(0);
+          const minimums = Array(columnCount).fill(9.5);
+          logicalCells.forEach(({ cell, columnIndex }) => {
+            lengths[columnIndex] = Math.max(lengths[columnIndex],
+              (cell.textContent || '').trim().length);
+            const headerWord = cell.tagName === 'TH'
+              ? Math.max(...(cell.textContent || '').split(/\s+/).map((word) => word.length)) : 0;
+            const codeWord = Math.max(0, ...Array.from(cell.querySelectorAll('code'))
+              .map((code) => Math.min(16, (code.textContent || '').length)));
+            minimums[columnIndex] = Math.max(minimums[columnIndex],
+              2.2 + Math.max(Math.min(8, headerWord) * 1.2, codeWord));
+          });
+          const weights = lengths.map((length) => Math.sqrt(Math.max(1, length)));
+          const minimumTotal = minimums.reduce((total, share) => total + share, 0);
+          if (minimumTotal < 100) {
+            // Reserve readable short columns, then share the rest by content.
+            const shares = Array(columnCount).fill(0);
+            let remaining = 100;
+            let pending = weights.map((weight, index) => index);
+            while (pending.length) {
+              const totalWeight = pending.reduce((total, index) => total + weights[index], 0);
+              const constrained = pending.filter((index) =>
+                remaining * weights[index] / totalWeight < minimums[index]);
+              if (!constrained.length) {
+                pending.forEach((index) => { shares[index] = remaining * weights[index] / totalWeight; });
+                break;
+              }
+              constrained.forEach((index) => {
+                shares[index] = minimums[index];
+                remaining -= shares[index];
+              });
+              pending = pending.filter((index) => !constrained.includes(index));
+            }
+            const colgroup = document.createElement('colgroup');
+            shares.forEach((share) => {
+              const column = document.createElement('col');
+              column.style.setProperty('width', `${share}%`, 'important');
+              colgroup.appendChild(column);
+            });
+            table.insertBefore(colgroup, table.firstChild);
+            table.classList.add('marktide-print-content-table');
+          }
+        }
       }
 
       if (hasLongValue) {
         table.classList.add('marktide-print-long-table');
       }
-    });
 
-    wrapper.querySelectorAll('table td:not(:first-child), table th:not(:first-child)').forEach((cell) => {
-      if (!needsSoftWrap(cell.textContent || '')) return;
+      valueCells.forEach((cell) => {
+        if (!needsSoftWrap(cell.textContent || '')) return;
 
-      cell.classList.add('marktide-print-soft-wrap');
+        cell.classList.add('marktide-print-soft-wrap');
 
-      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
-        acceptNode(node) {
-          if (!needsSoftWrap(node.nodeValue || '')) {
-            return NodeFilter.FILTER_REJECT;
+        const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!needsSoftWrap(node.nodeValue || '')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+
+            if (node.parentElement && node.parentElement.closest('pre')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+
+            return NodeFilter.FILTER_ACCEPT;
           }
+        });
+        const textNodes = [];
 
-          if (node.parentElement && node.parentElement.closest('pre')) {
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          return NodeFilter.FILTER_ACCEPT;
+        while (walker.nextNode()) {
+          textNodes.push(walker.currentNode);
         }
-      });
-      const textNodes = [];
 
-      while (walker.nextNode()) {
-        textNodes.push(walker.currentNode);
-      }
-
-      textNodes.forEach((node) => {
-        const fragment = document.createDocumentFragment();
-        addWrappedText(fragment, node.nodeValue || '');
-        node.parentNode.replaceChild(fragment, node);
+        textNodes.forEach((node) => {
+          const fragment = document.createDocumentFragment();
+          addWrappedText(fragment, node.nodeValue || '');
+          node.parentNode.replaceChild(fragment, node);
+        });
       });
     });
 
     return wrapper.innerHTML;
   }
 
-  stabilizeMermaidDiagrams(printDocument) {
-    const printWindow = printDocument.defaultView || window;
-    const helper = printWindow.MarkTideMermaidShared || window.MarkTideMermaidShared;
-
-    if (helper && helper.stabilizeMermaidDiagrams) {
-      helper.stabilizeMermaidDiagrams(printDocument, { stabilizeDimensions: true });
+  triggerPrint(printFrame, cleanup) {
+    try {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    } finally {
+      cleanup();
     }
   }
 
+  preparePrintTablePagination() {
+    document.querySelectorAll('table.marktide-print-content-table').forEach((table) => {
+      // Keep moderate rows together, not rows that could waste most of a page.
+      Array.from(table.tBodies).forEach((body) => {
+        Array.from(body.rows).forEach((row) => {
+          row.classList.toggle('marktide-print-keep-row', row.getBoundingClientRect().height <= 240);
+        });
+      });
+    });
+  }
+
+  getMermaidFactory() {
+    if (typeof window.MarkTideCreateMermaidShared === 'function') {
+      return window.MarkTideCreateMermaidShared;
+    }
+
+    throw new Error('Shared Mermaid factory is required for PDF export rendering.');
+  }
+
+  getMathJaxConfig() {
+    if (window.MarkTideMathJax
+      && typeof window.MarkTideMathJax.getConfigScript === 'function') {
+      return window.MarkTideMathJax;
+    }
+
+    throw new Error('Shared MathJax configuration is required for PDF export rendering.');
+  }
+
+  getExportAssets() {
+    if (window.MarkTideExportAssets) {
+      return window.MarkTideExportAssets;
+    }
+
+    throw new Error('Shared export assets are required for PDF export rendering.');
+  }
+
+  getMarkdownStyles() {
+    if (window.MarkTideMarkdownStyles
+      && typeof window.MarkTideMarkdownStyles.getStandaloneStyles === 'function') {
+      return window.MarkTideMarkdownStyles;
+    }
+
+    throw new Error('Shared Markdown styles are required for PDF export rendering.');
+  }
+
+  getPrintStyles() {
+    if (window.MarkTidePrintStyles
+      && typeof window.MarkTidePrintStyles.getStyles === 'function') {
+      return window.MarkTidePrintStyles;
+    }
+
+    throw new Error('Shared print styles are required for PDF export rendering.');
+  }
+
   printPreview(titleOverride) {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+      throw new Error('Shared Markdown rendering pipeline is required for PDF export.');
+    }
+
     // Store original title and set a shorter one for PDF export
     const originalTitle = document.title;
     
@@ -120,51 +264,40 @@ class PrintHandler {
     } else if (markdownEditor && window.MarkTideImportExport) {
       smartTitle = window.MarkTideImportExport.generateSmartFilename(markdownEditor.value, '') || 'MarkTide Document';
     }
-    document.title = smartTitle;
     const markdown = markdownEditor.value;
-    const normalizedMarkdown = (window.MarkTideRenderer && window.MarkTideRenderer.normalizeListSyntax)
-      ? window.MarkTideRenderer.normalizeListSyntax(markdown)
-      : markdown;
     
-    // Create a clean renderer for print/PDF (without enhanced code blocks)
-    const printRenderer = new marked.Renderer();
-    printRenderer.code = function (code, language) {
-      if (language === 'mermaid') {
-        const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-        return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
-      }
-      
-      try {
-        const highlighted = window.MarktideCodeHighlight
-          ? window.MarktideCodeHighlight.highlight(code, language)
-          : {
-              language: hljs.getLanguage(language) ? language : "plaintext",
-              value: hljs.highlight(code, { language: hljs.getLanguage(language) ? language : "plaintext", ignoreIllegals: true }).value
-            };
-        
-        return `<pre><code class="hljs ${highlighted.language}">${highlighted.value}</code></pre>`;
-      } catch (e) {
-        // Fallback to plain text if highlighting fails
-        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<pre><code class="hljs plaintext">${escapedCode}</code></pre>`;
-      }
-    };
+    const printRenderer = window.MarkTideCodeBlockRenderer.createRenderer({
+      enhanced: false,
+      includeMermaidSource: false,
+    });
     
     // Use the clean renderer for print/PDF
-    const html = (window.MarkTideRenderer && window.MarkTideRenderer.parseMarkdown)
-      ? window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer })
-      : marked.parse(normalizedMarkdown, { renderer: printRenderer });
-    const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['mjx-container', 'svg', 'path', 'g', 'marker', 'defs', 'pattern', 'clipPath', 'wbr', 'mark', 'abbr'],
-      ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start', 'title']
+    const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: printRenderer });
+    const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'pdf' });
+    const printableHtml = this.preparePrintTables(renderedHtml);
+    if (!window.MarktideHighlightTheme) {
+      throw new Error('Shared highlight theme helper is required for PDF export.');
+    }
+
+    const highlightTheme = window.MarktideHighlightTheme.getThemeUrl(false, { mode: 'pdf' });
+    const printHighlightTokenStyles = window.MarktideHighlightTheme.getPrintTokenCss();
+    const markdownPrintStyles = this.getMarkdownStyles().getStandaloneStyles({
+      mode: 'pdf'
     });
-    const printableHtml = this.preparePrintTables(sanitizedHtml);
-    const highlightTheme = window.MarktideHighlightTheme
-      ? window.MarktideHighlightTheme.getThemeUrl(false)
-      : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
-    const printHighlightTokenStyles = window.MarktideHighlightTheme
-      ? window.MarktideHighlightTheme.getPrintTokenCss()
-      : '';
+    const printStyles = this.getPrintStyles().getStyles({
+      printHighlightTokenStyles,
+      markdownPrintStyles
+    });
+    const exportAssets = this.getExportAssets();
+    const fontLinks = exportAssets.getFontLinks({ mode: 'pdf' });
+    const stylesheetLinks = exportAssets.getCommonStylesheetLinks({
+      mode: 'pdf',
+      includeBootstrapIcons: false
+    });
+    const mermaidScriptTag = exportAssets.getMermaidScriptTag({ mode: 'pdf' });
+    const mathJaxScriptTag = exportAssets.getMathJaxScriptTag({ mode: 'pdf' });
+    const mermaidFactoryScript = this.getMermaidFactory().toString();
+    const mathJaxConfigScript = this.getMathJaxConfig().getConfigScript();
 
     // Create a hidden iframe for printing
     const printFrame = document.createElement('iframe');
@@ -175,570 +308,19 @@ class PrintHandler {
     printFrame.style.height = '1123px';
     printFrame.style.border = 'none';
     
-    document.body.appendChild(printFrame);
-    
-    const printDocument = printFrame.contentDocument || printFrame.contentWindow.document;
     const printHandler = this;
-    
-    printDocument.write(`
+    const printDocumentHtml = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${smartTitle}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+  ${fontLinks}
+  ${stylesheetLinks}
   <link rel="stylesheet" href="${highlightTheme}">
   <style>
-    ${printHighlightTokenStyles}
-
-    @media print {
-      @page {
-        margin: 0.55in 0.38in;
-        size: A4;
-      }
-      
-      /* Force all text to wrap and prevent overflow */
-      *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        word-break: normal !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      
-      /* Override any fixed widths that might cause overflow */
-      .markdown-body *:not(.mermaid *):not(.mermaid-container *):not(.markdown-body pre *):not(.markdown-body code *) {
-        width: auto !important;
-        min-width: 0 !important;
-        flex-shrink: 1 !important;
-      }
-      
-      /* Preserve mermaid diagram layout */
-      .mermaid, .mermaid-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        white-space: initial !important;
-        word-wrap: initial !important;
-        overflow-wrap: initial !important;
-        word-break: initial !important;
-      }
-      
-      /* Preserve code block formatting */
-      .markdown-body pre, .markdown-body pre * {
-        white-space: pre-wrap !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        max-width: 100% !important;
-                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-        font-feature-settings: "liga" 1, "calt" 1 !important;
-      }
-      
-      .markdown-body code {
-        white-space: pre-wrap !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-        font-feature-settings: "liga" 1, "calt" 1 !important;
-      }
-      
-      * {
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      
-      html, body {
-        width: 100% !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        background: white !important;
-        color: #24292e !important;
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-        line-height: 1.6 !important;
-        font-size: 14px !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-      }
-      
-      body {
-        position: static !important;
-        overflow: visible !important;
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-      
-      body::-webkit-scrollbar {
-        display: none !important;
-      }
-    }
-    
-    /* Base styles for all media */
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: #ffffff !important;
-      color: #24292e !important;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      overflow-x: hidden;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    
-      .markdown-body {
-          box-sizing: border-box;
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 20px !important;
-      background-color: #ffffff !important;
-      color: #24292e !important;
-      overflow: visible !important;
-      position: relative !important;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-    }
-    
-    /* Remove any scrollbars */
-    * {
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
-    }
-    
-    *::-webkit-scrollbar {
-      display: none !important;
-    }
-    
-    /* Force light mode for all elements */
-    .markdown-body h1, .markdown-body h2, .markdown-body h3, 
-    .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-      color: #24292e !important;
-      background: transparent !important;
-      page-break-after: avoid !important;
-      font-weight: 900 !important;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-    }
-    
-    .markdown-body p:not(.mermaid *), .markdown-body li:not(.mermaid *), .markdown-body span:not(.mermaid *):not(pre code.hljs span),
-    .markdown-body div:not(.mermaid *):not(.mermaid-container), .markdown-body section, .markdown-body article {
-      background: transparent !important;
-      color: #24292e !important;
-      overflow: visible !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      word-break: normal !important;
-      hyphens: manual !important;
-    }
-
-    .markdown-body table th:first-child,
-    .markdown-body table td:first-child {
-      overflow-wrap: normal !important;
-      word-break: normal !important;
-      hyphens: manual !important;
-    }
-
-    .markdown-body table.marktide-print-cols-2 th:first-child,
-    .markdown-body table.marktide-print-cols-2 td:first-child {
-      width: 16% !important;
-      min-width: 88px !important;
-    }
-
-    .markdown-body table.marktide-print-cols-3 th:first-child,
-    .markdown-body table.marktide-print-cols-3 td:first-child {
-      width: 13% !important;
-      min-width: 86px !important;
-    }
-
-    .markdown-body table.marktide-print-cols-3 th:last-child,
-    .markdown-body table.marktide-print-cols-3 td:last-child {
-      width: 12% !important;
-      min-width: 78px !important;
-      overflow-wrap: normal !important;
-      word-break: normal !important;
-      hyphens: manual !important;
-    }
-
-    .markdown-body table.marktide-print-long-table,
-    .markdown-body table.marktide-print-wide-table {
-      table-layout: fixed !important;
-    }
-
-    .markdown-body table.marktide-print-long-table.marktide-print-cols-2 th:first-child,
-    .markdown-body table.marktide-print-long-table.marktide-print-cols-2 td:first-child {
-      width: 14% !important;
-      min-width: 74px !important;
-    }
-
-    .markdown-body table.marktide-print-wide-table th,
-    .markdown-body table.marktide-print-wide-table td {
-      padding: 6px 8px !important;
-    }
-
-    .markdown-body table .marktide-print-soft-wrap,
-    .markdown-body table .marktide-print-soft-wrap code {
-      overflow-wrap: anywhere !important;
-      word-break: normal !important;
-      white-space: normal !important;
-    }
-
-    .markdown-body mark {
-      background-color: #fff3a3 !important;
-      color: #24292e !important;
-      padding: 0.08em 0.18em !important;
-      border-radius: 3px !important;
-    }
-
-    .markdown-body abbr[title] {
-      text-decoration: underline dotted currentColor !important;
-      text-underline-offset: 0.18em !important;
-      cursor: help !important;
-    }
-    
-    .markdown-body code {
-      background-color: #f6f8fa !important;
-      color: #24292e !important;
-      padding: 0.2em 0.4em !important;
-      border-radius: 3px !important;
-      font-size: 85% !important;
-      overflow-wrap: break-word !important;
-                  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-      font-feature-settings: "liga" 1, "calt" 1 !important;
-    }
-    
-    .markdown-body pre {
-      background-color: #f6f8fa !important;
-      border-radius: 6px !important;
-      padding: 16px !important;
-      margin: 1.5em 0 !important;
-      overflow: visible !important;
-      font-size: 85% !important;
-      line-height: 1.45 !important;
-      break-inside: auto !important;
-      page-break-inside: auto !important;
-    }
-    
-    .markdown-body pre code {
-      background: transparent !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      overflow-wrap: break-word !important;
-      white-space: pre-wrap !important;
-                  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-      font-feature-settings: "liga" 1, "calt" 1 !important;
-    }
-    
-    .markdown-body table {
-      background-color: #ffffff !important;
-      border-collapse: collapse !important;
-      width: 100% !important;
-      overflow: visible !important;
-      break-inside: auto !important;
-      page-break-inside: auto !important;
-    }
-    
-    .markdown-body table tr {
-      background-color: #ffffff !important;
-      border-top: 1px solid #e1e4e8 !important;
-    }
-    
-    .markdown-body table tr:nth-child(2n) {
-      background-color: #f6f8fa !important;
-    }
-    
-    .markdown-body table th, .markdown-body table td {
-      padding: 9px 20px !important;
-      border: 1px solid #e1e4e8 !important;
-      overflow: visible !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      hyphens: auto !important;
-    }
-    
-    .markdown-body blockquote {
-      color: #6a737d !important;
-      border-left: 4px solid #dfe2e5 !important;
-      background: transparent !important;
-      padding: 0 1em !important;
-      margin: 0 0 16px 0 !important;
-    }
-    
-    .markdown-body ul, .markdown-body ol {
-      padding-left: 2.2em !important;
-      margin: 0 0 16px 0 !important;
-    }
-    
-    .markdown-body ul {
-      list-style-type: disc !important;
-    }
-
-    .markdown-body ol,
-    .markdown-body ol ol {
-      list-style: none !important;
-      counter-reset: item !important;
-      margin-left: 0 !important;
-    }
-
-    .markdown-body ol li {
-      list-style: none !important;
-      color: #24292e !important;
-    }
-
-    .markdown-body ol li::marker {
-      content: "" !important;
-    }
-
-    .markdown-body ol > li {
-      counter-increment: item !important;
-      position: relative !important;
-    }
-
-    .markdown-body ol > li::before {
-      content: counters(item, ".") ". " !important;
-      position: absolute !important;
-      left: -2.2em !important;
-      width: 2.2em !important;
-      padding-right: 0.2em !important;
-      box-sizing: border-box !important;
-      text-align: right !important;
-      font-weight: 600 !important;
-      color: #24292e !important;
-    }
-    
-    .markdown-body li {
-      margin: 0.25em 0 !important;
-    }
-    
-    /* Mermaid diagrams */
-    .mermaid-container, .mermaid {
-      overflow: visible !important;
-      max-width: 100% !important;
-      page-break-inside: avoid !important;
-      text-align: center !important;
-      margin: 1.5em 0 2.2em !important;
-    }
-
-    .mermaid svg {
-      display: block !important;
-      max-width: 100% !important;
-      height: auto !important;
-      margin: 0 auto !important;
-      overflow: visible !important;
-    }
-    
-    /* Mermaid flowchart specific styling for print */
-    .mermaid .nodeLabel, .mermaid .edgeLabel {
-      color: #24292e !important;
-    }
-    
-    .mermaid .node .label {
-      color: #24292e !important;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-    }
-    
-    /* Specific styling for flowchart decision nodes */
-    .mermaid .flowchart-link {
-      stroke: #24292e !important;
-      fill: none !important;
-    }
-    
-    .mermaid .edgePath path {
-      stroke: #24292e !important;
-      stroke-width: 1.5px !important;
-      fill: none !important;
-    }
-    
-    .mermaid .edgeLabel {
-      color: #24292e !important;
-      font-weight: 700 !important;
-    }
-
-    .mermaid .edgeLabel foreignObject div,
-    .mermaid .edgeLabel foreignObject span,
-    .mermaid .edgeLabel foreignObject p {
-      background-color: #e8f5e8 !important;
-      color: #24292e !important;
-      box-decoration-break: clone !important;
-      -webkit-box-decoration-break: clone !important;
-    }
-
-    .mermaid .edgeLabel foreignObject {
-      background-color: transparent !important;
-      overflow: visible !important;
-    }
-
-    .mermaid g.nodes g.node text {
-      fill: #24292e !important;
-      font-weight: 700 !important;
-    }
-    
-    /* Math expressions */
-    mjx-container {
-      overflow: visible !important;
-      page-break-inside: avoid !important;
-    }
-    
-    /* Images */
-    .markdown-body img {
-      max-width: 100% !important;
-      height: auto !important;
-      page-break-inside: avoid !important;
-      background-color: transparent !important;
-    }
-
-    .markdown-body img[src*="img.shields.io"] {
-      display: block !important;
-      width: fit-content !important;
-      max-width: 100% !important;
-      height: auto !important;
-      border-radius: 6px !important;
-      image-rendering: auto !important;
-    }
-
-    .markdown-body p:has(img[src*="img.shields.io"]) {
-      margin: 12px 0 !important;
-      line-height: 0.75 !important;
-    }
-
-    .markdown-body hr {
-      background-color: #c9d1d9 !important;
-      border: none !important;
-      height: 2px !important;
-      margin: 30px 0 !important;
-      opacity: 1 !important;
-    }
-    
-    /* Page break controls */
-    .markdown-body h1 {
-      page-break-before: auto !important;
-      page-break-after: avoid !important;
-    }
-    
-    .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-      page-break-after: avoid !important;
-      page-break-inside: avoid !important;
-    }
-
-    .markdown-body h1,
-    .markdown-body h2 {
-      padding-bottom: 0.3em !important;
-      border-bottom: 1px solid #c9d1d9 !important;
-    }
-    
-          /* Print-specific adjustments */
-      @media print {
-          .markdown-body {
-        padding: 6px !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      
-      /* Ensure content uses full width but prevent overflow */
-      .markdown-body > * {
-        max-width: 100% !important;
-        width: auto !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        white-space: normal !important;
-      }
-      
-      /* Specific handling for paragraphs and text elements */
-      .markdown-body p:not(.mermaid *), .markdown-body li:not(.mermaid *), .markdown-body span:not(.mermaid *):not(pre code.hljs span),
-      .markdown-body div:not(.mermaid *):not(.mermaid-container), .markdown-body td, .markdown-body th {
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        word-break: normal !important;
-        max-width: 100% !important;
-      }
-      
-      /* Better code block handling for print */
-      .markdown-body pre {
-        white-space: pre-wrap !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        max-width: 100% !important;
-        padding: 12px !important;
-                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-        font-feature-settings: "liga" 1, "calt" 1 !important;
-        background-color: #f6f8fa !important;
-        border-radius: 6px !important;
-      }
-      
-      .markdown-body pre code {
-        white-space: pre-wrap !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
-                    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Lucida Console", monospace !important;
-        font-feature-settings: "liga" 1, "calt" 1 !important;
-        background: transparent !important;
-        padding: 0 !important;
-        border-radius: 0 !important;
-      }
-      
-      /* Table responsiveness for print */
-      .markdown-body table {
-        font-size: 90% !important;
-        word-break: normal !important;
-        table-layout: auto !important;
-        width: 100% !important;
-        max-width: 100% !important;
-      }
-      
-      .markdown-body table th, .markdown-body table td {
-        padding: 6px 12px !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        word-break: normal !important;
-        hyphens: manual !important;
-        max-width: none !important;
-      }
-
-      .markdown-body table.marktide-print-cols-2 th:first-child,
-      .markdown-body table.marktide-print-cols-2 td:first-child {
-        width: 16% !important;
-        min-width: 88px !important;
-      }
-
-      .markdown-body table.marktide-print-cols-3 th:first-child,
-      .markdown-body table.marktide-print-cols-3 td:first-child {
-        width: 13% !important;
-        min-width: 86px !important;
-      }
-
-      .markdown-body table.marktide-print-cols-3 th:last-child,
-      .markdown-body table.marktide-print-cols-3 td:last-child {
-        width: 12% !important;
-        min-width: 78px !important;
-      }
-
-      .markdown-body table.marktide-print-long-table,
-      .markdown-body table.marktide-print-wide-table {
-        table-layout: fixed !important;
-      }
-
-      .markdown-body table.marktide-print-long-table.marktide-print-cols-2 th:first-child,
-      .markdown-body table.marktide-print-long-table.marktide-print-cols-2 td:first-child {
-        width: 14% !important;
-        min-width: 74px !important;
-      }
-
-      .markdown-body table.marktide-print-wide-table th,
-      .markdown-body table.marktide-print-wide-table td {
-        padding: 5px 7px !important;
-      }
-      }
+    ${printStyles}
   </style>
 </head>
 <body>
@@ -746,65 +328,50 @@ class PrintHandler {
       ${printableHtml}
   </article>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dos.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js"></script>
+  ${mermaidScriptTag}
   <script>
-    ${window.MarkTideCreateMermaidShared ? `window.MarkTideCreateMermaidShared = ${window.MarkTideCreateMermaidShared.toString()}; window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);` : ''}
+    window.MarkTideCreateMermaidShared = ${mermaidFactoryScript};
+    window.MarkTideMermaidShared = window.MarkTideCreateMermaidShared(window);
   </script>
   <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['\\\\(', '\\\\)']],
-        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
-        processEscapes: true,
-        processEnvironments: true
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-        ignoreHtmlClass: 'tex2jax_ignore',
-        processHtmlClass: 'tex2jax_process'
-      }
-    };
+    ${mathJaxConfigScript}
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+  <script>
+    window.addEventListener('beforeprint', function ${this.preparePrintTablePagination.toString()});
+  </script>
+  ${mathJaxScriptTag}
 </body>
 </html>
-    `);
-    
-    printDocument.close();
+    `;
 
     let cleanupDone = false;
-    let cleanupTimer = null;
     const cleanupPrintFrame = () => {
       if (cleanupDone) return;
       cleanupDone = true;
-      if (cleanupTimer) {
-        clearTimeout(cleanupTimer);
-        cleanupTimer = null;
-      }
       if (printFrame.parentNode) {
         document.body.removeChild(printFrame);
       }
       document.title = originalTitle;
     };
+
+    document.title = smartTitle;
+    try {
+      document.body.appendChild(printFrame);
+      const printDocument = printFrame.contentDocument
+        || (printFrame.contentWindow && printFrame.contentWindow.document);
+      if (!printDocument) {
+        throw new Error('Unable to create the PDF print document.');
+      }
+      printDocument.write(printDocumentHtml);
+      printDocument.close();
+    } catch (error) {
+      cleanupPrintFrame();
+      throw error;
+    }
     
     // Wait for content to load, then trigger print
     printFrame.onload = function() {
       setTimeout(async function() {
-        // Apply syntax highlighting
-        printFrame.contentDocument.querySelectorAll('pre code').forEach((block) => {
-          if (!block.classList.contains('mermaid') && !block.classList.contains('pseudocode')) {
-            try {
-              printFrame.contentWindow.hljs.highlightElement(block);
-    } catch (e) {
-              console.warn("Syntax highlighting failed:", e);
-            }
-          }
-        });
-        
         if (printFrame.contentDocument.fonts && printFrame.contentDocument.fonts.ready) {
           try {
             await printFrame.contentDocument.fonts.ready;
@@ -815,79 +382,48 @@ class PrintHandler {
 
         // Initialize and render Mermaid
         try {
-          const mermaidConfig = window.MarkTideMermaid
-            ? window.MarkTideMermaid.getMermaidConfig({ mode: 'pdf', theme: 'light' })
-            : {
-                startOnLoad: false,
-                theme: 'neutral',
-                themeVariables: {
-                  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-                },
-                securityLevel: 'strict',
-                htmlLabels: false,
-                flowchart: {
-                  useMaxWidth: true,
-                  htmlLabels: false,
-                  curve: 'basis',
-                  nodeSpacing: 60,
-                  rankSpacing: 70
-                },
-                fontSize: 16
-              };
-
-          printFrame.contentWindow.mermaid.initialize(mermaidConfig);
-          
-          // Render mermaid diagrams one by one
           const mermaidElements = printFrame.contentDocument.querySelectorAll('.mermaid');
           if (mermaidElements.length > 0) {
-            const mermaidRender = printFrame.contentWindow.mermaid.run
-              ? printFrame.contentWindow.mermaid.run({ nodes: mermaidElements })
-              : printFrame.contentWindow.mermaid.init(undefined, mermaidElements);
-
-            if (mermaidRender && typeof mermaidRender.then === 'function') {
-              await mermaidRender;
-            }
-
-            printHandler.stabilizeMermaidDiagrams(printFrame.contentDocument);
+            await printFrame.contentWindow.MarkTideMermaidShared.renderDiagrams(
+              printFrame.contentDocument,
+              {
+                mode: 'pdf',
+                theme: 'light',
+                nodes: mermaidElements,
+                stabilizeDimensions: true,
+              }
+            );
           }
         } catch (e) {
           console.warn("Mermaid rendering failed:", e);
         }
         
         // Render MathJax
-        if (printFrame.contentWindow.MathJax) {
+        if (printFrame.contentWindow.MarkTideMathJax) {
           try {
-            printFrame.contentWindow.MathJax.typesetPromise([printFrame.contentDocument.body]).then(() => {
+            printFrame.contentWindow.MarkTideMathJax.typeset(printFrame.contentDocument.body).then(() => {
               // After MathJax is done, trigger print
               setTimeout(function() {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+                printHandler.triggerPrint(printFrame, cleanupPrintFrame);
               }, 300);
             }).catch((err) => {
               console.warn('MathJax typesetting failed:', err);
               // Still print even if MathJax fails
               setTimeout(function() {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-                cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+                printHandler.triggerPrint(printFrame, cleanupPrintFrame);
               }, 300);
             });
           } catch (e) {
             console.warn("MathJax rendering failed:", e);
             // Fallback print
             setTimeout(function() {
-              printFrame.contentWindow.focus();
-              printFrame.contentWindow.print();
-              cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+              printHandler.triggerPrint(printFrame, cleanupPrintFrame);
             }, 300);
           }
         } else {
           // No MathJax, just print
           setTimeout(function() {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-            cleanupTimer = setTimeout(cleanupPrintFrame, 180000);
+            printHandler.triggerPrint(printFrame, cleanupPrintFrame);
           }, 300);
         }
       }, 100);
