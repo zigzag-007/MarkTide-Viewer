@@ -74,6 +74,7 @@ MarkTide is a Markdown editor that processes documents in your browser, without 
 - Footnotes, highlighted text (`==text==`), and abbreviation definitions
 - Standalone image captions and PhotoSwipe image viewing in Preview and HTML
 - Shared Back to top and scrolling controls in Preview and HTML
+- Responsive table of contents and heading rail in the editor, Preview and fresh HTML
 
 ### Export behaviour and limits
 

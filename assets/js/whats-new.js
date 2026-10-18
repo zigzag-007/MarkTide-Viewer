@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.4';
+  const CURRENT_VERSION = 'v1.8.5';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'Print documents with clearer page numbering and cleaner table breaks.',
-    headline: 'More polished PDF output',
+    tagline: 'Find your place and move through long documents more comfortably.',
+    headline: 'Easier document navigation',
     highlights: [
       {
-        icon: 'bi-file-earmark-pdf',
-        title: 'Clear page numbering',
-        text: 'PDF pages have a readable number and Page label, raised within the bottom margin.'
+        icon: 'bi-list-ul',
+        title: 'Table of contents',
+        text: 'Jump between headings in Preview, the editor and fresh HTML exports.'
       },
       {
-        icon: 'bi-table',
-        title: 'Cleaner split tables',
-        text: 'Tables keep clear borders and breathing room around text at page cuts.'
+        icon: 'bi-signpost',
+        title: 'Heading rail',
+        text: 'See your place in the document with heading markers and a visible reading range.'
       },
       {
-        icon: 'bi-fonts',
-        title: 'Refined PDF typography',
-        text: 'Print text and headings use refined sizes while keeping tables and code readable.'
+        icon: 'bi-pin-angle',
+        title: 'Flexible navigation',
+        text: 'Pin the contents panel where space allows, or open the mobile contents sheet.'
       },
       {
-        icon: 'bi-aspect-ratio',
-        title: 'Balanced page margins',
-        text: 'A4 pages use adjusted top and bottom margins for a balanced document layout.'
+        icon: 'bi-mouse',
+        title: 'Calmer rail interaction',
+        text: 'Delayed hover opening and smoother heading markers make navigation easier to follow.'
       }
     ]
   };

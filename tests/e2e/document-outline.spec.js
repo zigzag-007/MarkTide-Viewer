@@ -50,7 +50,7 @@ async function expectVisibleHeading(page, name) {
 async function setup(page, source = longDocument) {
   await page.goto('/index.html');
   await waitForMarkTide(page);
-  await page.locator('#close-dropzone').click();
+  if (await page.locator('#close-dropzone').isVisible()) await page.locator('#close-dropzone').click();
   await renderMarkdown(page, source);
   await expect(page.locator('.marktide-outline')).toHaveCount(1);
 }
