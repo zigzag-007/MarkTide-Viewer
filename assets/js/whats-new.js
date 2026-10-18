@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.2';
+  const CURRENT_VERSION = 'v1.8.3';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'More consistent documents, clearer footnotes, and stronger exports.',
-    headline: 'Consistent reading and stronger exports',
+    tagline: 'Read comfortably on smaller screens and explore images with less effort.',
+    headline: 'Comfortable reading and image viewing',
     highlights: [
       {
-        icon: 'bi-file-text',
-        title: 'Shared document rendering',
-        text: 'Preview, HTML and PDF use shared styles and rendering helpers.'
+        icon: 'bi-phone',
+        title: 'More comfortable reading',
+        text: 'Responsive tables, code and document spacing improve reading on narrow screens.'
       },
       {
-        icon: 'bi-superscript',
-        title: 'Math and footnotes',
-        text: 'Math edge cases and footnotes render more consistently across outputs.'
+        icon: 'bi-image',
+        title: 'Clearer images and captions',
+        text: 'Standalone images keep balanced sizing and can show captions from descriptive alt text.'
       },
       {
-        icon: 'bi-box-seam',
-        title: 'Bundled app libraries',
-        text: 'The main app uses bundled libraries and fonts. Exported HTML still needs some CDN resources.'
+        icon: 'bi-arrows-fullscreen',
+        title: 'PhotoSwipe image viewing',
+        text: 'Open supported document images for a closer look in Preview and fresh HTML exports.'
       },
       {
-        icon: 'bi-table',
-        title: 'More readable PDF tables',
-        text: 'Crowded PDF tables balance columns and page breaks while keeping text searchable.'
+        icon: 'bi-arrow-up',
+        title: 'Back to top',
+        text: 'Return to the start of long documents with a shared reading control.'
       }
     ]
   };

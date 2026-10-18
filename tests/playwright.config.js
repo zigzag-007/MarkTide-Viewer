@@ -25,7 +25,7 @@ module.exports = defineConfig({
         {
           origin: `http://127.0.0.1:${port}`,
           localStorage: [
-            { name: 'marktide-whats-new-dismissed', value: 'v1.8.2' },
+            { name: 'marktide-whats-new-dismissed', value: 'v1.8.3' },
           ],
         },
       ],

@@ -71,12 +71,14 @@ MarkTide is a Markdown editor that processes documents in your browser, without 
 - 😊 Emoji support
 - 🖨️ Print-friendly layouts
 - Footnotes, highlighted text (`==text==`), and abbreviation definitions
+- Standalone image captions and PhotoSwipe image viewing in Preview and HTML
+- Shared Back to top and scrolling controls in Preview and HTML
 
 ### Export behaviour and limits
 
 PDF export prepares a separate print document and opens the browser print dialog. Choose Save as PDF there. It uses shared Markdown styles plus deliberate print rules for typography, A4 margins, wrapping, and pagination. The suggested filename comes from the document title; the browser controls the final save name. Page breaks can change with fonts, content, and print settings. Fully dark PDF pages are not an accepted feature.
 
-HTML export includes document styles and code/diagram controls. Fonts, MathJax, Mermaid and some other resources still use pinned CDN links, so exported HTML is not fully offline. Remote document images may need a network connection. Hard reload before creating a fresh export after JavaScript changes; existing exports retain their original code.
+HTML export embeds shared styles, reading controls, the image viewer and readable image sources. Images that cannot be read, including remote images blocked by CORS, keep their safe URLs and may need a network connection. Fonts, MathJax, Mermaid and some other resources still use pinned CDN links, so exported HTML is not fully offline. Hard reload before creating a fresh export after JavaScript changes; existing exports retain their original code.
 
 Known issue: an unclosed raw HTML `<Title>` placeholder in a heading can consume the following document content. This was reproduced in Preview, and a fresh HTML export contained the later markup inside a body `title` element. Its handling remains under review; PDF behaviour has not been checked for this reproduction.
 
@@ -111,6 +113,7 @@ The two sites may run different versions. Updates reach the stable version after
 | PDF Export          | Browser printing through `PrintHandler.printPreview()`   |
 | Math Rendering      | [MathJax](https://www.mathjax.org/)                         |
 | Diagrams            | [Mermaid.js](https://mermaid.js.org/)                       |
+| Image Viewer        | PhotoSwipe, bundled locally and embedded in HTML exports  |
 | Theme Transitions   | View Transitions API + ripple fallback                      |
 
 ---
