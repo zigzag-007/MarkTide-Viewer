@@ -1,5 +1,15 @@
 // Markdown rendering and processing functionality
 
+const MARKTIDE_HTML_TAGS = new Set((
+  'a abbr address area article aside audio b base bdi bdo blockquote body br button canvas caption '
+  + 'cite code col colgroup data datalist dd del details dfn dialog div dl dt em embed fieldset '
+  + 'figcaption figure footer form h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input '
+  + 'ins kbd label legend li link main map mark menu meta meter nav noscript object ol optgroup '
+  + 'option output p picture pre progress q rp rt ruby s samp script search section select slot '
+  + 'small source span strong style sub summary sup table tbody td template textarea tfoot th '
+  + 'thead time title tr track u ul var video wbr svg math'
+).split(' '));
+
 class MarkdownRenderer {
   constructor() {
     this.markdownRenderTimeout = null;
@@ -453,10 +463,55 @@ class MarkdownRenderer {
     return wrapper.innerHTML;
   }
 
+  literalAnglePlaceholder(source) {
+    const match = source.match(/^<([a-z][a-z0-9-]*)[ \t]*\/?>/i);
+    if (!match) return null;
+    const name = match[1].toLowerCase();
+    const rawText = /^(?:title|textarea|xmp|noembed|noframes|plaintext)$/.test(name);
+    if (MARKTIDE_HTML_TAGS.has(name) && !rawText) return null;
+
+    // Paired tags still mean authored HTML. Bare placeholders stay visible text.
+    if (name !== 'plaintext' && new RegExp(`</${name}\\s*>`, 'i').test(source.slice(match[0].length))) {
+      return null;
+    }
+    return match[0];
+  }
+
+  prepareMarkdownTokenizer() {
+    const tokenizer = new marked.Tokenizer();
+    const html = tokenizer.html;
+    const tag = tokenizer.tag;
+    const renderer = this;
+
+    tokenizer.html = function (source) {
+      if (renderer.literalAnglePlaceholder(source)) return;
+      const token = html.call(this, source);
+      if (token) {
+        // Keep paired text elements, quoted attributes and comments untouched.
+        const tags = /<(title|textarea|xmp|noembed|noframes)\b(?:[^<>"']|"[^"]*"|'[^']*')*>[\s\S]*?<\/\1\s*>|<!--[\s\S]*?-->|<(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
+        token.text = token.text.replace(tags,
+          (raw, textTag, offset, text) => renderer.literalAnglePlaceholder(text.slice(offset))
+            ? renderer.escapeHtml(raw) : raw);
+      }
+      return token;
+    };
+    tokenizer.tag = function (source) {
+      const pairedText = source.match(/^<(title|textarea|xmp|noembed|noframes)\b(?:[^<>"']|"[^"]*"|'[^']*')*>[\s\S]*?<\/\1\s*>/i);
+      if (pairedText) return { type: 'html', raw: pairedText[0], text: pairedText[0] };
+      const raw = renderer.literalAnglePlaceholder(source);
+      if (raw) return { type: 'text', raw, text: renderer.escapeHtml(raw) };
+      return tag.call(this, source);
+    };
+    return tokenizer;
+  }
+
   parseMarkdown(markdownText, options = {}) {
     const normalizedMarkdown = this.normalizeListSyntax(markdownText || '');
     const extensionContext = this.prepareMarkdownExtensions(normalizedMarkdown);
-    const html = marked.parse(extensionContext.markdown, options);
+    const html = marked.parse(extensionContext.markdown, {
+      ...options,
+      tokenizer: this.prepareMarkdownTokenizer(),
+    });
     return this.applyMarkdownExtensions(html, extensionContext, options);
   }
 
