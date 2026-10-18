@@ -197,6 +197,7 @@
   .marktide-html-reading-area.marktide-outline-expanded { padding-left: 302px; }
   .editor-only-active .marktide-outline-editor { margin-left: 40px; width: calc(100% - 40px); }
   .editor-only-active .marktide-outline-editor.marktide-outline-expanded { margin-left: 302px; width: calc(100% - 302px); }
+  .marktide-outline-editor.marktide-outline-split-reserved { width: calc(100% - 262px); }
 }
 @media (max-width: 767px) {
   .marktide-outline { inset: 0 !important; width: auto !important; height: auto !important; pointer-events: none; z-index: 1100; }

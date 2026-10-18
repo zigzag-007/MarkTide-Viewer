@@ -98,7 +98,10 @@
       const editorOnly = Boolean(editorHost && doc.body.classList.contains('editor-only-active'));
       const innerScroll = !editorOnly && pane && /auto|scroll/.test(win.getComputedStyle(pane).overflowY);
       const region = editorOnly ? editorHost : (pane || root);
-      return { editorOnly, innerScroll, region, scroller: innerScroll ? pane : doc.scrollingElement };
+      const paired = Boolean(editorHost && !editorOnly && !doc.body.classList.contains('preview-only-active'));
+      const split = paired && win.innerWidth > 1080;
+      return { editorOnly, innerScroll, split, stacked: paired && !split,
+        region, scroller: innerScroll ? pane : doc.scrollingElement };
     }
 
     function bindEditor() {
@@ -271,8 +274,7 @@
       navigation.style.left = `${anchor}px`;
       navigation.style.top = `${railTop}px`;
       navigation.style.height = `${Math.max(80, bottom - railTop)}px`;
-      const split = reading.innerScroll && editorHost && !reading.editorOnly && win.innerWidth > 1080;
-      const panelLeft = !expanded && split ? anchor - 262 : anchor + 40;
+      const panelLeft = reading.split ? anchor - 262 : anchor + 40;
       navigation.style.setProperty('--outline-panel-left', `${Math.max(0, Math.min(panelLeft, win.innerWidth - 262))}px`);
       const panelTop = mobile.matches ? Math.max(16, headerBottom) : win.innerWidth <= 1080 ? headerBottom : top;
       navigation.style.setProperty('--outline-panel-top', `${panelTop}px`);
@@ -413,14 +415,15 @@
     }
 
     function updateExpanded(reading) {
-      const width = reading.editorOnly ? editorHost.closest('.editor-pane').clientWidth
+      const width = reading.editorOnly || reading.split ? editorHost.closest('.editor-pane').clientWidth
         : (pane || root.parentElement).clientWidth;
-      const next = open && pinned && !mobile.matches && width >= 502;
+      const next = open && pinned && !mobile.matches && !reading.stacked && width >= 502;
       navigation.classList.toggle('is-floating', !next);
       navigation.classList.toggle('is-mobile', mobile.matches);
-      pane?.classList.toggle('marktide-outline-expanded', next && !reading.editorOnly);
+      pane?.classList.toggle('marktide-outline-expanded', next && !reading.editorOnly && !reading.split);
       if (settings.pageScroll) root.parentElement.classList.toggle('marktide-outline-expanded', next);
       editorHost?.parentElement.classList.toggle('marktide-outline-expanded', next && reading.editorOnly);
+      editorHost?.parentElement.classList.toggle('marktide-outline-split-reserved', next && reading.split);
       backdrop.hidden = !open || !mobile.matches;
       doc.documentElement.classList.toggle('marktide-toc-modal-open', open && mobile.matches);
       panel.setAttribute('role', mobile.matches ? 'dialog' : 'navigation');
@@ -676,6 +679,7 @@
       if (settings.pageScroll) root.parentElement.classList.remove('marktide-outline-expanded');
       editorHost?.parentElement.classList.remove('marktide-outline-editor');
       editorHost?.parentElement.classList.remove('marktide-outline-expanded');
+      editorHost?.parentElement.classList.remove('marktide-outline-split-reserved');
       editorHost?.closest('.editor-pane').classList.remove('marktide-outline-reserved');
       doc.documentElement.classList.remove('marktide-toc-modal-open');
       navigation.remove();
