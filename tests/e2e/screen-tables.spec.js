@@ -91,8 +91,7 @@ for (const theme of ['light','dark']) {
           expect(table.display).toBe('table');
           expect(table.rangeOverflow, JSON.stringify(table.columns)).toBe(0);
         });
-        await exported.setViewportSize({width:Math.round(current.width),height:1024});
-        await exported.evaluate(width => { document.body.style.width = `${width}px`; },current.width);
+        await exported.setViewportSize({width,height:1024});
         const fresh = await measure(exported);
         expect(fresh.contentWidth).toBeCloseTo(current.contentWidth,0);
         fresh.tables.forEach((table,index) => {
@@ -117,8 +116,9 @@ for (const theme of ['light','dark']) {
       expect(split.contentWidth).toBeLessThan(500);
       expect(split.tables[1].scroll).toBeGreaterThan(200);
       expect(split.articleOverflow).toBeLessThanOrEqual(1);
-      await exported.setViewportSize({width:Math.round(split.width),height:900});
-      await exported.evaluate(width => { document.body.style.width = `${width}px`; },split.width);
+      await exported.setViewportSize({width:1100,height:900});
+      const paneWidth=await page.locator('.preview-pane').evaluate(pane=>pane.getBoundingClientRect().width);
+      await exported.locator('.marktide-html-reading-area').evaluate((area,width)=>{area.style.width=`${width}px`;},paneWidth);
       const fresh=await measure(exported);
       fresh.tables.forEach((table,index)=>expect(table.rows).toEqual(split.tables[index].rows));
       await expect(page.locator('#spans [rowspan="2"]')).toHaveCount(2);
@@ -228,8 +228,7 @@ test('table visual review uses the exact report example',async ({page,context,ba
       await page.setViewportSize({width,height:900});await measure(page);
       await page.screenshot({path:`${process.env.MARKTIDE_SCREEN_TABLE_REVIEW_DIR}/preview-${width}.png`,fullPage:true});
       const current=await measure(page);
-      await exported.setViewportSize({width:Math.round(current.width),height:900});
-      await exported.evaluate(width=>{document.body.style.width=`${width}px`;},current.width);
+      await exported.setViewportSize({width,height:900});
       await measure(exported);
       await exported.screenshot({path:`${process.env.MARKTIDE_SCREEN_TABLE_REVIEW_DIR}/html-${width}.png`,fullPage:true});
       console.log('Appendix B review',width,current.tables[0].columns,current.tables[0].rows[3],current.tables[0].scroll);

@@ -97,7 +97,7 @@
     function state() {
       const editorOnly = Boolean(editorHost && doc.body.classList.contains('editor-only-active'));
       const innerScroll = !editorOnly && pane && /auto|scroll/.test(win.getComputedStyle(pane).overflowY);
-      const region = editorOnly ? editorHost : (pane || root);
+      const region = editorOnly ? editorHost : (pane || root.parentElement);
       const paired = Boolean(editorHost && !editorOnly && !doc.body.classList.contains('preview-only-active'));
       const split = paired && win.innerWidth > 1080;
       return { editorOnly, innerScroll, split, stacked: paired && !split,
@@ -198,7 +198,10 @@
       }
       active = -1;
       pane?.classList.toggle('marktide-outline-surface', items.length > 0);
-      if (settings.pageScroll) root.classList.toggle('marktide-outline-document', items.length > 0);
+      if (settings.pageScroll) {
+        root.classList.toggle('marktide-outline-document', items.length > 0);
+        root.parentElement.classList.toggle('marktide-outline-surface', items.length > 0);
+      }
       editorHost?.parentElement.classList.toggle('marktide-outline-editor', items.length > 0);
       if (!items.length) { pinned = false; setOpen(false); }
       navigation.hidden = !items.length;
@@ -265,8 +268,7 @@
       const bottom = Math.min(win.innerHeight, bounds.bottom);
       const gutter = expanded ? 302 : 40;
       const left = reading.editorOnly ? bounds.left - gutter
-        : !pane ? root.getBoundingClientRect().left - gutter
-          : win.innerWidth <= 1080 || reading.innerScroll ? bounds.left
+        : win.innerWidth <= 1080 || reading.innerScroll ? bounds.left
             : root.getBoundingClientRect().left - gutter;
       const pixelScale = win.devicePixelRatio || 1;
       const anchor = Math.round(Math.max(0, left) * pixelScale) / pixelScale;
@@ -676,7 +678,7 @@
       pane?.classList.remove('marktide-outline-expanded');
       root.classList.remove('marktide-outline-document');
       root.classList.remove('marktide-outline-expanded');
-      if (settings.pageScroll) root.parentElement.classList.remove('marktide-outline-expanded');
+      if (settings.pageScroll) root.parentElement.classList.remove('marktide-outline-expanded', 'marktide-outline-surface');
       editorHost?.parentElement.classList.remove('marktide-outline-editor');
       editorHost?.parentElement.classList.remove('marktide-outline-expanded');
       editorHost?.parentElement.classList.remove('marktide-outline-split-reserved');

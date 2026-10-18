@@ -16,6 +16,7 @@
     let positionDirty = true;
     let anchoredInnerScroll = null;
     let paneSize = '';
+    let rootWidth = 0;
 
     function readingState() {
       const paneStyle = pane && win.getComputedStyle(pane);
@@ -121,6 +122,11 @@
       root.addEventListener('focusin', revealFocusedControl);
       if (win.ResizeObserver) {
         resizeObserver = new win.ResizeObserver(() => {
+          const width = root.getBoundingClientRect().width;
+          if (width !== rootWidth) {
+            rootWidth = width;
+            positionDirty = true;
+          }
           if (pane) {
             const state = readingState();
             // Page content height is not a reading viewport resize.
@@ -138,7 +144,13 @@
       if (win.MutationObserver) {
         contentObserver = new win.MutationObserver(scheduleRefresh);
         contentObserver.observe(root, { childList: true, subtree: true });
-        viewObserver = new win.MutationObserver(scheduleRefresh);
+        viewObserver = new win.MutationObserver(records => {
+          // Pinning can move a full width article without resizing it.
+          if (records.some(record => record.type === 'attributes'
+            && (record.target === root.parentElement || record.target === doc.body))) {
+            scheduleLayoutRefresh();
+          } else scheduleRefresh();
+        });
         viewObserver.observe(doc.body, { childList: true, subtree: true,
           attributes: true, attributeFilter: ['class'] });
         if (pane) viewObserver.observe(pane, { attributes: true, attributeFilter: ['style', 'class'] });
@@ -162,6 +174,7 @@
       positionDirty = true;
       anchoredInnerScroll = null;
       paneSize = '';
+      rootWidth = 0;
       button.remove();
       button = null;
       root = null;

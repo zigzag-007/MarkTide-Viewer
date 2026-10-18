@@ -70,8 +70,6 @@
   function getStandaloneStyles(options) {
     const settings = options || {};
     const mode = settings.mode || 'html';
-    const maxWidth = mode === 'html' ? '920px' : 'none';
-    const articlePadding = mode === 'html' ? '' : 'padding: 20px !important;';
     const contentStyles = getContentStyles();
     const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
     const readingControlStyles = mode === 'html' ? getStylesheet(READING_CONTROLS_HREF) : '';
@@ -90,7 +88,7 @@
 
       body {
         min-width: 200px;
-        max-width: ${maxWidth};
+        max-width: none;
         margin: 0 auto;
         padding: 0;
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
@@ -105,10 +103,10 @@
 
       ${imageViewerStyles}
 
-      .markdown-body {
-        max-width: ${maxWidth} !important;
-        ${articlePadding}
-      }
+      ${mode === 'html' ? '' : `.markdown-body {
+        max-width: none !important;
+        padding: 20px !important;
+      }`}
     `;
   }
 

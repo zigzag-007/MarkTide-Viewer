@@ -831,12 +831,12 @@ const checks = [
     pass: () => {
       const css = read('assets/css/markdown-content.css');
       const article = css.match(/\.markdown-body\s*\{([\s\S]*?)\}/)[1];
-      const fullPreview = css.match(/body\.preview-only-active \.markdown-body\s*\{([\s\S]*?)\}/)[1];
+      const fullPreview = css.match(/body\.preview-only-active \.markdown-body,\s*body\.marktide-html-document \.markdown-body\s*\{([\s\S]*?)\}/)?.[1];
       const print = read('assets/js/print-styles.js')
         .replace(/@bottom-(?:left|right)\s*\{[^}]*\}/g, '');
       const printLineHeights = [...print.matchAll(/line-height:\s*([^;]+);/g)];
       return /line-height:\s*1\.4;/.test(article)
-        && !/line-height:/.test(fullPreview)
+        && fullPreview !== undefined && !/line-height:/.test(fullPreview)
         && /\.markdown-body h1,\s*\.markdown-body h2\s*\{\s*padding-bottom:\s*0\.2em;/.test(css)
         && printLineHeights.length === 2
         && printLineHeights.every((match) => /^1\.4(?: !important)?$/.test(match[1]));

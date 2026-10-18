@@ -183,7 +183,8 @@
   }
 
   /* Slightly larger, document-like scale when in preview-only mode */
-  body.preview-only-active .markdown-body {
+  body.preview-only-active .markdown-body,
+  body.marktide-html-document .markdown-body {
     max-width: 920px;
   }
 
@@ -192,7 +193,11 @@
     .preview-pane,
     .marktide-html-reading-area {
       container: marktide-document / inline-size;
+      padding: 20px;
+      box-sizing: border-box;
     }
+
+    .marktide-html-reading-area { width: 100%; }
 
     .markdown-body h1 { font-size: 2.1em; }
     .markdown-body h2 { font-size: 1.7em; }
@@ -224,7 +229,8 @@
   }
 
   @media screen and (max-width: 600px) {
-    .preview-pane {
+    .preview-pane,
+    .marktide-html-reading-area {
       padding-inline: 0;
     }
   }
