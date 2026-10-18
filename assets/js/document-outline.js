@@ -29,6 +29,7 @@
     let viewObserver = null;
     let intersectionObserver = null;
     let observedScroller = undefined;
+    let observedRibbon = null;
     let editor = null;
     let editorListeners = [];
     let navigationTimer = null;
@@ -276,7 +277,18 @@
             : documentAnchor;
       const pixelScale = win.devicePixelRatio || 1;
       const anchor = Math.round(Math.max(0, left) * pixelScale) / pixelScale;
-      const railTop = Math.round(top * pixelScale) / pixelScale;
+      const ribbonHost = doc.querySelector('.ribbon-host');
+      if (ribbonHost && ribbonHost !== observedRibbon) {
+        viewObserver.observe(ribbonHost, { attributes: true, attributeFilter: ['class', 'hidden'] });
+        observedRibbon = ribbonHost;
+      }
+      const expandButton = reading.editorOnly && !ribbonHost?.hidden
+        && ribbonHost?.classList.contains('ribbon-collapsed') ? ribbonHost.querySelector('.ribbon-toggle') : null;
+      // Leave the chevron's whole click area clear, including its larger touch size.
+      const railStart = expandButton ? Math.max(top, expandButton.getBoundingClientRect().bottom + 8) : top;
+      const railTop = expandButton ? Math.ceil(railStart * pixelScale) / pixelScale
+        : Math.round(railStart * pixelScale) / pixelScale;
+      navigation.style.setProperty('--outline-rail-padding-top', expandButton ? '8px' : '20px');
       navigation.style.left = `${anchor}px`;
       navigation.style.top = `${railTop}px`;
       navigation.style.height = `${Math.max(80, bottom - railTop)}px`;
@@ -701,6 +713,7 @@
       expanded = false;
       lastMode = null;
       observedScroller = undefined;
+      observedRibbon = null;
       rebuildPending = false;
       layoutPending = true;
     }

@@ -31,7 +31,7 @@
 .marktide-heading-rail {
   height: 100%;
   box-sizing: border-box;
-  padding: 20px 4px;
+  padding: var(--outline-rail-padding-top, 20px) 4px 20px;
   margin-top: 0;
   overflow-y: auto;
   overflow-x: hidden;

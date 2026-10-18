@@ -1,0 +1,19 @@
+.editor-insertion-dialog { position: fixed; inset: 0; margin: auto; width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--editor-bg); color: var(--text-color); box-shadow: 0 12px 40px rgb(0 0 0 / 20%); }
+.editor-insertion-dialog::backdrop { background: rgb(0 0 0 / 35%); }
+.editor-insertion-dialog h2 { margin: 0 0 20px; font-size: 20px; }
+.editor-insertion-dialog label { display: grid; gap: 6px; margin-block: 14px; font-size: 14px; }
+.editor-insertion-dialog input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-color); color: var(--text-color); }
+.editor-insertion-dialog :focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.editor-insertion-error { min-height: 20px; font-size: 13px; color: var(--text-color); }
+.editor-insertion-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.editor-insertion-actions button { min-height: 40px; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--button-bg); color: var(--text-color); }
+.editor-insertion-image, .editor-insertion-table { width: min(360px, calc(100vw - 32px)); padding: 20px; }
+.editor-insertion-image h2, .editor-insertion-table h2 { margin-bottom: 16px; font-size: 18px; }
+.editor-insertion-image label, .editor-insertion-table label { margin-block: 12px; }
+.editor-insertion-image input::placeholder { color: color-mix(in srgb, var(--text-color) 62%, var(--bg-color)); opacity: 1; }
+.editor-insertion-image .editor-insertion-actions, .editor-insertion-table .editor-insertion-actions { margin-top: 18px; }
+.editor-insertion-error[hidden] { display: none; }
+.editor-insertion-table { width: min(320px, calc(100vw - 32px)); }
+.editor-insertion-table label { grid-template-columns: 1fr 80px; align-items: center; gap: 16px; }
+.editor-insertion-hint { margin: 12px 0 0; font-size: 12px; color: color-mix(in srgb, var(--text-color) 70%, var(--editor-bg)); }
+@media (pointer: coarse) { .editor-insertion-dialog input, .editor-insertion-actions button { min-height: 44px; } }

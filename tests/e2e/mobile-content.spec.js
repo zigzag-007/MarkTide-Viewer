@@ -36,7 +36,7 @@ async function setup(page, context) {
   await waitForMarkTide(page);
   await renderMarkdown(page, source);
   await page.evaluate(() => window.MarkTideViewManager.setView('preview-only'));
-  await page.locator('#close-dropzone').click();
+  if (await page.locator('#close-dropzone').isVisible()) await page.locator('#close-dropzone').click();
 }
 
 async function metrics(page) {

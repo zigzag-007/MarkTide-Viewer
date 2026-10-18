@@ -49,6 +49,15 @@ class KeyboardShortcutManager {
   }
 
   handleKeydown(e) {
+    if (e.isComposing || e.getModifierState?.('AltGraph')) return;
+    if (window.MarkTideCommands?.ribbonKey(e)) return;
+    if (window.MarkTideCommands?.ownsKey(e)) return;
+    const field = e.target.closest?.('input, textarea, [contenteditable="true"], [role="textbox"]');
+    if (field && !this.isMonacoTextFocused() && field.id !== 'markdown-editor') return;
+    const save = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's';
+    if (!this.isMonacoTextFocused() && e.target.id !== 'markdown-editor' && e.key !== 'F11' && !save) return;
+    // The command layer owns ribbon keys.
+    if (e.target.closest?.('.formatting-ribbon, .ribbon-toggle')) return;
     // The image dialog owns its keys. Never send Tab or formatting to the editor.
     if (document.querySelector('.marktide-image-viewer.pswp--open')) return;
     const key = (e.key || '').toLowerCase();
@@ -89,6 +98,8 @@ class KeyboardShortcutManager {
       return;
     }
     
+    if (window.MarkTideCommands && hasCtrlOrMeta && ['b', 'i', 'u', '`'].includes(key)) return;
+
     // Formatting keyboard shortcuts
     if (hasCtrlOrMeta && !e.shiftKey && !e.altKey) {
       switch(key) {

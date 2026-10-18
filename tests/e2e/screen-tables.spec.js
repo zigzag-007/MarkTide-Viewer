@@ -218,7 +218,7 @@ test('table visual review uses the exact report example',async ({page,context,ba
   await page.goto('/index.html');await waitForMarkTide(page);
   await setTheme(page,'light');await renderMarkdown(page,reportAppendix);
   await page.evaluate(()=>window.MarkTideViewManager.setView('preview-only'));
-  await page.locator('#close-dropzone').click();
+  if (await page.locator('#close-dropzone').isVisible()) await page.locator('#close-dropzone').click();
   const html=await captureHtmlExport(page);
   fs.writeFileSync(`${process.env.MARKTIDE_SCREEN_TABLE_REVIEW_DIR}/table-review.html`,html);
   const exported=await context.newPage();

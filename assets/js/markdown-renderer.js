@@ -22,6 +22,7 @@ class MarkdownRenderer {
   }
 
   setupMarked() {
+    window.MarkTideMarkdownEditing?.install(window.marked);
     if (!window.MarkTideCodeBlockRenderer) {
       throw new Error('Shared code block renderer is required for Markdown preview.');
     }
@@ -269,12 +270,6 @@ class MarkdownRenderer {
           });
           return;
         }
-
-        line = line.replace(/(^|[^=])==([^=\n](?:[^\n]*?[^=\n])?)==(?!=)/g, (match, prefix, content) => {
-          const token = `@@MARKTIDE_MARK_${markPlaceholders.length}@@`;
-          markPlaceholders.push(`<mark>${this.escapeHtml(content)}</mark>`);
-          return `${prefix}${token}`;
-        });
 
         line = line.replace(/(^|[^\\])\[\^([^\]\s]+)\]/g, (match, prefix, label) => {
           const token = `@@MARKTIDE_FOOTNOTE_REF_${footnotePlaceholders.length}@@`;
@@ -636,6 +631,33 @@ class MarkdownRenderer {
     });
   }
 
+  preparePageBreaks(wrapper) {
+    if (!wrapper.querySelectorAll('.marktide-page-break').length) return;
+    const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    const order = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.nodeType === 1 && node.classList.contains('marktide-page-break')) order.push({ marker: node });
+      else if (node.nodeType === 3 && node.textContent.trim() || node.nodeType === 1 && ['IMG', 'SVG', 'HR'].includes(node.tagName)) {
+        order.push({ content: true });
+      }
+    }
+    let before = false;
+    const hasAfter = new Set();
+    let after = false;
+    for (const item of [...order].reverse()) {
+      if (item.content) after = true;
+      else if (after) hasAfter.add(item.marker);
+    }
+    for (const item of order) {
+      if (item.content) before = true;
+      else {
+        item.marker.classList.toggle('marktide-print-break', before && hasAfter.has(item.marker));
+        before = false;
+      }
+    }
+  }
+
   prepareRenderedHtml(html, options = {}) {
     if (!window.MarkTideSanitizer) {
       throw new Error('Shared sanitizer is required for Markdown rendering.');
@@ -666,6 +688,7 @@ class MarkdownRenderer {
     });
 
     this.prepareImageCaptions(wrapper);
+    this.preparePageBreaks(wrapper);
     if (options.mode !== 'pdf') this.prepareScreenTables(wrapper);
 
     return wrapper.innerHTML;

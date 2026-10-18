@@ -199,29 +199,21 @@ class MarkTideCore {
 
   setupFormattingToolbar() {
     const formatButtons = [
-      { id: 'format-h1', action: () => window.MarkTideEditor.setHeading(1) },
-      { id: 'format-h2', action: () => window.MarkTideEditor.setHeading(2) },
-      { id: 'format-h3', action: () => window.MarkTideEditor.setHeading(3) },
-      { id: 'format-bold', action: () => window.MarkTideEditor.wrapText('**', '**') },
-      { id: 'format-italic', action: () => window.MarkTideEditor.wrapText('*', '*') },
-      { id: 'format-underline', action: () => window.MarkTideEditor.wrapText('<u>', '</u>') },
-      { id: 'format-code', action: () => window.MarkTideEditor.wrapText('`', '`') },
-      { id: 'format-quote', action: () => window.MarkTideEditor.insertAtLineStart('> ') },
-      { id: 'format-align-left', action: () => this.alignText('left') },
-      { id: 'format-align-center', action: () => this.alignText('center') },
-      { id: 'format-align-right', action: () => this.alignText('right') },
-      { id: 'format-ul', action: () => window.MarkTideEditor.insertAtLineStart('- ') },
-      { id: 'format-ol', action: () => window.MarkTideEditor.insertAtLineStart('1. ') },
-      { id: 'format-linebreak', action: () => window.MarkTideEditor.insertText('<div style="page-break-after: always;"></div>\n') },
+      ...Object.entries({ 'format-h1': 'heading-1', 'format-h2': 'heading-2', 'format-h3': 'heading-3',
+        'format-bold': 'bold', 'format-italic': 'italic', 'format-underline': 'underline',
+        'format-code': 'inline-code', 'format-quote': 'blockquote', 'format-align-left': 'align-left',
+        'format-align-center': 'align-center', 'format-align-right': 'align-right',
+        'format-ul': 'bullet-list', 'format-ol': 'numbered-list', 'format-linebreak': 'page-break',
+        'format-undo': 'undo', 'format-redo': 'redo',
+      }).map(([id, command]) => ({ id, command, action: () => window.MarkTideCommands.execute(command) })),
       { id: 'format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
       { id: 'mobile-format-beautify', action: () => window.MarkTideBeautify && window.MarkTideBeautify.runBeautify() },
-      { id: 'format-undo', action: () => this.undoTextAction() },
-      { id: 'format-redo', action: () => this.redoTextAction() }
     ];
 
-    formatButtons.forEach(({ id, action }) => {
+    formatButtons.forEach(({ id, command, action }) => {
       const button = document.getElementById(id);
       if (button) {
+        if (command) button.dataset.editorCommand = command;
         button.addEventListener('click', (e) => {
           e.preventDefault();
           action();

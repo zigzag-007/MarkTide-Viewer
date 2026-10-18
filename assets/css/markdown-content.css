@@ -680,7 +680,15 @@
     position: relative;
   }
 
-  .markdown-body .code-block-header-actions [data-marktide-tip]::after {
+.markdown-body .marktide-page-break { border-top: 1px dashed var(--border-color, #aaa); margin-block: 1.5em; text-align: center; }
+.markdown-body .marktide-page-break::before { content: "Page break"; font-size: .75em; opacity: .6; }
+@media print {
+  .markdown-body .marktide-page-break { border: 0; margin: 0; height: 0; }
+  .markdown-body .marktide-page-break::before { display: none; }
+  .markdown-body .marktide-page-break.marktide-print-break { break-after: page; page-break-after: always; }
+}
+
+.markdown-body .code-block-header-actions [data-marktide-tip]::after {
     content: attr(data-marktide-tip);
     position: absolute;
     top: calc(100% + 6px);

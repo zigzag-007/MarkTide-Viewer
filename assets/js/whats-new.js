@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.5';
+  const CURRENT_VERSION = 'v1.8.6';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'Find your place and move through long documents more comfortably.',
-    headline: 'Easier document navigation',
+    tagline: 'Write and format documents with useful controls close at hand.',
+    headline: 'A working formatting toolbar',
     highlights: [
       {
         icon: 'bi-list-ul',
-        title: 'Table of contents',
-        text: 'Jump between headings in Preview, the editor and fresh HTML exports.'
+        title: 'Formatting controls',
+        text: 'Apply headings, emphasis, lists and alignment from the compact toolbar.'
       },
       {
         icon: 'bi-signpost',
-        title: 'Heading rail',
-        text: 'See your place in the document with heading markers and a visible reading range.'
+        title: 'Insertion tools',
+        text: 'Insert links, images, code blocks and tables using focused controls.'
       },
       {
         icon: 'bi-pin-angle',
-        title: 'Flexible navigation',
-        text: 'Pin the contents panel where space allows, or open the mobile contents sheet.'
+        title: 'Keyboard commands',
+        text: 'Use shared commands and shortcuts while keeping your selection.'
       },
       {
         icon: 'bi-mouse',
-        title: 'Calmer rail interaction',
-        text: 'Delayed hover opening and smoother heading markers make navigation easier to follow.'
+        title: 'Print page breaks',
+        text: 'Add explicit page breaks while keeping Preview and export content structured.'
       }
     ]
   };

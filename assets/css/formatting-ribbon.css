@@ -1,0 +1,165 @@
+/* Application UI only. Document and export styles keep their existing owners. */
+.ribbon-host { position: relative; flex: 0 0 auto; z-index: 41; overflow-anchor: none; }
+.ribbon-host[hidden] { display: none; }
+.ribbon-host.ribbon-collapsed { height: 0; }
+.ribbon-toggle { position: absolute; z-index: 1; left: 4px; top: 12px; display: grid; place-items: center; width: 32px; height: 44px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-color); cursor: pointer; font-size: 13px; }
+.ribbon-toggle i { transform: translateX(-1px); }
+.ribbon-collapsed .ribbon-toggle { left: 3px; top: 8px; height: 32px; border-radius: 50%; }
+.ribbon-collapsed .ribbon-toggle i { transform: none; }
+.ribbon-collapsed .ribbon-toggle::before { content: ""; position: absolute; z-index: -1; width: min(100%, 32px); aspect-ratio: 1; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--text-color) 12%, var(--editor-bg)); border-radius: 50%; background: var(--editor-bg); box-shadow: 0 2px 7px rgb(0 0 0 / 8%); }
+.ribbon-host.ribbon-collapsed ~ .content-container .monaco-editor .line-numbers { transform: translateX(var(--ribbon-number-offset, 0px)); }
+.ribbon-toggle:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -2px; }
+.ribbon-toggle:active { transform: scale(.97); }
+.ribbon-folding .ribbon-toggle { transition: top 180ms cubic-bezier(0.32, 0.72, 0, 1), left 180ms cubic-bezier(0.32, 0.72, 0, 1); }
+.ribbon-collapsed .formatting-ribbon { position: absolute; top: 0; clip-path: inset(0 0 100% 0); }
+.ribbon-folding .formatting-ribbon { clip-path: inset(0); transition: clip-path 180ms cubic-bezier(0.32, 0.72, 0, 1); }
+.ribbon-folding.ribbon-collapsed .formatting-ribbon { clip-path: inset(0 0 100% 0); }
+.ribbon-collapsed .ribbon-groups { clip-path: inset(0 100% 0 0); opacity: 0; pointer-events: none; }
+.ribbon-folding .ribbon-groups { transition: clip-path 180ms cubic-bezier(0.32, 0.72, 0, 1), opacity 150ms ease; }
+.formatting-ribbon {
+  --ribbon-width: 100vw;
+  --ribbon-icon-size: 20px;
+  --ribbon-caption-width: clamp(40px, calc(40px + (var(--ribbon-width) - 1081px) * 0.039), 52px);
+  --ribbon-style-width: clamp(84px, calc(84px + (var(--ribbon-width) - 1081px) * 0.151), 138px);
+  --ribbon-insert-width: clamp(40px, calc(40px + (var(--ribbon-width) - 1081px) * 0.023), 48px);
+  --ribbon-gap: clamp(1px, calc((var(--ribbon-width) - 1081px) * 0.01), 3px);
+  --ribbon-inset: clamp(6px, calc(6px + (var(--ribbon-width) - 1081px) * 0.018), 12px);
+  --ribbon-border: color-mix(in srgb, var(--text-color) 12%, var(--editor-bg));
+  flex: 0 0 auto;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  color: var(--text-color);
+  background: var(--editor-bg);
+  border-block: 1px solid var(--ribbon-border);
+}
+.formatting-ribbon[hidden] { display: none; }
+.ribbon-phase-help { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ribbon-groups { display: flex; width: max-content; padding: 3px 4px 3px 40px; clip-path: inset(0); opacity: 1; }
+.ribbon-group { position: relative; flex: 0 0 auto; padding: 0 var(--ribbon-inset); text-align: center; }
+.ribbon-styles { padding-inline: 12px; }
+.ribbon-clipboard { padding-right: max(8px, var(--ribbon-inset)); }
+.ribbon-group:not(:last-child)::after { content: ""; position: absolute; right: 0; top: 5px; bottom: 5px; width: 1px; background: var(--ribbon-border); opacity: .7; pointer-events: none; }
+.ribbon-clipboard::before { content: ""; position: absolute; left: -4px; top: 5px; bottom: 5px; width: 1px; background: var(--ribbon-border); opacity: .7; pointer-events: none; }
+.ribbon-tools { display: flex; align-items: center; justify-content: center; gap: var(--ribbon-gap); height: 70px; }
+.ribbon-group-label { display: block; font-size: 11px; line-height: 16px; color: color-mix(in srgb, var(--text-color) 72%, var(--editor-bg)); }
+.ribbon-command, .ribbon-menu-trigger {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  width: 40px;
+  height: 36px;
+  padding: 2px;
+  font: inherit;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.ribbon-command { color: color-mix(in srgb, var(--text-color) 80%, var(--editor-bg)); cursor: not-allowed; }
+.ribbon-command[aria-disabled="false"], .ribbon-menu button[aria-disabled="false"] { cursor: pointer; }
+.ribbon-command[aria-disabled="false"] { color: var(--text-color); }
+.editor-command-status { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 2200; max-width: calc(100vw - 32px); padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); background: var(--button-bg); box-shadow: 0 3px 12px rgb(0 0 0 / 12%); }
+.editor-command-status[hidden] { display: none; }
+.ribbon-command i { font-size: var(--ribbon-icon-size); line-height: 1; }
+.ribbon-history-icon { width: calc(var(--ribbon-icon-size) * .97); height: calc(var(--ribbon-icon-size) * .97); }
+.ribbon-clipboard .ribbon-tools > .ribbon-captioned { width: max(36px, calc(var(--ribbon-caption-width) - 6px)); }
+.ribbon-captioned { width: var(--ribbon-caption-width); height: 60px; padding-inline: 0; grid-template-rows: 30px 18px; align-content: center; gap: 2px; }
+.ribbon-captioned span { font-size: 11px; white-space: nowrap; }
+.ribbon-paste { display: flex; align-items: center; }
+.ribbon-cut-copy { display: grid; grid-template-rows: repeat(2, 30px); gap: 0; }
+.ribbon-cut-copy .ribbon-captioned { width: 56px; }
+.ribbon-find-replace { display: grid; grid-template-rows: repeat(2, 30px); gap: 0; }
+.ribbon-find-replace .ribbon-captioned { width: 72px; }
+.ribbon-cut-copy .ribbon-captioned, .ribbon-find-replace .ribbon-captioned { display: grid; grid-template-columns: 16px 1fr; align-items: center; justify-items: start; grid-template-rows: 1fr; gap: 4px; height: 30px; padding: 4px; }
+.ribbon-cut-copy .ribbon-captioned i, .ribbon-find-replace .ribbon-captioned i { width: 16px; text-align: center; font-size: calc(var(--ribbon-icon-size) - 6px); }
+.ribbon-cut-copy [data-ribbon-command="Cut"] i { font-size: calc((var(--ribbon-icon-size) - 6px) * 1.03 * 1.04); }
+.ribbon-cut-copy [data-ribbon-command="Copy"] i { font-size: calc((var(--ribbon-icon-size) - 6px) * 1.03 * 1.03); }
+.ribbon-replace-icon { width: 16px; height: calc(var(--ribbon-icon-size) - 6px); }
+.ribbon-cut-copy .ribbon-captioned span, .ribbon-find-replace .ribbon-captioned span { font-size: 11px; line-height: 16px; }
+.ribbon-editing .ribbon-tools > .ribbon-captioned i { font-size: calc((var(--ribbon-icon-size) + 2px) * 1.04 * 1.04); }
+.ribbon-paste-arrow { width: 20px; height: 54px; margin-left: 4px; font-size: 11px; border-left: 1px solid var(--border-color); }
+.ribbon-menu-trigger { cursor: pointer; }
+.ribbon-styles-trigger { width: var(--ribbon-style-width); height: 36px; display: flex; justify-content: space-between; padding: 0 10px; border: 1px solid var(--ribbon-border); font-size: 13px; background: color-mix(in srgb, var(--bg-color) 38%, var(--editor-bg)); }
+.ribbon-styles-trigger i { font-size: 10px; }
+.ribbon-text-grid { display: grid; align-content: center; grid-template-columns: repeat(3, 32px); grid-template-rows: repeat(2, 34px); gap: 2px max(2px, var(--ribbon-gap)); }
+.ribbon-text-grid .ribbon-command { width: 32px; }
+.ribbon-text-grid .ribbon-command i { font-size: calc((var(--ribbon-icon-size) - 2px) * 1.04); }
+.ribbon-paragraph-grid { display: grid; align-content: center; grid-template-columns: repeat(6, 40px); grid-template-rows: repeat(2, 34px); gap: 2px max(2px, var(--ribbon-gap)); }
+.ribbon-text-grid .ribbon-command, .ribbon-paragraph-grid .ribbon-command { height: 34px; }
+.ribbon-insert .ribbon-command { width: var(--ribbon-insert-width); }
+.ribbon-command[aria-pressed="true"], .ribbon-command[aria-pressed="mixed"] { background: color-mix(in srgb, var(--accent-color) 14%, var(--editor-bg)); color: var(--text-color); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 65%, var(--text-color)); }
+.ribbon-command[data-ribbon-command="Page Break"] i, .ribbon-command[data-ribbon-command="Line Break"] i { font-size: calc(var(--ribbon-icon-size) - 2px); }
+.ribbon-command[data-ribbon-command="Link"] i { font-size: calc(var(--ribbon-icon-size) + 2px); }
+.ribbon-command[data-ribbon-command="Highlight"] i { position: relative; font-size: calc((var(--ribbon-icon-size) - 4px) * 1.04); }
+.ribbon-command[data-ribbon-command="Highlight"] i::after { content: ""; position: absolute; bottom: -3px; left: 3px; right: 3px; height: 2px; background: #e5c84c; }
+.formatting-ribbon button:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent-color) 55%, var(--text-color)); outline-offset: -2px; }
+.ribbon-menu-trigger[aria-expanded="true"], .ribbon-command[aria-expanded="true"] { background: color-mix(in srgb, var(--accent-color) 14%, var(--editor-bg)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 65%, var(--text-color)); }
+.ribbon-menu {
+  position: fixed;
+  z-index: 2000;
+  width: 260px;
+  max-width: calc(100vw - 16px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--text-color);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+.ribbon-menu[hidden], .ribbon-tooltip[hidden] { display: none; }
+.ribbon-menu button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 36px; padding: 7px 10px; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: not-allowed; }
+.ribbon-menu button span { font-size: 10px; color: color-mix(in srgb, var(--text-color) 68%, var(--button-bg)); }
+.ribbon-menu button:focus { background: var(--button-hover); }
+.ribbon-image-menu { width: 200px; }
+.ribbon-menu [data-insertion-action] { cursor: pointer; }
+.ribbon-table-menu { width: max-content; padding: 10px; }
+.ribbon-table-size { display: block; margin-bottom: 8px; font-size: 13px; text-align: center; }
+.ribbon-table-menu [role="row"] { display: flex; gap: 2px; margin-bottom: 2px; }
+.ribbon-table-menu [role="gridcell"] { display: block; flex: 0 0 24px; width: 24px; min-height: 24px; height: 24px; padding: 0; border: 1px solid color-mix(in srgb, var(--text-color) 35%, var(--button-bg)); border-radius: 2px; cursor: pointer; transition: none; }
+.ribbon-table-menu [role="gridcell"][aria-selected="true"] { background: color-mix(in srgb, var(--accent-color) 18%, var(--button-bg)); border-color: color-mix(in srgb, var(--accent-color) 65%, var(--text-color)); }
+.ribbon-table-hint { margin: 8px 0; color: color-mix(in srgb, var(--text-color) 70%, var(--button-bg)); font-size: 11px; }
+.ribbon-table-menu [data-insertion-action="custom-table"] { margin-top: 6px; border-top: 1px solid var(--border-color); border-radius: 0 0 4px 4px; }
+.ribbon-tooltip { position: fixed; z-index: 2100; max-width: min(290px, calc(100vw - 16px)); padding: 7px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--button-bg); color: var(--text-color); box-shadow: 0 3px 12px rgb(0 0 0 / 12%); font-size: 12px; line-height: 1.4; pointer-events: none; }
+#import-button { display: none; }
+body.ribbon-layout #import-button { display: flex; }
+body.ribbon-layout .formatting-toolbar, body.ribbon-layout #dropzone { display: none !important; }
+body.ribbon-layout .editor-wrapper { height: 100% !important; }
+@media (hover: hover) and (pointer: fine) {
+  /* The site wide hover color is important, so this surface overrides it here. */
+  .formatting-ribbon button:hover, .ribbon-toggle:hover { background-color: color-mix(in srgb, var(--accent-color) 14%, var(--editor-bg)) !important; color: var(--text-color); border-radius: 5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 65%, var(--text-color)); }
+}
+@media (pointer: coarse) {
+  .formatting-ribbon {
+    --ribbon-touch-width: clamp(40px, calc(40px + (var(--ribbon-width) - 1081px) * .012), 44px);
+    --ribbon-inset: clamp(6px, calc(6px + (var(--ribbon-width) - 1081px) * .018), 12px);
+  }
+  .ribbon-command, .ribbon-menu-trigger { min-height: 44px; min-width: var(--ribbon-touch-width); }
+  .ribbon-tools, .ribbon-text-grid, .ribbon-paragraph-grid { gap: 2px; }
+  .ribbon-clipboard .ribbon-tools, .ribbon-insert .ribbon-tools { gap: 0; }
+  .ribbon-editing .ribbon-tools { gap: 1px; }
+  .ribbon-groups { padding-left: 40px; }
+  .ribbon-toggle { width: 40px; }
+  .ribbon-collapsed .ribbon-toggle { height: 44px; }
+  .ribbon-captioned { height: 72px; grid-template-rows: 30px 28px; }
+  .ribbon-clipboard .ribbon-tools > .ribbon-captioned { width: var(--ribbon-touch-width); }
+  .ribbon-insert .ribbon-command, .ribbon-editing .ribbon-tools > .ribbon-captioned { width: var(--ribbon-touch-width); }
+  .ribbon-paste-arrow { margin-left: 0; }
+  .ribbon-tools { height: 90px; }
+  .ribbon-cut-copy { grid-template-rows: repeat(2, 44px); }
+  .ribbon-cut-copy .ribbon-captioned { height: 44px; }
+  .ribbon-find-replace { grid-template-rows: repeat(2, 44px); }
+  .ribbon-find-replace .ribbon-captioned { height: 44px; }
+  .ribbon-text-grid, .ribbon-paragraph-grid { grid-template-rows: repeat(2, 44px); grid-template-columns: repeat(3, var(--ribbon-touch-width)); }
+  .ribbon-paragraph-grid { grid-template-columns: repeat(6, var(--ribbon-touch-width)); }
+  .ribbon-menu button { min-height: 44px; }
+  .ribbon-table-menu [role="gridcell"] { flex-basis: 44px; width: 44px; min-height: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .formatting-ribbon button { transition: none; } }
+@media (min-width: 1280px) { .formatting-ribbon { --ribbon-icon-size: 21px; } }
+@media (min-width: 1440px) { .formatting-ribbon { --ribbon-icon-size: 22px; } }
+@media print { .ribbon-host, .formatting-ribbon, .ribbon-tooltip, #import-button { display: none !important; } }

@@ -21,7 +21,7 @@ async function setup(page, context, source = longDocument) {
   await installStandaloneCdnMirror(context);
   await page.goto('/index.html');
   await waitForMarkTide(page);
-  await page.locator('#close-dropzone').click();
+  if (await page.locator('#close-dropzone').isVisible()) await page.locator('#close-dropzone').click();
   await renderMarkdown(page, source);
   await expect(page.locator(control)).toHaveCount(1);
 }

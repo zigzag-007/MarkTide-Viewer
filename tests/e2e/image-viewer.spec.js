@@ -45,7 +45,7 @@ async function setup(page, context, theme = 'light') {
   await page.goto('/index.html');
   await waitForMarkTide(page);
   expect(await page.evaluate(() => typeof window.PhotoSwipe)).toBe('function');
-  await page.locator('#close-dropzone').click();
+  if (await page.locator('#close-dropzone').isVisible()) await page.locator('#close-dropzone').click();
   await setTheme(page, theme);
   await renderMarkdown(page, source);
   await expect(page.locator('.marktide-viewable-image')).toHaveCount(4);

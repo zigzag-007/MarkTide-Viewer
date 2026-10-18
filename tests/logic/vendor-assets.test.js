@@ -30,6 +30,8 @@ test('pinned local vendor files are present and nonempty', () => {
     'assets/vendor/monaco/vs/base/worker/workerMain.js',
     'assets/vendor/prettier/standalone.mjs',
     'assets/vendor/prettier/plugins/markdown.mjs',
+    'assets/vendor/turndown/turndown.js',
+    'assets/vendor/turndown/turndown-plugin-gfm.js',
     'assets/vendor/photoswipe/photoswipe.umd.min.js',
     'assets/vendor/photoswipe/photoswipe.css',
   ];
@@ -61,6 +63,8 @@ test('redistributed vendor packages include their license notices', () => {
     'monaco-editor-0.52.2.LICENSE',
     'prettier-3.2.5.LICENSE',
     'photoswipe-5.4.4.LICENSE',
+    'turndown-7.2.4.LICENSE',
+    'turndown-plugin-gfm-1.0.2.LICENSE',
   ];
 
   assert.deepEqual(fs.readdirSync(licenseRoot).sort(), expectedLicenses.sort());
