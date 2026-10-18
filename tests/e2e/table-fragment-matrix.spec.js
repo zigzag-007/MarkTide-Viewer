@@ -432,8 +432,15 @@ for (const profile of profiles) {
             if (kind === 'borderless') continue;
             const edges = fragmentEdges(pdf, pageNumber, colors);
             const label = `${profile.name}, ${kind}, position ${position}, page ${pageNumber}`;
-            if (!edges) expect(pages[pageNumber - 1], `${label} has no table fragment`).toHaveLength(0);
-            else {
+            if (!edges) {
+              // A page without table content still gets its page number.
+              const contentBottom = (297 / 25.4 - profile.margin) * 72;
+              const contentWords = pages[pageNumber - 1].filter(word =>
+                Number(word.match(/yMin="([\d.]+)"/)[1]) < contentBottom);
+              expect(contentWords, `${label} has no table fragment`).toHaveLength(0);
+              expect(pages[pageNumber - 1].map(word => word.match(/>([^<]+)<\/word>/)[1]))
+                .toEqual([String(pageNumber), 'Page']);
+            } else {
               expect(edges.right - edges.left, `${label} table width`).toBeGreaterThan(1000);
               expect(edges.top, `${label} top border`).toBeGreaterThan(0.95);
               expect(edges.bottom, `${label} bottom border`).toBeGreaterThan(0.95);

@@ -12,6 +12,42 @@
       @page {
         margin: 0.56in 0.38in;
         size: A4;
+
+        /* Use the existing margin so numbering does not move document content. */
+        @bottom-left {
+          content: counter(page);
+          text-align: right;
+          padding-right: 4pt;
+          vertical-align: middle;
+          font-family: Arial, sans-serif;
+          font-size: 7pt;
+          font-weight: 600;
+          line-height: 1;
+          color: #000;
+          background: linear-gradient(#d7d7d7, #d7d7d7) left calc(50% - 11pt) / 100% 0.25pt no-repeat;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* The fixed label width leaves the number directly beside the separator. */
+        @bottom-right {
+          content: "Page";
+          width: 25pt;
+          padding-left: 4pt;
+          text-align: right;
+          vertical-align: middle;
+          font-family: Arial, sans-serif;
+          font-size: 7pt;
+          font-weight: 400;
+          letter-spacing: 1pt;
+          line-height: 1;
+          color: #92969e;
+          background:
+            linear-gradient(#42464d, #42464d) left center / 0.5pt 8pt no-repeat,
+            linear-gradient(#d7d7d7, #d7d7d7) left calc(50% - 11pt) / 100% 0.25pt no-repeat;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
       }
 
       /* Force all text to wrap and prevent overflow */

@@ -1025,9 +1025,10 @@ async function testMermaidUsesOneSharedRenderLifecycle() {
 
 function testPrintStylesLeaveTypographyToSharedMarkdownStyles() {
   const printStyles = loadPrintStyles().getStyles();
+  const documentStyles = printStyles.replace(/@bottom-(?:left|right)\s*\{[^}]*\}/g, '');
 
   assert(
-    !/font-family\s*:/i.test(printStyles),
+    !/font-family\s*:/i.test(documentStyles),
     'print layout CSS must not replace the shared Markdown font families'
   );
 }
