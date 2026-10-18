@@ -95,7 +95,13 @@ for (const width of [390, 768, 1080, 1081, 1440, 1920]) {
               expect(after.editor.x).toBeGreaterThanOrEqual(after.panel.right - 1);
             } else {
               await expect(page.locator('.preview-pane')).toHaveClass(/marktide-outline-expanded/);
-              expect(await page.locator('#markdown-preview').evaluate(root => getComputedStyle(root).marginLeft)).toBe('262px');
+              const inset = await page.locator('#markdown-preview').evaluate(root => {
+                const surface = root.parentElement, padding = getComputedStyle(surface), style = getComputedStyle(root);
+                const available = surface.clientWidth - parseFloat(padding.paddingLeft) - parseFloat(padding.paddingRight);
+                return { actual: parseFloat(style.marginLeft),
+                  expected: 262 + Math.min(160, Math.max(0, (available - 262 - parseFloat(style.maxWidth) - 64) / 3)) };
+              });
+              expect(inset.actual).toBeCloseTo(inset.expected, 0);
               expect(after.preview.width).toBeLessThanOrEqual(before.preview.width);
               expect(after.preview.x).toBeGreaterThanOrEqual(after.panel.right - 1);
             }

@@ -267,9 +267,13 @@
       const top = Math.max(headerBottom, bounds.top, 0);
       const bottom = Math.min(win.innerHeight, bounds.bottom);
       const gutter = expanded ? 302 : 40;
+      // Pinned navigation stays at the surface edge as the document moves.
+      const documentAnchor = expanded && !reading.editorOnly && !reading.split
+        ? bounds.left + parseFloat(win.getComputedStyle(reading.region).paddingLeft) - 40
+        : root.getBoundingClientRect().left - gutter;
       const left = reading.editorOnly ? bounds.left - gutter
         : win.innerWidth <= 1080 || reading.innerScroll ? bounds.left
-            : root.getBoundingClientRect().left - gutter;
+            : documentAnchor;
       const pixelScale = win.devicePixelRatio || 1;
       const anchor = Math.round(Math.max(0, left) * pixelScale) / pixelScale;
       const railTop = Math.round(top * pixelScale) / pixelScale;
@@ -280,6 +284,7 @@
       navigation.style.setProperty('--outline-panel-left', `${Math.max(0, Math.min(panelLeft, win.innerWidth - 262))}px`);
       const panelTop = mobile.matches ? Math.max(16, headerBottom) : win.innerWidth <= 1080 ? headerBottom : top;
       navigation.style.setProperty('--outline-panel-top', `${panelTop}px`);
+      navigation.style.setProperty('--outline-panel-bottom', `${Math.max(0, win.innerHeight - bottom)}px`);
       if (mobile.matches) {
         const corner = (reading.innerScroll ? pane : root).getBoundingClientRect();
         const right = reading.editorOnly ? 16 : Math.max(16, win.innerWidth - Math.min(corner.right, win.innerWidth) + 16);
@@ -530,7 +535,9 @@
     }
 
     const onScroll = event => {
-      if (event.target === doc || event.target === pane || event.target === editorHost) schedule();
+      // Page scrolling moves the pane even when its own scroll position stays put.
+      if (event.target === doc) schedule(false, true);
+      else if (event.target === pane || event.target === editorHost) schedule();
     };
     const onResize = () => schedule(false, true);
     const onRendered = () => schedule(true, true);

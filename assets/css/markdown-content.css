@@ -3,6 +3,7 @@
      ================================================================= */
 
   :root {
+    --markdown-reading-max-width: 920px;
     --markdown-color-scheme: light;
     --markdown-bg: #ffffff;
     --markdown-text-color: #24292e;
@@ -185,7 +186,7 @@
   /* Slightly larger, document-like scale when in preview-only mode */
   body.preview-only-active .markdown-body,
   body.marktide-html-document .markdown-body {
-    max-width: 920px;
+    max-width: var(--markdown-reading-max-width);
   }
 
   /* Screen documents respond to their reading area, including split Preview. */

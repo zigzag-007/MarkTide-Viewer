@@ -1,6 +1,8 @@
 /* Navigation stays outside the Markdown document and PDF export. */
 .marktide-outline {
   --outline-active-text: color-mix(in srgb, var(--markdown-accent-color) 45%, var(--markdown-text-color));
+  --outline-button-fill: color-mix(in srgb, var(--accent-color, var(--markdown-accent-color)) 14%, var(--editor-bg, var(--markdown-bg)));
+  --outline-button-border: color-mix(in srgb, var(--accent-color, var(--markdown-accent-color)) 65%, var(--text-color, var(--markdown-text-color)));
   position: fixed;
   z-index: 40;
   width: 40px;
@@ -75,7 +77,7 @@
 .marktide-toc {
   position: fixed;
   top: var(--outline-panel-top, 0px);
-  bottom: 0;
+  bottom: var(--outline-panel-bottom, 0px);
   left: var(--outline-panel-left, 40px);
   display: flex;
   flex-direction: column;
@@ -93,6 +95,7 @@
 }
 .marktide-toc-header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
@@ -102,10 +105,6 @@
 }
 .marktide-toc-header span { flex: 1; }
 .marktide-toc-header svg { width: 17px; height: 17px; vertical-align: middle; }
-.marktide-toc-header button[aria-pressed="true"] {
-  color: var(--outline-active-text);
-  background: color-mix(in srgb, var(--markdown-accent-color) 12%, transparent);
-}
 .marktide-toc > ol {
   scrollbar-color: color-mix(in srgb, var(--markdown-text-color) 28%, transparent) transparent;
 }
@@ -149,9 +148,14 @@
   padding: 0;
   background: transparent;
   border: 0;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 20px;
   font-weight: 400;
+}
+.marktide-toc-header button:is([aria-pressed="true"], :active) {
+  color: var(--text-color, var(--markdown-text-color));
+  background-color: var(--outline-button-fill) !important;
+  box-shadow: inset 0 0 0 1px var(--outline-button-border);
 }
 .marktide-toc ol { list-style: none; padding: 0; margin: 0; }
 .marktide-toc > ol { overflow-y: auto; min-height: 0; flex: 1; padding: 0 10px 12px; scrollbar-width: thin; overscroll-behavior: contain; }
@@ -183,16 +187,24 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .marktide-heading-marker:hover::before { opacity: 0.65; }
-  .marktide-toc a:hover, .marktide-toc-header button:hover, .marktide-outline-toggle:hover {
+  .marktide-toc a:hover, .marktide-outline-toggle:hover {
     opacity: 1;
     background: color-mix(in srgb, var(--markdown-text-color) 6%, transparent);
+  }
+  .marktide-toc-header button:hover {
+    background-color: var(--outline-button-fill) !important;
+    color: var(--text-color, var(--markdown-text-color));
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px var(--outline-button-border);
   }
 }
 @media screen {
   :is(.preview-pane, .marktide-html-reading-area).marktide-outline-surface { padding-left: 60px; }
   :is(.preview-pane, .marktide-html-reading-area).marktide-outline-surface.marktide-outline-expanded > .markdown-body {
+    /* Share spare space gently, with a compact start and a nearby TOC. */
+    --outline-document-offset: clamp(0px, (100% - 262px - var(--markdown-reading-max-width) - 64px) / 3, 160px);
     width: calc(100% - 262px);
-    margin-left: 262px;
+    margin-left: calc(262px + var(--outline-document-offset));
   }
   .editor-only-active .marktide-outline-editor { margin-left: 40px; width: calc(100% - 40px); }
   .editor-only-active .marktide-outline-editor.marktide-outline-expanded { margin-left: 302px; width: calc(100% - 302px); }
@@ -219,6 +231,7 @@
   .marktide-toc {
     left: 0;
     right: 0;
+    bottom: 0;
     width: 100%;
     z-index: 1;
     pointer-events: auto;
