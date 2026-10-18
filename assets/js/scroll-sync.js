@@ -5,6 +5,7 @@ class ScrollSyncManager {
     this.syncScrollingEnabled = false;
     this.isEditorScrolling = false;
     this.isPreviewScrolling = false;
+    this.navigationInProgress = false;
     this.scrollSyncTimeout = null;
     this.SCROLL_SYNC_DELAY = 10;
     
@@ -42,7 +43,7 @@ class ScrollSyncManager {
   }
 
   syncEditorToPreview() {
-    if (!this.syncScrollingEnabled || this.isPreviewScrolling) return;
+    if (!this.syncScrollingEnabled || this.isPreviewScrolling || this.navigationInProgress) return;
 
     this.isEditorScrolling = true;
     clearTimeout(this.scrollSyncTimeout);
@@ -66,7 +67,7 @@ class ScrollSyncManager {
   }
 
   syncPreviewToEditor() {
-    if (!this.syncScrollingEnabled || this.isEditorScrolling) return;
+    if (!this.syncScrollingEnabled || this.isEditorScrolling || this.navigationInProgress) return;
 
     this.isPreviewScrolling = true;
     clearTimeout(this.scrollSyncTimeout);
@@ -92,6 +93,17 @@ class ScrollSyncManager {
   toggleSyncScrolling() {
     this.syncScrollingEnabled = !this.syncScrollingEnabled;
     this.updateSyncButtons();
+  }
+
+  beginNavigation() {
+    clearTimeout(this.scrollSyncTimeout);
+    this.navigationInProgress = true;
+    this.isEditorScrolling = false;
+    this.isPreviewScrolling = false;
+  }
+
+  endNavigation() {
+    this.navigationInProgress = false;
   }
 
   updateSyncButtons() {
