@@ -34,6 +34,7 @@
     let pinned = false;
     let keyboardOpen = false;
     let hoverTimer = null;
+    let hoverOpenTimer = null;
     let expanded = false;
     let lastMode = null;
     let suppressFocusOpen = false;
@@ -360,6 +361,7 @@
 
     function setOpen(value) {
       win.clearTimeout(hoverTimer);
+      win.clearTimeout(hoverOpenTimer);
       open = Boolean(value);
       navigation.classList.toggle('is-open', open);
       panel.hidden = !open;
@@ -496,11 +498,16 @@
     const onEnter = event => {
       if (mobile.matches || event.pointerType === 'touch' || !win.matchMedia('(hover: hover)').matches) return;
       win.clearTimeout(hoverTimer);
+      win.clearTimeout(hoverOpenTimer);
       keyboardOpen = false;
-      setOpen(true);
+      if (open) return;
+      hoverOpenTimer = win.setTimeout(() => {
+        if (!navigation.hidden && !mobile.matches && navigation.matches(':hover')) setOpen(true);
+      }, 300);
     };
     const onLeave = () => {
       win.clearTimeout(hoverTimer);
+      win.clearTimeout(hoverOpenTimer);
       if (!pinned && !keyboardOpen) hoverTimer = win.setTimeout(() => setOpen(false), 140);
     };
     const onPointerDown = event => {
@@ -594,6 +601,7 @@
       if (!navigation) return;
       finishNavigation();
       win.clearTimeout(hoverTimer);
+      win.clearTimeout(hoverOpenTimer);
       if (frame !== null) win.cancelAnimationFrame(frame);
       frame = null;
       resizeObserver?.disconnect();
