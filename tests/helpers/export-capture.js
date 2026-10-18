@@ -10,7 +10,7 @@ async function captureHtmlExport(page) {
     URL.revokeObjectURL = () => {};
 
     try {
-      window.MarkTideImportExport.exportAsHTML();
+      await window.MarkTideImportExport.exportAsHTML();
       if (!blobUrl) throw new Error('HTML export did not create a download URL');
       return await fetch(blobUrl).then((response) => response.text());
     } finally {

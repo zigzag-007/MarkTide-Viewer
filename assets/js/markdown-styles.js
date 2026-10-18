@@ -2,6 +2,7 @@
 (function (window) {
   const MARKDOWN_CONTENT_HREF = 'assets/css/markdown-content.css';
   const MERMAID_TOOLBAR_HREF = 'assets/css/mermaid-toolbar.css';
+  const READING_CONTROLS_HREF = 'assets/css/reading-controls.css';
 
   function normalizeHref(value) {
     return (value || '').replace(/\\/g, '/').split('?')[0].split('#')[0];
@@ -70,10 +71,12 @@
     const settings = options || {};
     const mode = settings.mode || 'html';
     const maxWidth = mode === 'html' ? '920px' : 'none';
-    const bodyPadding = mode === 'html' ? '45px' : '0';
-    const articlePadding = mode === 'html' ? '0' : '20px';
+    const articlePadding = mode === 'html' ? '' : 'padding: 20px !important;';
     const contentStyles = getContentStyles();
     const mermaidToolbarStyles = mode === 'html' ? getMermaidToolbarStyles() : '';
+    const readingControlStyles = mode === 'html' ? getStylesheet(READING_CONTROLS_HREF) : '';
+    const imageViewerStyles = mode === 'html'
+      ? getStylesheet('assets/vendor/photoswipe/photoswipe.css') + '\n' + getStylesheet('assets/css/image-viewer.css') : '';
 
     return `
       html,
@@ -88,7 +91,7 @@
         min-width: 200px;
         max-width: ${maxWidth};
         margin: 0 auto;
-        padding: ${bodyPadding};
+        padding: 0;
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
       }
 
@@ -96,9 +99,13 @@
 
       ${mermaidToolbarStyles}
 
+      ${readingControlStyles}
+
+      ${imageViewerStyles}
+
       .markdown-body {
         max-width: ${maxWidth} !important;
-        padding: ${articlePadding} !important;
+        ${articlePadding}
       }
     `;
   }

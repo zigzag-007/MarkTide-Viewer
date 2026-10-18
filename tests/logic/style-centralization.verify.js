@@ -824,6 +824,117 @@ const checks = [
     },
   },
   {
+    name: 'document line spacing and heading divider spacing stay shared',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const article = css.match(/\.markdown-body\s*\{([\s\S]*?)\}/)[1];
+      const fullPreview = css.match(/body\.preview-only-active \.markdown-body\s*\{([\s\S]*?)\}/)[1];
+      const print = read('assets/js/print-styles.js');
+      const printLineHeights = [...print.matchAll(/line-height:\s*([^;]+);/g)];
+      return /line-height:\s*1\.4;/.test(article)
+        && !/line-height:/.test(fullPreview)
+        && /\.markdown-body h1,\s*\.markdown-body h2\s*\{\s*padding-bottom:\s*0\.2em;/.test(css)
+        && printLineHeights.length === 2
+        && printLineHeights.every((match) => /^1\.4(?: !important)?$/.test(match[1]));
+    },
+  },
+  {
+    name: 'screen typography uses shared reading width rules without print overrides',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const responsive = read('assets/css/responsive.css');
+      const styles = read('assets/js/markdown-styles.js');
+      return /@media screen\s*\{[\s\S]*container:\s*marktide-document \/ inline-size;/.test(css)
+        && /@container marktide-document \(max-width: 600px\)/.test(css)
+        && /\.marktide-html-reading-area/.test(css)
+        && /<body class="marktide-html-document">/.test(read('assets/js/import-export.js'))
+        && !/\.markdown-body\s*\{/.test(responsive)
+        && !/bodyPadding/.test(styles);
+    },
+  },
+  {
+    name: 'screen tables share sanitized preparation without print sizing changes',
+    pass: () => {
+      const renderer = read('assets/js/markdown-renderer.js');
+      const css = read('assets/css/markdown-content.css');
+      return /options\.mode !== 'pdf'\) this\.prepareScreenTables\(wrapper\)/.test(renderer)
+        && /!hasSpans && !hasAuthoredWidths && !hasMedia/.test(renderer)
+        && /@media screen\s*\{[\s\S]*\.markdown-body \.marktide-table-scroll/.test(css)
+        && /\.marktide-table-scroll:focus-visible/.test(css)
+        && /overscroll-behavior-x:\s*contain;/.test(css)
+        && !/marktide-screen-|marktide-table-scroll/.test(read('assets/js/print-styles.js'))
+        && !/prepareScreenTables|marktide-screen-/.test(read('assets/js/import-export.js'));
+    },
+  },
+  {
+    name: 'mobile table and code density have shared screen owners',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const renderer = read('assets/js/markdown-renderer.js');
+      return /@container marktide-document \(max-width: 600px\)\s*\{\s*\.markdown-body table\.marktide-screen-compact-table/.test(css)
+        && /font-size:\s*87\.5%;/.test(css)
+        && /marktide-screen-short-value/.test(renderer)
+        && /code-block-header-actions button:focus-visible/.test(css)
+        && /@media screen and \(hover: none\) and \(pointer: coarse\)/.test(css)
+        && /<pre tabindex="0" role="region"/.test(read('assets/js/code-block-renderer.js'))
+        && !/marktide-screen-compact|font-size:\s*13px/.test(read('assets/js/print-styles.js'));
+    },
+  },
+  {
+    name: 'table scroll hints serialize one shared screen controller',
+    pass: () => {
+      const controller = read('assets/js/table-scroll-handler.js');
+      return /MarkTideCreateTableScrollController/.test(controller)
+        && /MutationObserver/.test(controller)
+        && /ResizeObserver/.test(controller)
+        && /assets\/js\/table-scroll-handler\.js/.test(read('index.html'))
+        && /MarkTideCreateTableScrollController\.toString\(\)/.test(read('assets/js/import-export.js'))
+        && !/TableScrollController/.test(read('assets/js/print-handler.js'));
+    },
+  },
+  {
+    name: 'reading controls share external styling and serialized runtime without PDF',
+    pass: () => {
+      const helper = read('assets/js/markdown-styles.js');
+      const controller = read('assets/js/back-to-top.js');
+      const css = read('assets/css/reading-controls.css');
+      return /assets\/css\/reading-controls\.css/.test(read('index.html'))
+        && /assets\/js\/back-to-top\.js/.test(read('index.html'))
+        && /mode === 'html' \? getStylesheet\(READING_CONTROLS_HREF\) : ''/.test(helper)
+        && /MarkTideCreateBackToTopController\.toString\(\)/.test(read('assets/js/import-export.js'))
+        && /doc\.body\.appendChild\(button\)/.test(controller)
+        && /prefers-reduced-motion: reduce/.test(controller)
+        && /@media print[\s\S]*display: none !important/.test(css)
+        && !/BackToTop|back-to-top|reading-controls/.test(read('assets/js/print-handler.js'))
+        && !/back-to-top/.test(read('assets/css/markdown-content.css'));
+    },
+  },
+  {
+    name: 'standalone image defaults belong to shared Markdown styles',
+    pass: () => {
+      const css = read('assets/css/markdown-content.css');
+      const print = read('assets/js/print-styles.js');
+      return /img\.marktide-default-image\s*\{\s*max-width:\s*85%;/.test(css)
+        && /img\.marktide-content-image\s*\{[^}]*margin-left:\s*auto;[^}]*margin-right:\s*auto;/.test(css)
+        && !/img\s*\{[^}]*max-width:\s*100%\s*!important/.test(print)
+        && !/marktide-default-image/.test(print);
+    },
+  },
+  {
+    name: 'image captions use the shared sanitized pipeline and stylesheet',
+    pass: () => {
+      const renderer = read('assets/js/markdown-renderer.js');
+      const css = read('assets/css/markdown-content.css');
+      const privateOwners = read('assets/js/import-export.js') + read('assets/js/print-handler.js')
+        + read('assets/js/print-styles.js');
+      return /this\.prepareImageCaptions\(wrapper\)/.test(renderer)
+        && /caption\.textContent = alt;/.test(renderer)
+        && !/caption\.innerHTML/.test(renderer)
+        && /\.markdown-body \.marktide-image-caption\s*\{[^}]*font-style:\s*italic;[^}]*text-align:\s*center;/.test(css)
+        && !/marktide-image-caption/.test(privateOwners);
+    },
+  },
+  {
     name: 'shared CSS owns light and dark markdown theme tokens',
     pass: () => {
       const css = read('assets/css/markdown-content.css');

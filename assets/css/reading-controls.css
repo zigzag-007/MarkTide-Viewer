@@ -1,0 +1,63 @@
+/* Reading controls stay outside the Markdown document. */
+.marktide-back-to-top {
+  appearance: none;
+  box-sizing: border-box;
+  position: fixed;
+  right: max(var(--marktide-top-right, 16px), env(safe-area-inset-right, 0px));
+  bottom: max(var(--marktide-top-bottom, 16px), env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--markdown-table-border);
+  border-radius: 12px;
+  background: var(--markdown-table-row-alt);
+  color: var(--markdown-text-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.marktide-back-to-top[hidden] {
+  display: none;
+}
+
+.marktide-back-to-top svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.marktide-back-to-top:focus-visible {
+  outline: 2px solid var(--markdown-accent-color);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .marktide-back-to-top:hover {
+    background: var(--markdown-copy-code-btn-hover-bg);
+  }
+}
+
+.marktide-back-to-top:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marktide-back-to-top {
+    transition: none;
+  }
+
+  .marktide-back-to-top:active {
+    transform: none;
+  }
+}
+
+@media print {
+  .marktide-back-to-top {
+    display: none !important;
+  }
+}

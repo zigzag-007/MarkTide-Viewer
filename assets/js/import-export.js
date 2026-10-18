@@ -110,6 +110,35 @@ function marktideRequireMathJax() {
   return window.MarkTideMathJax;
 }
 
+function marktideExportTableScrollScript() {
+  if (typeof window.MarkTideCreateTableScrollController !== 'function') {
+    throw new Error('Shared table scroll controller is required for HTML export.');
+  }
+
+  return `
+    window.MarkTideCreateTableScrollController = ${window.MarkTideCreateTableScrollController.toString()};
+    window.MarkTideTableScroll = window.MarkTideCreateTableScrollController(window, {
+      rootSelector: '.markdown-body'
+    });
+    window.MarkTideTableScroll.init();
+  `;
+}
+
+function marktideExportBackToTopScript() {
+  if (typeof window.MarkTideCreateBackToTopController !== 'function') {
+    throw new Error('Shared Back to top controller is required for HTML export.');
+  }
+
+  return `
+    window.MarkTideCreateBackToTopController = ${window.MarkTideCreateBackToTopController.toString()};
+    window.MarkTideBackToTop = window.MarkTideCreateBackToTopController(window, {
+      rootSelector: '.markdown-body',
+      pageScroll: true
+    });
+    window.MarkTideBackToTop.init();
+  `;
+}
+
 function marktideExportMathJaxConfigScript() {
   return marktideRequireMathJax().getConfigScript();
 }
@@ -316,7 +345,10 @@ class ImportExportManager {
     if (exportHtml) {
       exportHtml.addEventListener("click", () => {
         this.closeMobileMenu();
-        this.exportAsHTML();
+        this.exportAsHTML().catch(error => {
+          console.error('HTML export failed:', error);
+          window.MarkTideSoftBreaks?.showNotification('HTML export failed. Please reload and try again.');
+        });
       });
     }
     if (exportTxt) {
@@ -342,7 +374,10 @@ class ImportExportManager {
     if (mobileExportHtml) {
       mobileExportHtml.addEventListener("click", () => {
         this.closeMobileMenu();
-        this.exportAsHTML();
+        this.exportAsHTML().catch(error => {
+          console.error('HTML export failed:', error);
+          window.MarkTideSoftBreaks?.showNotification('HTML export failed. Please reload and try again.');
+        });
       });
     }
     if (mobileExportTxt) {
@@ -655,8 +690,9 @@ class ImportExportManager {
     URL.revokeObjectURL(url);
   }
 
-  exportAsHTML() {
-    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer) {
+  async exportAsHTML() {
+    if (!window.MarkTideCodeBlockRenderer || !window.MarkTideRenderer || !window.MarkTideSanitizer
+      || !window.MarkTideImageViewerAssets) {
       throw new Error('Shared Markdown rendering pipeline is required for HTML export.');
     }
 
@@ -670,6 +706,7 @@ class ImportExportManager {
     // Use the enhanced renderer for HTML export
     const html = window.MarkTideRenderer.parseMarkdown(markdown, { renderer: exportRenderer });
     const renderedHtml = window.MarkTideRenderer.prepareRenderedHtml(html, { mode: 'html' });
+    const images = await window.MarkTideImageViewerAssets.prepareExport(renderedHtml);
     
     // Get current theme
     const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -711,10 +748,13 @@ class ImportExportManager {
     <link rel="stylesheet" href="${highlightTheme}">
     <style>${minifiedStyles}</style>
 </head>
-<body>
+<body class="marktide-html-document">
+    <main class="marktide-html-reading-area">
     <article class="markdown-body">
-        ${renderedHtml}
+        ${images.html}
     </article>
+    </main>
+    ${images.script}
     
     ${mermaidScript}
     <script>${this.minifyJS(marktideExportMermaidSharedScript())}</script>
@@ -728,6 +768,8 @@ class ImportExportManager {
     ${mathJaxScript}
     <script>${this.minifyJS(marktideExportCodeCopyScript())}</script>
     <script>${this.minifyJS(marktideExportCodeWrapScript())}</script>
+    <script>${this.minifyJS(marktideExportTableScrollScript())}</script>
+    <script>${this.minifyJS(marktideExportBackToTopScript())}</script>
 </body>
 </html>`;
     

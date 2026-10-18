@@ -237,6 +237,11 @@ function createHtmlExportHarness() {
   };
   context.window.MarkTideCreateMermaidShared = function createMermaidShared() {};
   context.window.MarkTideCreateCodeWrapController = function createCodeWrapController() {};
+  context.window.MarkTideCreateTableScrollController = function createTableScrollController() {};
+  context.window.MarkTideCreateBackToTopController = function createBackToTopController() {};
+  context.window.MarkTideImageViewerAssets = {
+    async prepareExport(html) { return { html, script: '' }; },
+  };
   context.window.MarkTideMathJax = {
     getConfigScript() {
       return 'window.MathJax = {};';
@@ -248,8 +253,8 @@ function createHtmlExportHarness() {
   context.window.MarkTideImportExport.markdownEditor = { value: '# Export' };
 
   return {
-    exportHtml() {
-      context.window.MarkTideImportExport.exportAsHTML();
+    async exportHtml() {
+      await context.window.MarkTideImportExport.exportAsHTML();
       return exportedHtml;
     },
   };
@@ -725,22 +730,22 @@ function testPrintDependencyFailureLeavesPageUntouched() {
   assert.strictEqual(document.body.appended, 0);
 }
 
-function testDarkHtmlExportDoesNotInjectPrintTokens() {
-  const html = createHtmlExportHarness().exportHtml();
+async function testDarkHtmlExportDoesNotInjectPrintTokens() {
+  const html = await createHtmlExportHarness().exportHtml();
 
   assert(html.includes('dark-highlight.css'), 'dark export must load the dark Highlight theme');
   assert(!html.includes('LIGHT_PRINT_TOKENS'), 'HTML export must not inject light PDF token colors');
 }
 
-function testHtmlExportUsesSharedRenderedHtmlPipeline() {
-  const html = createHtmlExportHarness().exportHtml();
+async function testHtmlExportUsesSharedRenderedHtmlPipeline() {
+  const html = await createHtmlExportHarness().exportHtml();
 
   assert(html.includes('<p>EMOJI_READY</p>'), 'HTML export must use the shared rendered HTML result');
   assert(!html.includes('SANITIZED_WITHOUT_EMOJI'), 'HTML export must not bypass shared emoji post processing');
 }
 
-function testHtmlExportEnhancesValidMermaidAfterBatchFailure() {
-  const html = createHtmlExportHarness().exportHtml();
+async function testHtmlExportEnhancesValidMermaidAfterBatchFailure() {
+  const html = await createHtmlExportHarness().exportHtml();
 
   assert(
     /window\.MarkTideMermaidRenderPromise\s*=\s*window\.MarkTideMermaidShared\.renderDiagrams\(document,\s*\{\s*mode:\s*['"]html['"]\s*\}\)[\s\S]*?\.catch\([\s\S]*?\.finally\([\s\S]*?MarkTideMermaidToolbar\.enhance\(document\)/.test(html),
@@ -755,7 +760,7 @@ function testHtmlExportEnhancesValidMermaidAfterBatchFailure() {
 function testSharedRenderedHtmlPipelineSanitizesBeforeEmojis() {
   const { context, renderer } = loadMarkdownRendererHarness();
   const calls = [];
-  const wrapper = { innerHTML: '' };
+  const wrapper = { innerHTML: '', querySelectorAll: () => [] };
   context.document = {
     createElement() {
       return wrapper;

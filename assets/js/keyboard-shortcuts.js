@@ -49,6 +49,8 @@ class KeyboardShortcutManager {
   }
 
   handleKeydown(e) {
+    // The image dialog owns its keys. Never send Tab or formatting to the editor.
+    if (document.querySelector('.marktide-image-viewer.pswp--open')) return;
     const key = (e.key || '').toLowerCase();
     const hasCtrlOrMeta = e.ctrlKey || e.metaKey;
     const isMonacoFocused = this.isMonacoTextFocused();

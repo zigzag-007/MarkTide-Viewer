@@ -97,7 +97,9 @@ test('Appendix B gets readable columns and complete D3 rows in a searchable PDF'
       }
     });
     expect(wrapping[1].prose[2]).toBeLessThan(baselineWrapping[1].prose[2]);
-    await expect(page.locator('#markdown-preview colgroup')).toHaveCount(0);
+    await expect(page.locator('#markdown-preview colgroup:not(.marktide-screen-columns)')).toHaveCount(0);
+    await expect(page.locator('#markdown-preview .marktide-screen-columns')).toHaveCount(1);
+    await expect(printPage.locator('.marktide-screen-columns, .marktide-table-scroll')).toHaveCount(0);
     const pdf = await printPage.pdf({
       preferCSSPageSize: true,
       printBackground: true,
@@ -112,17 +114,19 @@ test('Appendix B gets readable columns and complete D3 rows in a searchable PDF'
     const pages = extractPages(pdf);
     expect(pages).toHaveLength(2);
     expect(pages[0]).toContain('Detailed Validation Table');
-    expect(pages[1]).toContain('VAL-DNS-C2-TP-');
+    expect(pages[0]).toContain('VAL-DNS-C2-TP-');
     expect(pages[1]).toContain('VAL-DNS-FP-01');
-    expect(pages[1]).toContain('offline cross-check');
+    expect(pages[0]).toContain('offline cross-check');
     expect(pages[1]).toContain('Origin and method');
     expect(pages[1]).toContain('unconfirmed.');
-    // The page boundary falls between COVERAGE and SLOW, never inside a row.
+    // The tighter document line spacing puts the boundary between the D3 rows.
     expect(pages[0]).toContain('SYN-D2-COVERAGE-');
     expect(pages[0]).toContain('guessing coverage.');
-    expect(pages[0]).not.toContain('SYN-D2-SLOW-01');
-    expect(pages[1]).toContain('SYN-D2-SLOW-01');
-    expect(pages[1]).toContain('neither matches.');
+    expect(pages[0]).toContain('SYN-D2-SLOW-01');
+    expect(pages[0]).toContain('neither matches.');
+    expect(pages[0]).not.toContain('VAL-DNS-FP-01');
+    expect(pages[1]).not.toContain('VAL-DNS-C2-TP-');
+    expect(pages[1]).not.toContain('offline cross-check');
     expect(pages.join('').match(/offline cross-check/g)).toHaveLength(2);
     expect(pages.join('')).not.toMatch(/MATC\s*\n\s*H/);
   } finally {

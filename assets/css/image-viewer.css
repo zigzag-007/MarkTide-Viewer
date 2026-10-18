@@ -1,0 +1,64 @@
+/* Viewer styles stay outside the shared Markdown document and print output. */
+@media screen {
+  .marktide-viewable-image { cursor: zoom-in; }
+  .marktide-viewable-image:focus-visible {
+    outline: 2px solid var(--markdown-accent-color);
+    outline-offset: 4px;
+  }
+}
+
+.marktide-image-viewer {
+  --pswp-bg: var(--markdown-bg, #101418);
+  --pswp-placeholder-bg: transparent;
+  --pswp-icon-color: var(--markdown-text-color, #fff);
+  --pswp-icon-color-secondary: var(--markdown-bg, #101418);
+  --pswp-icon-stroke-color: var(--markdown-bg, #101418);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.marktide-image-viewer .pswp__button:focus-visible {
+  outline: 2px solid var(--markdown-accent-color);
+  outline-offset: -4px;
+}
+.marktide-image-viewer .pswp__button--arrow {
+  width: 48px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 8px;
+  background: var(--markdown-bg);
+}
+.marktide-image-viewer .pswp__button--arrow .pswp__icn {
+  width: 32px;
+  height: 32px;
+  left: 8px;
+  right: 8px;
+  margin-top: -16px;
+}
+.marktide-image-viewer.pswp--touch .pswp__button--arrow { visibility: visible; }
+.marktide-image-viewer .pswp__document-caption {
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  right: 16px;
+  max-height: 104px;
+  overflow: auto;
+  padding: 8px 16px;
+  color: var(--markdown-text-color);
+  background: var(--markdown-bg);
+  text-align: center;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+.marktide-image-viewer .pswp__document-caption[hidden] { display: none; }
+.marktide-image-viewer .pswp__document-caption:focus-visible {
+  outline: 2px solid var(--markdown-accent-color);
+  outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marktide-image-viewer .pswp__hide-on-close { transition: none; }
+  .marktide-image-viewer .pswp__preloader .pswp__icn { animation: none; }
+}
+@media print {
+  .marktide-image-viewer { display: none !important; }
+}

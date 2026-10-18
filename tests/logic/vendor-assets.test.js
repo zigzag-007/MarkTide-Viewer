@@ -30,6 +30,8 @@ test('pinned local vendor files are present and nonempty', () => {
     'assets/vendor/monaco/vs/base/worker/workerMain.js',
     'assets/vendor/prettier/standalone.mjs',
     'assets/vendor/prettier/plugins/markdown.mjs',
+    'assets/vendor/photoswipe/photoswipe.umd.min.js',
+    'assets/vendor/photoswipe/photoswipe.css',
   ];
 
   requiredFiles.forEach((relativePath) => {
@@ -58,6 +60,7 @@ test('redistributed vendor packages include their license notices', () => {
     'mermaid-11.15.0.LICENSE',
     'monaco-editor-0.52.2.LICENSE',
     'prettier-3.2.5.LICENSE',
+    'photoswipe-5.4.4.LICENSE',
   ];
 
   assert.deepEqual(fs.readdirSync(licenseRoot).sort(), expectedLicenses.sort());
