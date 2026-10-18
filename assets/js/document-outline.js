@@ -14,6 +14,8 @@
     let track = null;
     let indicator = null;
     let viewportMarker = null;
+    let viewportFill = null;
+    let viewportOutline = null;
     let pin = null;
     let toggle = null;
     let backdrop = null;
@@ -35,6 +37,7 @@
     let keyboardOpen = false;
     let hoverTimer = null;
     let hoverOpenTimer = null;
+    let railRevealTarget = null;
     let expanded = false;
     let lastMode = null;
     let suppressFocusOpen = false;
@@ -156,7 +159,9 @@
         return { id, label, level, line: entry?.line || null, heading, y: 0, position: 0 };
       });
       list.replaceChildren();
-      track.replaceChildren(viewportMarker, indicator);
+      viewportMarker.style.height = '';
+      viewportFill.style.height = '';
+      track.replaceChildren(viewportFill, viewportOutline, indicator);
       const stack = [];
       for (const [index, item] of items.entries()) {
         item.y = index * 12;
@@ -201,7 +206,7 @@
 
     function setActive(index, instant = false) {
       if (!items.length) return;
-      if (index === active) { revealActiveMarker(); return; }
+      if (index === active) { revealActiveMarker(instant); return; }
       items[active]?.link.removeAttribute('aria-current');
       items[active]?.marker.removeAttribute('aria-current');
       if (items[active]) items[active].marker.tabIndex = -1;
@@ -211,8 +216,8 @@
       item.marker.setAttribute('aria-current', 'location');
       item.marker.tabIndex = 0;
       indicator.classList.toggle('is-instant', instant);
-      indicator.style.transform = `translateY(${item.y}px) scaleX(${markerWidth(item) / 18})`;
-      revealActiveMarker();
+      positionIndicator(item);
+      revealActiveMarker(instant);
       if (open && !panel.matches(':hover')) {
         const top = item.link.offsetTop;
         if (top < list.scrollTop || top > list.scrollTop + list.clientHeight - 40) {
@@ -221,7 +226,14 @@
       }
     }
 
-    function revealActiveMarker() {
+    function positionIndicator(item) {
+      const width = markerWidth(item);
+      indicator.style.width = `${width}px`;
+      indicator.style.left = `${(30 - width) / 2}px`;
+      indicator.style.transform = `translateY(${item.y}px)`;
+    }
+
+    function revealActiveMarker(instant = false) {
       const viewport = track.parentElement;
       if (!items[active] || mobile.matches || !viewport.clientHeight) return;
       const bounds = viewport.getBoundingClientRect();
@@ -230,7 +242,11 @@
       const bottom = top + viewport.clientHeight;
       // Use the painted position so the rail's padding is included.
       if (marker.top < top + 8 || marker.bottom > bottom - 8) {
-        viewport.scrollTop += (marker.top + marker.bottom - top - bottom) / 2;
+        const target = Math.max(0, Math.min(viewport.scrollHeight - viewport.clientHeight,
+          viewport.scrollTop + (marker.top + marker.bottom - top - bottom) / 2));
+        if (!instant && !motion.matches && railRevealTarget !== null && Math.abs(railRevealTarget - target) < 1) return;
+        railRevealTarget = target;
+        viewport.scrollTo({ top: target, behavior: instant || motion.matches ? 'instant' : 'smooth' });
       }
     }
 
@@ -249,10 +265,12 @@
         : !pane ? root.getBoundingClientRect().left - gutter
           : win.innerWidth <= 1080 || reading.innerScroll ? bounds.left
             : root.getBoundingClientRect().left - gutter;
-      const anchor = Math.max(0, left);
+      const pixelScale = win.devicePixelRatio || 1;
+      const anchor = Math.round(Math.max(0, left) * pixelScale) / pixelScale;
+      const railTop = Math.round(top * pixelScale) / pixelScale;
       navigation.style.left = `${anchor}px`;
-      navigation.style.top = `${top}px`;
-      navigation.style.height = `${Math.max(80, bottom - top)}px`;
+      navigation.style.top = `${railTop}px`;
+      navigation.style.height = `${Math.max(80, bottom - railTop)}px`;
       const split = reading.innerScroll && editorHost && !reading.editorOnly && win.innerWidth > 1080;
       const panelLeft = !expanded && split ? anchor - 262 : anchor + 40;
       navigation.style.setProperty('--outline-panel-left', `${Math.max(0, Math.min(panelLeft, win.innerWidth - 262))}px`);
@@ -268,14 +286,18 @@
       }
       const origin = root.getBoundingClientRect().top;
       for (const [index, item] of items.entries()) {
+        const bounds = item.heading.getBoundingClientRect();
         item.position = reading.editorOnly && editor && item.line
-          ? editor.getTopForLineNumber(item.line) : item.heading.getBoundingClientRect().top - origin;
+          ? editor.getTopForLineNumber(item.line) : bounds.top - origin;
+        item.height = reading.editorOnly && editor && item.line
+          ? editor.getTopForLineNumber(Math.min(item.line + 1, editor.getModel().getLineCount())) - item.position || 20
+          : bounds.height;
         // Keep section order compact. The range still uses real document offsets.
         item.y = index * 12;
         item.marker.style.transform = `translateY(${item.y}px)`;
       }
       track.style.height = `${Math.max(12, items.length * 12)}px`;
-      if (items[active]) indicator.style.transform = `translateY(${items[active].y}px) scaleX(${markerWidth(items[active]) / 18})`;
+      if (items[active]) positionIndicator(items[active]);
       if (observedScroller !== reading.scroller) {
         intersectionObserver?.disconnect();
         observedScroller = reading.scroller;
@@ -310,10 +332,25 @@
         return last.y + (Math.max(space - 8, last.y) - last.y)
           * Math.min(1, (position - last.position) / Math.max(1, length - last.position));
       };
-      const top = Math.max(0, map(start) - 3);
-      const end = map(start + height) + 8;
-      viewportMarker.style.transform = `translateY(${top}px)`;
-      viewportMarker.style.height = `${Math.max(20, end - top)}px`;
+      const visible = items.filter(item => item.position < start + height && item.position + item.height > start);
+      // Show visible headings, with section mapping when none are on screen.
+      let top = visible.length ? visible[0].y
+        : Math.max(0, Math.min(space - 12, Math.floor(map(start) / 12) * 12));
+      let end = visible.length ? visible.at(-1).y + 12
+        : Math.min(space, Math.max(top + 12, Math.ceil(map(start + height) / 12) * 12));
+      // Two rows keep a small range readable, except in a one heading document.
+      const minimum = Math.min(24, space);
+      if (end - top < minimum) {
+        end = Math.min(space, top + minimum);
+        top = Math.max(0, end - minimum);
+      }
+      const transform = `translateY(${top}px)`;
+      const size = `${end - top}px`;
+      if (viewportMarker.style.transform === transform && viewportMarker.style.height === size) return;
+      viewportMarker.style.transform = transform;
+      viewportMarker.style.height = size;
+      viewportFill.style.transform = transform;
+      viewportFill.style.height = size;
     }
 
     function refresh() {
@@ -511,6 +548,7 @@
       if (!pinned && !keyboardOpen) hoverTimer = win.setTimeout(() => setOpen(false), 140);
     };
     const onPointerDown = event => {
+      railRevealTarget = null;
       pointerType = event.pointerType;
       skipRailClick = false;
       if (pointerType === 'touch' && !open && event.target.closest('.marktide-heading-rail')) {
@@ -530,6 +568,7 @@
     };
     const onMotion = () => schedule(false, true);
     const onScrollEnd = event => {
+      if (event.target === track?.parentElement) railRevealTarget = null;
       if (event.target === doc || event.target === pane) finishNavigation();
     };
 
@@ -547,9 +586,17 @@
       track = navigation.querySelector('.marktide-rail-track');
       indicator = navigation.querySelector('.marktide-active-marker');
       backdrop = navigation.querySelector('.marktide-toc-backdrop');
+      track.parentElement.addEventListener('wheel', () => { railRevealTarget = null; }, { passive: true });
       viewportMarker = doc.createElement('span');
       viewportMarker.className = 'marktide-viewport-marker';
       viewportMarker.setAttribute('aria-hidden', 'true');
+      viewportFill = doc.createElement('span');
+      viewportFill.className = 'marktide-viewport-fill';
+      viewportFill.setAttribute('aria-hidden', 'true');
+      viewportOutline = doc.createElement('span');
+      viewportOutline.className = 'marktide-viewport-outline';
+      viewportOutline.setAttribute('aria-hidden', 'true');
+      viewportOutline.appendChild(viewportMarker);
       pin = doc.createElement('button');
       pin.type = 'button';
       pin.setAttribute('aria-label', 'Pin table of contents');
