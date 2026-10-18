@@ -10,7 +10,7 @@
       ${markdownPrintStyles}
     @media print {
       @page {
-        margin: 0.55in 0.38in;
+        margin: 0.56in 0.38in;
         size: A4;
       }
 
@@ -175,11 +175,40 @@
           /* Print-specific adjustments */
       @media print {
           .markdown-body {
+        --marktide-print-reference-font-size: 1.05rem;
+        font-size: 1.03rem;
         padding: 6px !important;
         margin: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
+      }
+
+      /* Keep the original hierarchy with small print size reductions. */
+      .markdown-body h1 { --marktide-print-reference-font-size: 2.1rem; }
+      .markdown-body h2 { --marktide-print-reference-font-size: 1.575rem; }
+      .markdown-body h3 { --marktide-print-reference-font-size: 1.3125rem; }
+      .markdown-body h4 { --marktide-print-reference-font-size: 1.05rem; }
+      .markdown-body h5 { --marktide-print-reference-font-size: 0.91875rem; }
+      .markdown-body h6 { --marktide-print-reference-font-size: 0.8925rem; }
+      .markdown-body :is(h1, h2, h3, h4, h5, h6) {
+        font-size: calc(var(--marktide-print-reference-font-size) - 0.2px);
+      }
+      .markdown-body :is(h2, h3, h4) {
+        font-size: calc(var(--marktide-print-reference-font-size) - 0.3px);
+      }
+
+      /* Code and captions keep their previous sizes, not the smaller body size. */
+      .markdown-body code:not(pre code):not([style*="font-size"] code) {
+        font-size: calc(var(--marktide-print-reference-font-size) * 0.85);
+      }
+      .markdown-body code:not(pre code) {
+        padding-top: 0.08em;
+        padding-bottom: 0.08em;
+      }
+      .markdown-body .marktide-image-caption:not([style*="font-size"] .marktide-image-caption) {
+        --marktide-print-reference-font-size: 0.945rem;
+        font-size: var(--marktide-print-reference-font-size);
       }
 
       /* Ensure content uses full width but prevent overflow */
@@ -213,6 +242,10 @@
         page-break-inside: auto !important;
       }
 
+      .markdown-body pre:not(.enhanced-code-block pre):not([style*="font-size"] pre) {
+        font-size: calc(var(--marktide-print-reference-font-size) * 0.85);
+      }
+
       .markdown-body pre code {
         white-space: pre-wrap !important;
         word-break: break-word !important;
@@ -221,7 +254,8 @@
 
       /* Table responsiveness for print */
       .markdown-body table {
-        font-size: 90% !important;
+        --marktide-print-reference-font-size: 0.945rem;
+        font-size: var(--marktide-print-reference-font-size) !important;
         word-break: normal !important;
         table-layout: auto !important;
         width: 100% !important;
@@ -277,7 +311,8 @@
       /* Only wide, simple grids get content based column allocation. */
       .markdown-body table.marktide-print-content-table {
         display: table !important;
-        font-size: 83% !important;
+        --marktide-print-reference-font-size: 0.8715rem;
+        font-size: var(--marktide-print-reference-font-size) !important;
       }
 
       .markdown-body table.marktide-print-content-table th,
@@ -295,6 +330,31 @@
       .markdown-body table.marktide-print-content-table tbody tr.marktide-print-keep-row {
         break-inside: avoid;
         page-break-inside: avoid;
+      }
+
+      /* Reserve cut space without adding padding inside ordinary cells. */
+      .markdown-body .marktide-print-fragment-edge {
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        padding-bottom: 7px;
+      }
+
+      .markdown-body .marktide-print-fragment-edge > table {
+        margin-bottom: -7px !important;
+      }
+
+      .markdown-body .marktide-print-fragment-edge > table > tbody {
+        /* Row groups end at their content, unlike a page filling outer frame. */
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        outline: 1px solid var(--marktide-print-fragment-border, var(--markdown-table-border, var(--markdown-border-color)));
+        outline-offset: -1px;
+      }
+
+      /* Allow a partial row when the cut has room for one readable line. */
+      .markdown-body .marktide-print-fragment-edge > table > tbody > tr > :is(td, th) {
+        orphans: 1;
+        widows: 1;
       }
       }
     `;

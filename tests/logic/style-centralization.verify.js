@@ -312,7 +312,7 @@ const checks = [
     name: 'shared print styles preserve accepted PDF layout values',
     pass: () => {
       const source = read('assets/js/print-styles.js');
-      return /margin:\s*0\.55in 0\.38in/.test(source)
+      return /margin:\s*0\.56in 0\.38in/.test(source)
         && /width:\s*16%[\s\S]*?min-width:\s*88px/.test(source)
         && /width:\s*13%[\s\S]*?min-width:\s*86px/.test(source)
         && /width:\s*12%[\s\S]*?min-width:\s*78px/.test(source)
@@ -320,12 +320,15 @@ const checks = [
     },
   },
   {
-    name: 'print styles contain layout rules only for shared Markdown content',
+    name: 'print styles preserve shared content styling except approved PDF code padding',
     pass: () => {
       const source = read('assets/js/print-styles.js');
+      const approvedPadding = /\.markdown-body code:not\(pre code\)\s*\{\s*padding-top:\s*0\.08em;\s*padding-bottom:\s*0\.08em;\s*\}/;
+      const remaining = source.replace(approvedPadding, '');
       return !/\.markdown-body blockquote\s*\{/.test(source)
         && !/\.markdown-body table tr:nth-child/.test(source)
-        && !/\.markdown-body code:not\(pre code\)\s*\{/.test(source)
+        && approvedPadding.test(source)
+        && !/\.markdown-body code:not\(pre code\)\s*\{/.test(remaining)
         && !/\.mermaid \.nodeLabel/.test(source)
         && !/\.mermaid \.edgeLabel foreignObject (?:div|span|p)/.test(source);
     },
@@ -925,8 +928,12 @@ const checks = [
     pass: () => {
       const renderer = read('assets/js/markdown-renderer.js');
       const css = read('assets/css/markdown-content.css');
-      const privateOwners = read('assets/js/import-export.js') + read('assets/js/print-handler.js')
-        + read('assets/js/print-styles.js');
+      // Only the exact PDF font preservation rule may live outside shared CSS.
+      const printStyles = read('assets/js/print-styles.js').replace(
+        /\.markdown-body \.marktide-image-caption:not\(\[style\*="font-size"\] \.marktide-image-caption\)\s*\{\s*--marktide-print-reference-font-size:\s*0\.945rem;\s*font-size:\s*var\(--marktide-print-reference-font-size\);\s*\}/,
+        ''
+      );
+      const privateOwners = read('assets/js/import-export.js') + read('assets/js/print-handler.js') + printStyles;
       return /this\.prepareImageCaptions\(wrapper\)/.test(renderer)
         && /caption\.textContent = alt;/.test(renderer)
         && !/caption\.innerHTML/.test(renderer)

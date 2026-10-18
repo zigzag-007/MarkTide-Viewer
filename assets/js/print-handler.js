@@ -204,6 +204,28 @@ class PrintHandler {
         });
       });
     });
+    document.querySelectorAll('.markdown-body table').forEach((table) => {
+      // Border painting must not depend on column sizing or row height.
+      if (table.parentElement.classList.contains('marktide-print-fragment-edge')) return;
+      let borderColor = null;
+      Array.from(table.rows).some((row) => Array.from(row.cells).some((cell) => {
+        const style = getComputedStyle(cell);
+        return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+          const color = style[`border${side}Color`];
+          if (parseFloat(style[`border${side}Width`]) <= 0
+            || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return false;
+          borderColor = color;
+          return true;
+        });
+      }));
+      if (!borderColor) return;
+      const edge = document.createElement('div');
+      edge.className = 'marktide-print-fragment-edge';
+      edge.style.marginBottom = getComputedStyle(table).marginBottom;
+      edge.style.setProperty('--marktide-print-fragment-border', borderColor);
+      table.before(edge);
+      edge.appendChild(table);
+    });
   }
 
   getMermaidFactory() {
