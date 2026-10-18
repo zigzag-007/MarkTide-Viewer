@@ -5,32 +5,32 @@
   'use strict';
 
   const STORAGE_KEY = 'marktide-whats-new-dismissed';
-  const CURRENT_VERSION = 'v1.8.3';
+  const CURRENT_VERSION = 'v1.8.4';
 
   const RELEASE = {
     version: CURRENT_VERSION,
-    tagline: 'Read comfortably on smaller screens and explore images with less effort.',
-    headline: 'Comfortable reading and image viewing',
+    tagline: 'Print documents with clearer page numbering and cleaner table breaks.',
+    headline: 'More polished PDF output',
     highlights: [
       {
-        icon: 'bi-phone',
-        title: 'More comfortable reading',
-        text: 'Responsive tables, code and document spacing improve reading on narrow screens.'
+        icon: 'bi-file-earmark-pdf',
+        title: 'Clear page numbering',
+        text: 'PDF pages have a readable number and Page label, raised within the bottom margin.'
       },
       {
-        icon: 'bi-image',
-        title: 'Clearer images and captions',
-        text: 'Standalone images keep balanced sizing and can show captions from descriptive alt text.'
+        icon: 'bi-table',
+        title: 'Cleaner split tables',
+        text: 'Tables keep clear borders and breathing room around text at page cuts.'
       },
       {
-        icon: 'bi-arrows-fullscreen',
-        title: 'PhotoSwipe image viewing',
-        text: 'Open supported document images for a closer look in Preview and fresh HTML exports.'
+        icon: 'bi-fonts',
+        title: 'Refined PDF typography',
+        text: 'Print text and headings use refined sizes while keeping tables and code readable.'
       },
       {
-        icon: 'bi-arrow-up',
-        title: 'Back to top',
-        text: 'Return to the start of long documents with a shared reading control.'
+        icon: 'bi-aspect-ratio',
+        title: 'Balanced page margins',
+        text: 'A4 pages use adjusted top and bottom margins for a balanced document layout.'
       }
     ]
   };

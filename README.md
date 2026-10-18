@@ -70,6 +70,7 @@ MarkTide is a Markdown editor that processes documents in your browser, without 
 - ✅ Task lists, tables, and fenced code blocks
 - 😊 Emoji support
 - 🖨️ Print-friendly layouts
+- PDF page numbers in the bottom margin, using supported browser page margin boxes
 - Footnotes, highlighted text (`==text==`), and abbreviation definitions
 - Standalone image captions and PhotoSwipe image viewing in Preview and HTML
 - Shared Back to top and scrolling controls in Preview and HTML
