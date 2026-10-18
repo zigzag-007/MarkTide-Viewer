@@ -49,7 +49,19 @@ function pages(pdf) {
     .map(match => ({ width: Number(match[1]), height: Number(match[2]),
       words: [...match[3].matchAll(/<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)<\/word>/g)]
         .map(word => ({ x: Number(word[1]), y: Number(word[2]), right: Number(word[3]),
-          bottom: Number(word[4]), text: word[5], raw: word[0] })) }));
+          bottom: Number(word[4]), text: word[5], raw: word[0] })) }))
+    .map(sheet => {
+      // Poppler can split the spaced footer label into separate letters.
+      const label = sheet.words.filter(word => word.y > sheet.height - 0.56 * 72 && /^[Page]+$/.test(word.text));
+      if (label.length > 1 && label.map(word => word.text).join('') === 'Page') {
+        expect(Math.max(...label.map(word => word.y)) - Math.min(...label.map(word => word.y))).toBeLessThan(0.1);
+        const combined = { ...label[0], text: 'Page', right: label.at(-1).right,
+          bottom: Math.max(...label.map(word => word.bottom)) };
+        sheet.words = sheet.words.filter(word => !label.includes(word));
+        sheet.words.push(combined);
+      }
+      return sheet;
+    });
 }
 
 function pixels(pdf, pageNumber) {
@@ -72,6 +84,10 @@ for (const [name, markdown] of Object.entries(documents)) {
     test.setTimeout(180_000);
     await page.goto('/index.html');
     await waitForMarkTide(page);
+    if (captureBaseline) {
+      const originalStyles = command('git', ['show', 'HEAD:assets/js/print-styles.js']).toString();
+      await page.addScriptTag({ content: originalStyles });
+    }
     await renderMarkdown(page, markdown);
     const prepared = await capturePdfPreparation(page, 'Numbering review', { includeDocumentHtml: true });
     expect(prepared.mermaidCount).toBe(name === 'single' ? 1 : 13);
@@ -94,6 +110,38 @@ for (const [name, markdown] of Object.entries(documents)) {
         fs.writeFileSync(path.join(reviewDirectory, `${captureBaseline ? 'baseline' : 'updated'}-${name}.pdf`), pdf);
       }
       if (captureBaseline) return;
+      const footerStyles = await printed.evaluate(() => {
+        const result = [];
+        const visit = rules => {
+          for (const rule of rules) {
+            if (rule.type === CSSRule.PAGE_RULE) {
+              for (const margin of rule.cssRules) {
+                if (!['bottom-left', 'bottom-right'].includes(margin.name)) continue;
+                const probe = document.createElement('span');
+                probe.style.cssText = margin.style.cssText;
+                document.body.appendChild(probe);
+                const css = getComputedStyle(probe);
+                result.push({ name: margin.name, fontSize: css.fontSize,
+                  backgroundSize: css.backgroundSize, backgroundPosition: css.backgroundPosition,
+                  declaredFontSize: margin.style.fontSize, paddingBottom: margin.style.paddingBottom });
+                probe.remove();
+              }
+            } else if (rule.cssRules) visit(rule.cssRules);
+          }
+        };
+        for (const sheet of document.styleSheets) {
+          try { visit(sheet.cssRules); } catch (error) {
+            if (error.name !== 'SecurityError') throw error;
+          }
+        }
+        return result;
+      });
+      expect(footerStyles.map(style => style.declaredFontSize)).toEqual(['9.1875pt', '9.1875pt']);
+      for (const style of footerStyles) expect(parseFloat(style.fontSize)).toBeCloseTo(9.1875 * 96 / 72, 4);
+      expect(footerStyles[0].backgroundSize).toBe('auto');
+      expect(footerStyles[1].backgroundSize).toBe('0.833333px 10.6667px');
+      expect(footerStyles.map(style => style.paddingBottom)).toEqual(['8pt', '8pt']);
+      expect(footerStyles[1].backgroundPosition).toBe('0% calc(50% - 5.33333px)');
       await testInfo.attach(`${name}.pdf`, { body: pdf, contentType: 'application/pdf' });
       for (const [index, sheet] of actual.entries()) {
         expect(sheet.width).toBeCloseTo(595.28, 0);
@@ -109,6 +157,31 @@ for (const [name, markdown] of Object.entries(documents)) {
         ? await printed.pdf({ ...settings, displayHeaderFooter: true }) : null;
       const withoutBackground = name === 'single'
         ? await printed.pdf({ ...settings, printBackground: false }) : null;
+      if (name === 'single') {
+        for (const number of ['999', '9999', '10000', '999999']) {
+          await printed.evaluate(number => {
+            for (const sheet of document.styleSheets) {
+              try {
+                for (const group of sheet.cssRules) {
+                  for (const rule of group.cssRules || []) {
+                    if (rule.type !== CSSRule.PAGE_RULE) continue;
+                    for (const margin of rule.cssRules) {
+                      if (margin.name === 'bottom-left') margin.style.content = `"${number}"`;
+                    }
+                  }
+                }
+              } catch (error) { if (error.name !== 'SecurityError') throw error; }
+            }
+          }, number);
+          const sheet = pages(await printed.pdf(settings))[0];
+          const footer = sheet.words.filter(word => word.y > sheet.height - 0.56 * 72);
+          expect(footer.map(word => word.text)).toEqual([number, 'Page']);
+          expect(Math.abs(footer[0].y - footer[1].y)).toBeLessThan(0.2);
+          expect(footer[0].right).toBeLessThan(footer[1].x);
+          expect(footer[0].x).toBeGreaterThan(sheet.width - 110);
+          expect(footer.every(word => word.bottom < sheet.height - 18)).toBe(true);
+        }
+      }
       // Disable only generated margin content for an identical content comparison.
       await printed.evaluate(() => {
         const visit = rules => {
@@ -134,8 +207,11 @@ for (const [name, markdown] of Object.entries(documents)) {
         expect(content.map(word => word.raw)).toEqual(previousContent.map(word => word.raw));
         const previousFooter = before[index].words.filter(word => word.y > before[index].height - 0.56 * 72);
         if (previousFooter.length) {
-          expect(actual[index].words.filter(word => word.y > actual[index].height - 0.56 * 72))
-            .toEqual(previousFooter);
+          const updatedFooter = actual[index].words.filter(word => word.y > actual[index].height - 0.56 * 72);
+          expect(updatedFooter.map(word => word.text)).toEqual(previousFooter.map(word => word.text));
+          expect(updatedFooter[1].right).toBeCloseTo(previousFooter[1].right, 1);
+          expect((updatedFooter[0].bottom - updatedFooter[0].y)
+            / (previousFooter[0].bottom - previousFooter[0].y)).toBeCloseTo(1.3125, 2);
         }
         const originalPixels = pixels(baseline, index + 1);
         const updatedPixels = pixels(pdf, index + 1);
@@ -168,10 +244,7 @@ for (const [name, markdown] of Object.entries(documents)) {
           }
           if (greyPixels > (updatedPixels.width - 2 * 0.38 * 72) * 0.98) ruleRows.push(y);
         }
-        expect(ruleRows.length).toBeGreaterThanOrEqual(1);
-        expect(ruleRows.length).toBeLessThanOrEqual(2);
-        expect(footer[0].y - Math.max(...ruleRows)).toBeGreaterThanOrEqual(6);
-        expect(Math.min(...separator.map(pixel => pixel.y)) - Math.max(...ruleRows)).toBeGreaterThanOrEqual(5);
+        expect(ruleRows).toEqual([]);
       }
       if (name === 'single') {
         // Browser metadata is controlled by the print dialog, not the document.
