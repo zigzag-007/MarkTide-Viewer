@@ -1,8 +1,10 @@
 const path = require('node:path');
 const { defineConfig, devices } = require('playwright/test');
+const { chromium } = require('playwright');
+const { resolveBrowserExecutable } = require('./helpers/browser-executable');
 
 const port = Number(process.env.MARKTIDE_TEST_PORT || 4173);
-const browserExecutable = process.env.MARKTIDE_BROWSER_EXECUTABLE;
+const browserExecutable = resolveBrowserExecutable({ bundledExecutable: chromium.executablePath() });
 const artifactRoot = process.env.MARKTIDE_TEST_ARTIFACT_DIR || __dirname;
 
 module.exports = defineConfig({
