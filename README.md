@@ -82,7 +82,7 @@ PDF export prepares a separate print document and opens the browser print dialog
 
 HTML export embeds shared styles, reading controls, the image viewer and readable image sources. Images that cannot be read, including remote images blocked by CORS, keep their safe URLs and may need a network connection. Fonts, MathJax, Mermaid and some other resources still use pinned CDN links, so exported HTML is not fully offline. Hard reload before creating a fresh export after JavaScript changes; existing exports retain their original code.
 
-Known issue: an unclosed raw HTML `<Title>` placeholder in a heading can consume the following document content. This was reproduced in Preview, and a fresh HTML export contained the later markup inside a body `title` element. Its handling remains under review; PDF behaviour has not been checked for this reproduction.
+Literal placeholders such as `<Title>` now stay visible instead of consuming the following document content. The complete original reproduction was checked in Preview, fresh HTML in both themes, and a real PDF. Intentional HTML still follows the shared rendering and sanitizing rules.
 
 ---
 
