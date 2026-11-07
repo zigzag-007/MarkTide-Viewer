@@ -111,12 +111,18 @@ for (const theme of ['light', 'dark']) {
       return documentCopy.querySelectorAll('.marktide-image-caption').length;
     });
     expect(repeated).toBe(10);
+    // Compare HTML with full Preview at the same reading width.
+    await page.evaluate(() => window.MarkTideViewManager.setView('preview-only'));
     const quoteStyles = await page.locator('#markdown-preview blockquote').first().evaluate(quote => {
       const style = getComputedStyle(quote);
       return [style.color, style.borderLeft, style.paddingLeft, style.margin];
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await checkCaptions(page, '#markdown-preview');
+    const mobileQuoteStyles = await page.locator('#markdown-preview blockquote').first().evaluate(quote => {
+      const style = getComputedStyle(quote);
+      return [style.color, style.borderLeft, style.paddingLeft, style.margin];
+    });
     const html = await captureHtmlExport(page);
     const exported = await context.newPage();
     try {
@@ -128,6 +134,10 @@ for (const theme of ['light', 'dark']) {
       })).toEqual(quoteStyles);
       await exported.setViewportSize({ width: 390, height: 844 });
       await checkCaptions(exported);
+      expect(await exported.locator('blockquote').first().evaluate(quote => {
+        const style = getComputedStyle(quote);
+        return [style.color, style.borderLeft, style.paddingLeft, style.margin];
+      })).toEqual(mobileQuoteStyles);
     } finally {
       await exported.close();
     }
