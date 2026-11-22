@@ -5,6 +5,18 @@ const marked = require('../../assets/vendor/marked/marked.min');
 editing.install(marked);
 const selection = (anchor, head = anchor) => ({ anchor, head });
 
+test('bare URLs remain finite inline spans when planning an image insertion', () => {
+  const source = 'Reference: https://example.com/report';
+  const spans = editing.inlineTokens(source, marked);
+  assert.ok(spans.some(span => span.token.type === 'link'));
+  assert.ok(spans.length < 10);
+  const target = editing.linkTarget(source, [selection(0)], marked, true);
+  const plan = editing.link(source, [selection(0)], target, 'New image', '/new.png', true);
+  const result = editing.apply(source, plan);
+  assert.ok(result.includes('![New image](</new.png>)'));
+  assert.ok(result.includes(source));
+});
+
 test('inline transforms retain reverse selections and toggle enclosing nested formatting', () => {
   const plan = editing.inline('one word', [selection(8, 4)], 'bold', marked);
   assert.equal(editing.apply('one word', plan), 'one **word**');

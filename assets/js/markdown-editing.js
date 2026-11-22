@@ -142,7 +142,10 @@
       spans.push(span);
       if (token.tokens && typeof token.text === 'string') {
         const prefix = token.raw.indexOf(token.text);
-        if (prefix >= 0) spans.push(...inlineTokens(token.text, marked, position + prefix));
+        // Bare URLs keep the same raw text. Only parse a smaller inner range.
+        if (prefix >= 0 && token.text.length < token.raw.length) {
+          spans.push(...inlineTokens(token.text, marked, position + prefix));
+        }
       }
       position = span.to;
     }
