@@ -82,9 +82,7 @@ PDF export prepares a separate print document and opens the browser print dialog
 
 HTML export embeds shared styles, reading controls, the image viewer and readable image sources. Images that cannot be read, including remote images blocked by CORS, keep their safe URLs and may need a network connection. Fonts, MathJax, Mermaid and some other resources still use pinned CDN links, so exported HTML is not fully offline. Hard reload before creating a fresh export after JavaScript changes; existing exports retain their original code.
 
-Bare angle bracket placeholders are preserved by the shared Markdown parser. The complete original placeholder report has focused Preview, fresh HTML and real PDF evidence on the v1.8.5 candidate. Full release validation and broader malformed HTML compatibility remain separate checks.
-
-Known limit in this toolbar candidate: scanning a bare URL during some formatting commands can recurse. The source guard is assigned to v1.8.7; moving it into v1.8.6 still needs approval. The duplicate code copy tooltip fix is also not included.
+Literal placeholders such as `<Title>` now stay visible instead of consuming the following document content. The complete original reproduction was checked in Preview, fresh HTML in both themes, and a real PDF. Intentional HTML still follows the shared rendering and sanitizing rules.
 
 ---
 

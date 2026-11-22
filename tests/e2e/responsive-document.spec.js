@@ -105,8 +105,8 @@ for (const theme of ['light','dark']) {
         assertDocument(current);
         const padding = current.containerWidth <= 600 ? 16 : current.containerWidth <= 800 ? 20 : 45;
         expect(parseFloat(current.padding.split(' ')[1] || current.padding)).toBe(padding);
-        await exported.setViewportSize({ width: Math.round(current.width), height: 1024 });
-        await exported.evaluate(width => { document.body.style.width = `${width}px`; }, current.width);
+        // Both surfaces include the shared reading area's outer padding.
+        await exported.setViewportSize({ width, height: 1024 });
         const fresh = await metrics(exported);
         assertDocument(fresh);
         expect(fresh.contentWidth).toBeCloseTo(current.contentWidth,0);
@@ -129,8 +129,12 @@ for (const theme of ['light','dark']) {
       const split = await metrics(page);
       assertDocument(split);
       expect(split.fontSize).toBe('16px');
-      await exported.setViewportSize({width:Math.round(split.width),height:900});
-      await exported.evaluate(width => { document.body.style.width = `${width}px`; }, split.width);
+      const paneWidth = await page.locator('.preview-pane').evaluate(pane =>
+        pane.getBoundingClientRect().width - pane.offsetWidth + pane.clientWidth);
+      await exported.setViewportSize({width:1100,height:900});
+      await exported.locator('.marktide-html-reading-area').evaluate((area,width) => {
+        area.style.width = `${width}px`;
+      }, paneWidth);
       const fresh = await metrics(exported);
       expect(fresh.heads).toEqual(split.heads);
       expect(fresh.text).toEqual(split.text);

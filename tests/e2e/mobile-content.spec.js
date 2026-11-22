@@ -82,9 +82,7 @@ for (const theme of ['light', 'dark']) {
       for (const width of [320,390,430,768,1024,1440]) {
         await page.setViewportSize({ width, height: 1000 });
         const current = await metrics(page);
-        const articleWidth = await page.locator('.markdown-body').evaluate(el => el.getBoundingClientRect().width);
-        await exported.setViewportSize({ width: Math.round(articleWidth), height: 1000 });
-        await exported.evaluate(width => { document.body.style.width = `${width}px`; }, articleWidth);
+        await exported.setViewportSize({ width, height: 1000 });
         const fresh = await metrics(exported);
         expect(fresh).toEqual(current);
         expect(current.overflow).toBeLessThanOrEqual(1);
@@ -353,9 +351,7 @@ test('real report tables and code remain readable across screen widths', async (
       for (const width of [320,390,430,768,1024,1440]) {
         await page.setViewportSize({ width, height: 900 });
         await metrics(page);
-        const articleWidth = await page.locator('.markdown-body').evaluate(el => el.getBoundingClientRect().width);
-        await exported.setViewportSize({ width: Math.round(articleWidth), height: 900 });
-        await exported.evaluate(width => { document.body.style.width = `${width}px`; }, articleWidth);
+        await exported.setViewportSize({ width, height: 900 });
         await metrics(exported);
         const measureReport = async surface => surface.locator('.markdown-body').evaluate(article => ({
           overflow: article.scrollWidth - article.clientWidth,
@@ -417,9 +413,11 @@ test('real report tables and code remain readable across screen widths', async (
       await page.setViewportSize({ width: 1100, height: 900 });
       await page.evaluate(() => window.MarkTideViewManager.setView('split'));
       await metrics(page);
-      const splitWidth = await page.locator('.markdown-body').evaluate(el => el.getBoundingClientRect().width);
-      await exported.setViewportSize({ width: Math.round(splitWidth), height: 900 });
-      await exported.evaluate(width => { document.body.style.width = `${width}px`; }, splitWidth);
+      const splitWidth = await page.locator('.preview-pane').evaluate(el => el.getBoundingClientRect().width);
+      await exported.setViewportSize({ width: 1100, height: 900 });
+      await exported.locator('.marktide-html-reading-area').evaluate((area,width) => {
+        area.style.width = `${width}px`;
+      }, splitWidth);
       expect(await metrics(exported)).toEqual(await metrics(page));
       await page.evaluate(() => window.MarkTideViewManager.setView('preview-only'));
     } finally { await exported.close(); }
