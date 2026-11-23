@@ -1,19 +1,19 @@
 const { expect, test } = require('playwright/test');
 const { waitForMarkTide } = require('../helpers/marktide-page');
 
-test('v1.8.5 badges and announcement match the release candidate', async ({ page }, testInfo) => {
+test('v1.8.6 badges and announcement match the release candidate', async ({ page }, testInfo) => {
   await page.goto('/index.html');
   await waitForMarkTide(page);
-  await expect(page.locator('.app-version-badge')).toHaveText(['v1.8.5', 'v1.8.5']);
+  await expect(page.locator('.app-version-badge')).toHaveText(['v1.8.6', 'v1.8.6']);
   await page.evaluate(() => window.MarkTideWhatsNew.show());
   const dialog = page.locator('.whats-new-dialog');
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText('Heading rail');
-  await expect(dialog).toContainText('Calmer rail interaction');
+  await expect(dialog).toContainText('A working formatting toolbar');
+  await expect(dialog).toContainText('Insertion tools');
   await expect(dialog).not.toContainText('completed improvements');
   await expect(dialog).toHaveCSS('opacity', '1');
   await expect(dialog).toHaveCSS('filter', 'blur(0px)');
-  await page.screenshot({ path: testInfo.outputPath('v1.8.5-announcement.png') });
+  await page.screenshot({ path: testInfo.outputPath('v1.8.6-announcement.png') });
 });
 
 test('What’s New hides its scrollbar without disabling scrolling', async ({ page }) => {

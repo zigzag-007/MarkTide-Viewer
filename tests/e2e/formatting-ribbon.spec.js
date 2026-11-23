@@ -763,6 +763,8 @@ test.describe('eligible touch tablet', () => {
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     const readingWidth = await page.locator('#markdown-preview').evaluate(element=>element.clientWidth);
     const editorWidth = await page.locator('.editor-pane').evaluate(element=>element.clientWidth);
+    const editor = page.locator('.editor-wrapper');
+    const editingWidth = (await editor.boundingBox()).width;
     await page.locator('.marktide-heading-marker').first().tap();
     await expect(page.locator('.marktide-toc')).toBeVisible();
     expect(await page.locator('#markdown-preview').evaluate(element=>element.clientWidth)).toBe(readingWidth);
@@ -772,7 +774,8 @@ test.describe('eligible touch tablet', () => {
     expect(panel.y+panel.height).toBeLessThanOrEqual(834);
     await shot(page,`touch-tablet-toc-floating-${width}-${theme}`);
     await page.getByRole('button',{name:'Pin table of contents',exact:true}).tap();
-    await expect.poll(()=>page.locator('#markdown-preview').evaluate(element=>element.clientWidth)).toBeLessThan(readingWidth-200);
+    await expect.poll(async () => (await editor.boundingBox()).width).toBeLessThan(editingWidth-200);
+    expect(await page.locator('#markdown-preview').evaluate(element=>element.clientWidth)).toBe(readingWidth);
     expect(await page.locator('.editor-pane').evaluate(element=>element.clientWidth)).toBe(editorWidth);
     await shot(page,`touch-tablet-toc-pinned-${width}-${theme}`);
   });
