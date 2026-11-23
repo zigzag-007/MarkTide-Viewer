@@ -12,7 +12,13 @@ async function measure(page) {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    await Promise.all(document.querySelector('.markdown-body').getAnimations({subtree:true})
+    // A parent pane may still be resizing after the viewport changes.
+    const article = document.querySelector('.markdown-body');
+    const animations = article.getAnimations({ subtree: true });
+    for (let parent = article.parentElement; parent; parent = parent.parentElement) {
+      animations.push(...parent.getAnimations());
+    }
+    await Promise.all(animations
       .filter(animation => Number.isFinite(animation.effect.getTiming().iterations))
       .map(animation => animation.finished.catch(() => {})));
   });

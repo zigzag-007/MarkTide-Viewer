@@ -19,9 +19,15 @@ async function metrics(page) {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const animations = document.querySelector('.markdown-body').getAnimations({ subtree: true })
-      .filter(animation => Number.isFinite(animation.effect.getTiming().iterations));
-    await Promise.all(animations.map(animation => animation.finished.catch(() => {})));
+    // A parent pane may still be resizing after the viewport changes.
+    const article = document.querySelector('.markdown-body');
+    const animations = article.getAnimations({ subtree: true });
+    for (let parent = article.parentElement; parent; parent = parent.parentElement) {
+      animations.push(...parent.getAnimations());
+    }
+    await Promise.all(animations
+      .filter(animation => Number.isFinite(animation.effect.getTiming().iterations))
+      .map(animation => animation.finished.catch(() => {})));
   });
   return page.locator('.markdown-body').evaluate(article => {
     const style = getComputedStyle(article);
